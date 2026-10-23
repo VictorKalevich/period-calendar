@@ -24,7 +24,7 @@ export function VersionTapper({ devMode }: { devMode: boolean }) {
   return (
     <>
       <button type="button" className="version" onClick={onTap}>
-        Версия {__APP_VERSION__}
+        Версия {__APP_VERSION__} · {__APP_BUILD__}
       </button>
       <p className={toast ? 'toast toast--visible' : 'toast'} role="status" aria-live="polite">
         {toast}

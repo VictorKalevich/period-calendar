@@ -5,7 +5,11 @@ import { version } from './package.json';
 
 export default defineConfig({
   base: '/period-calendar/',
-  define: { __APP_VERSION__: JSON.stringify(version) },
+  define: {
+    __APP_VERSION__: JSON.stringify(version),
+    // Номер сборки виден в «Настройках» — так на телефоне понятно, какая сборка запущена.
+    __APP_BUILD__: JSON.stringify(process.env.BUILD_ID ?? process.env.GITHUB_SHA?.slice(0, 7) ?? 'dev'),
+  },
   plugins: [
     react(),
     VitePWA({

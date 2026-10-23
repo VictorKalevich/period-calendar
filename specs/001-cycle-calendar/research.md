@@ -49,6 +49,12 @@ GitHub Pages + GitHub Actions, Cloudflare Worker для Web Push. Ниже — �
   `base: '/period-calendar/'` (путь GitHub Pages проекта).
 - **Rationale**: `generateSW` не позволяет добавить обработчик push; `injectManifest` оставляет
   офлайн-кэш на плагине. Данные живут в IndexedDB, поэтому обновление SW их не трогает.
+- **Обновление (уточнено после проверки на iPhone)**: в `injectManifest` режим `autoUpdate` сам не
+  активирует новый SW — `sw.ts` вызывает `skipWaiting()` при установке и `clientsClaim()`, иначе на
+  iPhone новая сборка ждёт закрытия всех окон PWA. iOS не проверяет обновления при возврате из фона,
+  поэтому приложение вызывает `registration.update()` при каждом `visibilitychange → visible` и раз
+  в час. После активации — одна перезагрузка; если открыт лист или поле ввода — плашка
+  «Доступна новая версия — Обновить» (`src/pwa/`). В «Настройках» показывается номер сборки.
 - **Alternatives**: `generateSW` + `importScripts` — хрупко; SW без Workbox — ручное версионирование кэша.
 
 ## R5. Web Push на iOS

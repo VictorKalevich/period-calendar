@@ -9,6 +9,8 @@ interface ImportMetaEnv {
 
 /** Версия приложения из package.json (vite.config.ts → define). */
 declare const __APP_VERSION__: string;
+/** Короткий хэш коммита сборки (GITHUB_SHA) или BUILD_ID; локально — «dev». */
+declare const __APP_BUILD__: string;
 
 interface ImportMeta {
   readonly env: ImportMetaEnv;

@@ -1,7 +1,16 @@
 /// <reference lib="webworker" />
+import { clientsClaim } from 'workbox-core';
 import { cleanupOutdatedCaches, precacheAndRoute } from 'workbox-precaching';
 
 declare const self: ServiceWorkerGlobalScope;
+
+// Новая сборка активируется сразу и берёт открытые окна под контроль; приложение само
+// перезагружается (src/pwa/registerUpdates.ts). Иначе на iPhone новый service worker
+// ждёт закрытия всех окон PWA, которого может не случиться. IndexedDB здесь не трогаем.
+self.addEventListener('install', () => {
+  void self.skipWaiting();
+});
+clientsClaim();
 
 cleanupOutdatedCaches();
 precacheAndRoute(self.__WB_MANIFEST);

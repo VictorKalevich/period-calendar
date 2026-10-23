@@ -889,6 +889,31 @@
   transform: translate(-50%, 0);
 }
 
+/* Плашка обновления */
+.update-banner {
+  position: sticky;
+  top: 0;
+  z-index: 15;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: calc(var(--safe-top) + 8px) calc(var(--gutter) + var(--safe-right)) 8px calc(var(--gutter) + var(--safe-left));
+  background: var(--violetSoft);
+  color: var(--violetText);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.update-banner__btn {
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 22px;
+  background: var(--btnBg);
+  color: var(--btnInk);
+  font-weight: 800;
+}
+
 /* Нижний лист */
 .sheet {
   width: 100%;

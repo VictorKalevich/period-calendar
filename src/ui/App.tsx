@@ -1,5 +1,6 @@
 import { useEffect, useState, type ComponentType } from 'react';
 import { CalendarIcon, SettingsIcon, StatsIcon, TodayIcon } from './components/Icons';
+import { UpdateBanner } from './components/UpdateBanner';
 import { CalendarScreen } from './screens/CalendarScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { StatsScreen } from './screens/StatsScreen';
@@ -40,6 +41,7 @@ export function App() {
 
   return (
     <div className="app">
+      <UpdateBanner />
       <main className="app__screen">
         <Screen />
       </main>
