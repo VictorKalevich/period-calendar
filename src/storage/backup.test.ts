@@ -69,6 +69,15 @@ describe('buildBackup', () => {
     expect(JSON.stringify(b)).not.toContain('secret');
   });
 
+  it('exports schema version 2 with both switches (004)', async () => {
+    await saveSettings({ ...DEFAULT_SETTINGS, showWellbeing: true, showNotes: false });
+    const b = await buildBackup(new Date());
+    expect(b.schemaVersion).toBe(2);
+    expect(b.data.settings).toMatchObject({ showWellbeing: true, showNotes: false });
+    const parsed = parseBackup(JSON.stringify(b));
+    expect(parsed.ok && parsed.value.settings).toMatchObject({ showWellbeing: true, showNotes: false });
+  });
+
   it('does not export the dev mode flag (FR-003)', async () => {
     await seed();
     await setDevMode(true);
@@ -135,6 +144,25 @@ describe('parseBackup', () => {
     ['missing data', (f) => void delete (f as Partial<typeof f>).data],
   ];
 
+  it('imports an old schemaVersion 1 file with both switches off (004 FR-005)', () => {
+    const r = parseBackup(JSON.stringify(validFile()));
+    expect(r.ok && r.value.settings).toEqual({
+      defaultCycleLength: 27,
+      defaultPeriodLength: 4,
+      remindPeriod: false,
+      remindOvulation: true,
+      showWellbeing: false,
+      showNotes: false,
+    });
+  });
+
+  it('rejects non-boolean switches in a v2 file', () => {
+    const f = { ...validFile(), schemaVersion: 2 };
+    (f.data.settings as Record<string, unknown>).showWellbeing = 'yes';
+    (f.data.settings as Record<string, unknown>).showNotes = false;
+    expect(parseBackup(JSON.stringify(f)).ok).toBe(false);
+  });
+
   it('merges adjacent and overlapping periods on import (003 FR-015)', () => {
     const f = validFile();
     f.data.periods.push({ id: 'y', start: '2026-08-06', end: '2026-08-08', endEstimated: false }); // вплотную к 1–5
@@ -159,7 +187,14 @@ describe('applyBackup', () => {
     await applyBackup(parsed.value);
     const first = { p: await getPeriods(), d: await getDayEntries(), s: await getSettings() };
     expect(first.p).toEqual([{ id: 'x', start: '2026-08-01', end: '2026-08-05', endEstimated: false }]);
-    expect(first.s).toEqual({ defaultCycleLength: 27, defaultPeriodLength: 4, remindPeriod: false, remindOvulation: true });
+    expect(first.s).toEqual({
+      defaultCycleLength: 27,
+      defaultPeriodLength: 4,
+      remindPeriod: false,
+      remindOvulation: true,
+      showWellbeing: false,
+      showNotes: false,
+    });
     expect((await getPushState())?.token).toBe('secret');
 
     await applyBackup(parsed.value);

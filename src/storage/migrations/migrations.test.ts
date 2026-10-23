@@ -1,5 +1,32 @@
 import { describe, expect, it } from 'vitest';
-import { migrateData, type MigrationData } from './index';
+import { migrateData, migrations, type MigrationData } from './index';
+
+// Реальная миграция v1 → v2 (фича 004): переключатели «Самочувствие» и «Заметки».
+describe('migrations[1] (v1 → v2)', () => {
+  const v1 = {
+    periods: [],
+    days: [],
+    settings: { defaultCycleLength: 30, defaultPeriodLength: 4, remindPeriod: true, remindOvulation: false },
+  };
+
+  it('adds both switches as off when missing and keeps other fields', () => {
+    expect(migrations[1]!(v1)).toEqual({
+      ...v1,
+      settings: { ...v1.settings, showWellbeing: false, showNotes: false },
+    });
+  });
+
+  it('keeps explicit values and is idempotent', () => {
+    const withValues = { ...v1, settings: { ...v1.settings, showWellbeing: true, showNotes: false } };
+    expect(migrations[1]!(withValues)).toEqual(withValues);
+    const once = migrations[1]!(v1);
+    expect(migrations[1]!(once)).toEqual(once);
+  });
+
+  it('leaves data without settings untouched', () => {
+    expect(migrations[1]!({ periods: [] })).toEqual({ periods: [] });
+  });
+});
 
 // Механизм миграций для будущих версий схемы: проверяется на вымышленных миграциях v1 → v2 → v3.
 const registry: Record<number, (d: MigrationData) => MigrationData> = {

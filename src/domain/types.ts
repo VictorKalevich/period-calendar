@@ -41,6 +41,10 @@ export interface Settings {
   defaultPeriodLength: number;
   remindPeriod: boolean;
   remindOvulation: boolean;
+  /** Показывать «Самочувствие» (симптомы и настроение) — фича 004; выключение не удаляет записи. */
+  showWellbeing: boolean;
+  /** Показывать «Заметки» — фича 004; выключение не удаляет записи. */
+  showNotes: boolean;
 }
 
 export const DEFAULT_SETTINGS: Readonly<Settings> = Object.freeze({
@@ -48,6 +52,8 @@ export const DEFAULT_SETTINGS: Readonly<Settings> = Object.freeze({
   defaultPeriodLength: 5,
   remindPeriod: true,
   remindOvulation: true,
+  showWellbeing: false,
+  showNotes: false,
 });
 
 export const CYCLE_LENGTH_RANGE = { min: 21, max: 45 } as const;

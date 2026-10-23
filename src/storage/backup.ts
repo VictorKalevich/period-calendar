@@ -96,15 +96,19 @@ function parseDays(input: unknown): DayEntry[] | string {
 
 function parseSettings(input: unknown): Settings | string {
   if (!isObject(input)) return 'нет настроек';
-  const { defaultCycleLength, defaultPeriodLength, remindPeriod, remindOvulation } = input;
+  const { defaultCycleLength, defaultPeriodLength, remindPeriod, remindOvulation, showWellbeing, showNotes } = input;
   if (!isIntIn(defaultCycleLength, CYCLE_LENGTH_RANGE)) return 'длина цикла вне 21…45';
   if (!isIntIn(defaultPeriodLength, PERIOD_LENGTH_RANGE)) return 'длина месячных вне 2…10';
   if (typeof remindPeriod !== 'boolean' || typeof remindOvulation !== 'boolean') return 'некорректные настройки напоминаний';
+  // Старые копии получают эти поля миграцией v1 → v2 (migrations[1]).
+  if (typeof showWellbeing !== 'boolean' || typeof showNotes !== 'boolean') return 'некорректные переключатели записей';
   return {
     defaultCycleLength: defaultCycleLength as number,
     defaultPeriodLength: defaultPeriodLength as number,
     remindPeriod,
     remindOvulation,
+    showWellbeing,
+    showNotes,
   };
 }
 

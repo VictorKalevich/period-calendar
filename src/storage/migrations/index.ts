@@ -5,7 +5,20 @@
 export type MigrationData = Record<string, unknown>;
 export type Migration = (data: MigrationData) => MigrationData;
 
-export const migrations: Record<number, Migration> = {};
+/** v1 → v2 (фича 004): переключатели «Самочувствие» и «Заметки», по умолчанию выключены. */
+function addEntrySwitches(data: MigrationData): MigrationData {
+  const settings = data.settings;
+  if (typeof settings !== 'object' || settings === null) return data;
+  const s = settings as Record<string, unknown>;
+  return {
+    ...data,
+    settings: { ...s, showWellbeing: s.showWellbeing ?? false, showNotes: s.showNotes ?? false },
+  };
+}
+
+export const migrations: Record<number, Migration> = {
+  1: addEntrySwitches,
+};
 
 /** Последовательно применяет миграции from → to. Неизвестные поля не трогает. */
 export function migrateData(

@@ -1,7 +1,8 @@
 import Dexie, { type Table } from 'dexie';
 import type { DayEntry, LocalDate, Period } from '../domain/types';
+import { migrations } from './migrations';
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 export interface KvRecord<T = unknown> {
   key: string;
@@ -21,6 +22,16 @@ class CycleDb extends Dexie {
       days: 'date',
       kv: 'key',
     });
+    // v2 (фича 004): таблицы те же; в сохранённые настройки добавляются переключатели (migrations[1]).
+    this.version(2)
+      .stores({ periods: 'id, start', days: 'date', kv: 'key' })
+      .upgrade(async (tx) => {
+        const kv = tx.table<KvRecord, string>('kv');
+        const rec = await kv.get('settings');
+        if (!rec) return;
+        const migrated = migrations[1]!({ settings: rec.value }).settings;
+        await kv.put({ key: 'settings', value: migrated });
+      });
   }
 }
 
