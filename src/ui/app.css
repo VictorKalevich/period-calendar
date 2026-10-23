@@ -50,6 +50,276 @@
   font-weight: 800;
 }
 
+/* Кнопки */
+.round-btn {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--surface);
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--line);
+  color: var(--ink);
+}
+
+.pill-btn {
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 22px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.pill-btn--rose {
+  color: var(--roseText);
+}
+
+.pill-btn--main {
+  min-height: 52px;
+  border-radius: 26px;
+  background: var(--surface);
+}
+
+.pill-btn--filled {
+  background: var(--btnBg);
+  border-color: var(--btnBg);
+  color: var(--btnInk);
+}
+
+.btn {
+  min-height: 52px;
+  padding: 0 20px;
+  border-radius: 26px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+  width: 100%;
+}
+
+.btn--primary {
+  min-height: 54px;
+  border-radius: 27px;
+  background: var(--btnBg);
+  border-color: var(--btnBg);
+  color: var(--btnInk);
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.btn--ghost {
+  background: none;
+  border-color: transparent;
+  color: var(--muted);
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 12px;
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.pill--violet {
+  background: var(--violetSoft);
+  color: var(--violetText);
+}
+
+.pill--sage {
+  background: var(--sageSoft);
+  color: var(--ink);
+}
+
+.pill--rose {
+  background: var(--roseSoft);
+  color: var(--roseText);
+}
+
+/* Экран «Календарь»: шапка */
+.month-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.month-header__title {
+  margin: 0;
+  text-align: center;
+  flex: 1;
+}
+
+/* Карточка с сеткой и пейджер */
+.calendar-card {
+  padding: 14px 8px 12px;
+}
+
+.weekdays,
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.weekdays {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  text-align: center;
+  padding-bottom: 8px;
+}
+
+.month-grid {
+  row-gap: 4px;
+}
+
+.pager {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.pager::-webkit-scrollbar {
+  display: none;
+}
+
+.pager__page {
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  /* 6 строк по 44 px + 5 промежутков по 4 px — высота не прыгает между месяцами */
+  min-height: 284px;
+}
+
+/* Ячейка дня (design.md «Состояния дня в календаре») */
+.day-cell {
+  height: 44px;
+  min-width: 44px;
+  display: grid;
+  place-items: center;
+}
+
+.day {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+  border: 2px solid transparent;
+}
+
+.day--outside {
+  opacity: 0.35;
+}
+
+.day--period {
+  background: var(--btnBg);
+  color: var(--btnInk);
+  font-weight: 800;
+}
+
+.day--period-predicted {
+  border: 2px dashed var(--rose);
+  color: var(--roseText);
+  font-weight: 700;
+}
+
+.day--fertile {
+  background: var(--violetSoft);
+  border: 2px dashed var(--violetMid);
+  color: var(--violetText);
+  font-weight: 700;
+}
+
+.day--fertile-past {
+  background: var(--violetSoft);
+  color: var(--violetText);
+  font-weight: 600;
+}
+
+.day--ovulation {
+  background: var(--goldSoft);
+  border: 2px solid var(--gold);
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.day--today {
+  border: 2px solid var(--ink);
+  font-weight: 800;
+}
+
+.day--selected {
+  box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px var(--violet);
+}
+
+.day__crown {
+  position: absolute;
+  top: -9px;
+  right: -6px;
+}
+
+.day__dot {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  margin-left: -2.5px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+
+.day--period .day__dot {
+  background: var(--btnInk);
+}
+
+/* Карточка выбранного дня */
+.day-card {
+  padding: 18px 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.day-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.day-card__title,
+.day-card__text {
+  margin: 0;
+}
+
+.day-card__actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.day-card__actions .pill-btn {
+  padding: 0 8px;
+}
+
 /* Нижний лист */
 .sheet {
   width: 100%;
@@ -84,4 +354,18 @@
 
 .sheet__title {
   margin: 0;
+}
+
+.sheet__note {
+  margin: 0;
+}
+
+.sheet__error {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: var(--roseSoft);
+  color: var(--roseText);
+  font-size: 14px;
+  font-weight: 700;
 }
