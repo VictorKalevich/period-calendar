@@ -1,0 +1,55 @@
+import 'fake-indexeddb/auto';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { db, SCHEMA_VERSION } from './db';
+import { getPeriods, getSettings, savePeriods, saveSettings } from './repository';
+import { DEFAULT_SETTINGS, type LocalDate, type Period } from '../domain/types';
+
+beforeEach(async () => {
+  await db.delete();
+  await db.open();
+});
+
+describe('db schema v1', () => {
+  it('has schema version 1', () => {
+    expect(SCHEMA_VERSION).toBe(1);
+    expect(db.verno).toBe(1);
+  });
+
+  it('creates periods, days and kv tables with the expected keys', () => {
+    const periods = db.table('periods').schema;
+    expect(periods.primKey.name).toBe('id');
+    expect(periods.indexes.map((i) => i.name)).toContain('start');
+    expect(db.table('days').schema.primKey.name).toBe('date');
+    expect(db.table('kv').schema.primKey.name).toBe('key');
+  });
+});
+
+describe('settings', () => {
+  it('returns defaults when nothing is stored', async () => {
+    expect(await getSettings()).toEqual({
+      defaultCycleLength: 28,
+      defaultPeriodLength: 5,
+      remindPeriod: true,
+      remindOvulation: true,
+    });
+    expect(DEFAULT_SETTINGS.defaultCycleLength).toBe(28);
+  });
+
+  it('persists saved settings', async () => {
+    await saveSettings({ ...DEFAULT_SETTINGS, defaultCycleLength: 30 });
+    expect((await getSettings()).defaultCycleLength).toBe(30);
+  });
+});
+
+describe('periods', () => {
+  it('round-trips endEstimated and replaces all periods', async () => {
+    const periods: Period[] = [
+      { id: 'a', start: '2026-09-01' as LocalDate, end: '2026-09-05' as LocalDate, endEstimated: true },
+      { id: 'b', start: '2026-09-29' as LocalDate, end: null, endEstimated: false },
+    ];
+    await savePeriods(periods);
+    expect(await getPeriods()).toEqual(periods);
+    await savePeriods([periods[1]!]);
+    expect(await getPeriods()).toEqual([periods[1]]);
+  });
+});
