@@ -1,5 +1,12 @@
 import { isUuid, MAX_BODY_BYTES, validatePutBody, type ReminderJSON } from './validate';
-import { sendPush, type Fetcher, type PushSubscriptionJSON, type VapidKeys } from './webpush';
+import {
+  sendPush,
+  vapidKeyPairMatches,
+  type Fetcher,
+  type PushResult,
+  type PushSubscriptionJSON,
+  type VapidKeys,
+} from './webpush';
 
 // Push-воркер (contracts/push-worker-api.md). Хранит только подписку, напоминания и технические
 // идентификаторы авторизации — clientId и SHA-256 токена (Конституция I, v1.0.1).
@@ -121,25 +128,59 @@ async function sendTest(
   // Попытка засчитывается до отправки — ограничение действует и при неудачах push-сервиса.
   await env.SUBS.put(key, JSON.stringify({ ...rec, lastTestAt: new Date(now).toISOString() }));
 
-  const vapid: VapidKeys = { privateJwk: env.VAPID_PRIVATE_KEY, publicKey: env.VAPID_PUBLIC_KEY, subject: env.VAPID_SUBJECT };
-  let status = 0;
-  try {
-    status = await sendPush(rec.subscription, TEST_NOTIFICATION, vapid, Math.floor(now / 1000), fetcher);
-  } catch {
-    status = 0;
-  }
+  const { status } = await attemptPush(rec.subscription, TEST_NOTIFICATION, env, now, fetcher, 'test');
   if (status >= 200 && status < 300) return reply(204);
   if (status === 404 || status === 410) {
     await env.SUBS.delete(key);
     return reply(410);
   }
-  console.warn(`test push failed with status ${status}`);
   return reply(502);
+}
+
+const vapidOf = (env: Env): VapidKeys => ({
+  privateJwk: env.VAPID_PRIVATE_KEY,
+  publicKey: env.VAPID_PUBLIC_KEY,
+  subject: env.VAPID_SUBJECT,
+});
+
+/**
+ * Отправка с диагностикой: при отказе в лог пишутся статус, причина от push-сервиса, его хост
+ * (без пути подписки) и самопроверка пары VAPID-ключей. Тексты и endpoint в лог не попадают.
+ */
+async function attemptPush(
+  sub: PushSubscriptionJSON,
+  payload: unknown,
+  env: Env,
+  now: number,
+  fetcher: Fetcher,
+  kind: string,
+): Promise<PushResult> {
+  const vapid = vapidOf(env);
+  let result: PushResult;
+  try {
+    result = await sendPush(sub, payload, vapid, Math.floor(now / 1000), fetcher);
+  } catch (e) {
+    result = { status: 0, detail: (e as Error).message.slice(0, 200) };
+  }
+  if (result.status < 200 || result.status >= 300) {
+    const host = (() => {
+      try {
+        return new URL(sub.endpoint).host;
+      } catch {
+        return '?';
+      }
+    })();
+    const keysMatch = await vapidKeyPairMatches(vapid);
+    console.warn(
+      `${kind} push failed: status=${result.status} host=${host} detail=${result.detail || '-'} ` +
+        `vapidPairOk=${keysMatch} subject=${vapid.subject.split(':')[0]}:`,
+    );
+  }
+  return result;
 }
 
 /** Cron: отправляет наступившие напоминания всем подпискам. */
 export async function runSchedule(env: Env, now: number = Date.now(), fetcher: Fetcher = fetch): Promise<void> {
-  const vapid: VapidKeys = { privateJwk: env.VAPID_PRIVATE_KEY, publicKey: env.VAPID_PUBLIC_KEY, subject: env.VAPID_SUBJECT };
   let cursor: string | undefined;
   do {
     const page = await env.SUBS.list({ prefix: 'sub:', cursor });
@@ -154,19 +195,13 @@ export async function runSchedule(env: Env, now: number = Date.now(), fetcher: F
           keep.push(r);
           continue;
         }
-        let status = 0;
-        try {
-          status = await sendPush(rec.subscription, { title: r.title, body: r.body, id: r.id }, vapid, Math.floor(now / 1000), fetcher);
-        } catch {
-          status = 0;
-        }
+        const { status } = await attemptPush(rec.subscription, { title: r.title, body: r.body, id: r.id }, env, now, fetcher, 'scheduled');
         if (status === 404 || status === 410) {
           gone = true;
           continue;
         }
         const delivered = status >= 200 && status < 300;
         if (!delivered && now - at < STALE_MS) keep.push(r);
-        if (!delivered) console.warn(`push failed with status ${status}`);
       }
       if (gone) await env.SUBS.delete(name);
       else if (keep.length !== rec.reminders.length) await env.SUBS.put(name, JSON.stringify({ ...rec, reminders: keep }));

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { b64urlDecode, b64urlEncode, encryptPayload, vapidAuthorization } from '../src/webpush';
+import { b64urlDecode, b64urlEncode, encryptPayload, vapidAuthorization, vapidKeyPairMatches } from '../src/webpush';
 
 // RFC 8291, Appendix A — эталонный пример шифрования Web Push (aes128gcm).
 const V = {
@@ -53,6 +53,29 @@ describe('encryptPayload (RFC 8291 Appendix A)', () => {
     const b = await encryptPayload(new TextEncoder().encode('x'), keys);
     expect(b64urlEncode(a.slice(0, 16))).not.toBe(b64urlEncode(b.slice(0, 16)));
     expect(a[20]).toBe(65); // idlen
+  });
+});
+
+describe('vapidKeyPairMatches', () => {
+  it('detects whether the private and public VAPID keys belong together', async () => {
+    const gen = async () => (await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign', 'verify'])) as CryptoKeyPair;
+    const a = await gen();
+    const b = await gen();
+    const jwk = JSON.stringify(await crypto.subtle.exportKey('jwk', a.privateKey));
+    const pubA = b64urlEncode(new Uint8Array((await crypto.subtle.exportKey('raw', a.publicKey)) as ArrayBuffer));
+    const pubB = b64urlEncode(new Uint8Array((await crypto.subtle.exportKey('raw', b.publicKey)) as ArrayBuffer));
+    expect(await vapidKeyPairMatches({ privateJwk: jwk, publicKey: pubA, subject: 'mailto:a@example.com' })).toBe(true);
+    expect(await vapidKeyPairMatches({ privateJwk: jwk, publicKey: pubB, subject: 'mailto:a@example.com' })).toBe(false);
+  });
+
+  it('tolerates a UTF-8 BOM and surrounding whitespace in the stored secret', async () => {
+    const pair = (await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign', 'verify'])) as CryptoKeyPair;
+    const jwk = JSON.stringify(await crypto.subtle.exportKey('jwk', pair.privateKey));
+    const pub = b64urlEncode(new Uint8Array((await crypto.subtle.exportKey('raw', pair.publicKey)) as ArrayBuffer));
+    const vapid = { privateJwk: `﻿${jwk}\r\n`, publicKey: ` ${pub}\n`, subject: 'mailto:a@example.com' };
+    expect(await vapidKeyPairMatches(vapid)).toBe(true);
+    const header = await vapidAuthorization('https://web.push.apple.com/abc', vapid, 1_790_000_000);
+    expect(header).toMatch(new RegExp(`, k=${pub}$`));
   });
 });
 

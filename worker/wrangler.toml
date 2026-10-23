@@ -14,8 +14,8 @@ id = "aab7e54cf34d43b28cea499626b21c4c"
 [vars]
 # Публичный VAPID-ключ (base64url, 65 байт) — тот же, что VITE_VAPID_PUBLIC_KEY в приложении.
 VAPID_PUBLIC_KEY = "BCUejqVmnkm5H6gRhzCwIhY3DQD6_WQzvdtr2TfxrCUFsEsWD7TbTZk3iJ-iriHJGmI5mA-rQopAJzr5Vpns71A"
-# RFC 8292 допускает mailto: или https: — ссылка на репозиторий, чтобы не публиковать email.
-VAPID_SUBJECT = "https://github.com/VictorKalevich/period-calendar"
 ALLOWED_ORIGIN = "https://victorkalevich.github.io"
 
-# Секрет (не в репозитории): npx wrangler secret put VAPID_PRIVATE_KEY  — приватный ключ в формате JWK.
+# Секреты (не в репозитории), загружать без BOM — не через конвейер Windows PowerShell 5.1:
+#   VAPID_PRIVATE_KEY — приватный ключ в формате JWK (npx wrangler secret put VAPID_PRIVATE_KEY)
+#   VAPID_SUBJECT     — контакт для push-сервисов, mailto:<email> (npx wrangler secret put VAPID_SUBJECT)

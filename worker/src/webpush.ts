@@ -95,18 +95,38 @@ export interface VapidKeys {
 
 const VAPID_TTL_SECONDS = 12 * 3600;
 
+/** Секреты, загруженные из Windows/PowerShell, могут прийти с BOM и переводом строки. */
+const clean = (s: string) => s.replace(/^﻿/, '').trim();
+
+function importVapidPrivate(privateJwk: string): Promise<CryptoKey> {
+  const { kty, crv, d, x, y } = JSON.parse(clean(privateJwk)) as JsonWebKey;
+  return crypto.subtle.importKey('jwk', { kty, crv, d, x, y }, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign']);
+}
+
 /** Заголовок Authorization по RFC 8292: `vapid t=<JWT>, k=<public key>`. */
 export async function vapidAuthorization(endpoint: string, vapid: VapidKeys, nowSeconds: number): Promise<string> {
-  const { kty, crv, d, x, y } = JSON.parse(vapid.privateJwk) as JsonWebKey;
-  const key = await crypto.subtle.importKey('jwk', { kty, crv, d, x, y }, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign']);
+  const key = await importVapidPrivate(vapid.privateJwk);
   const header = b64urlEncode(enc.encode(JSON.stringify({ typ: 'JWT', alg: 'ES256' })));
   const claims = b64urlEncode(
-    enc.encode(JSON.stringify({ aud: new URL(endpoint).origin, exp: nowSeconds + VAPID_TTL_SECONDS, sub: vapid.subject })),
+    enc.encode(JSON.stringify({ aud: new URL(endpoint).origin, exp: nowSeconds + VAPID_TTL_SECONDS, sub: clean(vapid.subject) })),
   );
   const signature = new Uint8Array(
     await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, key, enc.encode(`${header}.${claims}`)),
   );
-  return `vapid t=${header}.${claims}.${b64urlEncode(signature)}, k=${vapid.publicKey}`;
+  return `vapid t=${header}.${claims}.${b64urlEncode(signature)}, k=${clean(vapid.publicKey)}`;
+}
+
+/** Самопроверка: приватный ключ подписывает, публичный проверяет — значит, это одна пара. */
+export async function vapidKeyPairMatches(vapid: VapidKeys): Promise<boolean> {
+  try {
+    const priv = await importVapidPrivate(vapid.privateJwk);
+    const pub = await crypto.subtle.importKey('raw', b64urlDecode(clean(vapid.publicKey)), { name: 'ECDSA', namedCurve: 'P-256' }, false, ['verify']);
+    const data = enc.encode('vapid-self-check');
+    const sig = await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, priv, data);
+    return await crypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, pub, sig, data);
+  } catch {
+    return false;
+  }
 }
 
 export interface PushSubscriptionJSON {
@@ -116,14 +136,20 @@ export interface PushSubscriptionJSON {
 
 export type Fetcher = (url: string, init: RequestInit) => Promise<Response>;
 
-/** Отправляет одно уведомление; возвращает HTTP-статус push-сервиса. */
+export interface PushResult {
+  status: number;
+  /** Причина отказа push-сервиса (Apple: `{"reason":"BadJwtToken"}`), до 200 символов. */
+  detail: string;
+}
+
+/** Отправляет одно уведомление; возвращает статус и причину отказа push-сервиса. */
 export async function sendPush(
   sub: PushSubscriptionJSON,
   payload: unknown,
   vapid: VapidKeys,
   nowSeconds: number,
   fetcher: Fetcher = fetch,
-): Promise<number> {
+): Promise<PushResult> {
   const body = await encryptPayload(enc.encode(JSON.stringify(payload)), sub.keys);
   const res = await fetcher(sub.endpoint, {
     method: 'POST',
@@ -136,5 +162,6 @@ export async function sendPush(
     },
     body,
   });
-  return res.status;
+  const detail = res.ok ? '' : (await res.text().catch(() => '')).slice(0, 200);
+  return { status: res.status, detail };
 }
