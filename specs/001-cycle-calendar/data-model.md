@@ -21,8 +21,9 @@
   `min(start_prev + periodLength − 1, start_new − 1)`, где `periodLength` — прогнозируемая длина
   месячных (без истории — `defaultPeriodLength`), и получает `endEstimated = true`.
 - Длина периода (`end − start + 1`) — 1…15 дней; больше — ошибка `too-long` с подсказкой.
-- Начало внутри существующего периода — ошибка `inside-existing`; UI предлагает «Сдвинуть начало на
-  этот день» (`movePeriodStart`) или «Отметить конец» (`markPeriodEnd`).
+- Начало внутри существующего периода — ошибка `inside-existing`. Для дней внутри месячных диалог
+  предлагает «Установить как начало» (`setPeriodStart`) и «Отметить конец в этот день»
+  (`markPeriodEnd`) — состав диалога по фиче 003 (`periodActionsFor`).
 
 **Переходы состояний** (через карточку дня, FR-009):
 
@@ -31,7 +32,7 @@
 {start, end: null} --«Конец» в день E (E >= start)--> {start, end: E, endEstimated: false}
 {start, end: null} --«Начало» следующих месячных--> {start, end: оценка, endEstimated: true}
 {start, end} --«Конец» в другой день E'--> {start, end: E', endEstimated: false}
-{start, end} --«Сдвинуть начало» на день D внутри--> {start: D, end}
+{start, end} --«Установить как начало» на день D внутри--> {start: D, end} (003: конец сохраняется)
 любой --«Снять отметку»--> удалён (если день = start) / end = день − 1, endEstimated: false (если день внутри)
 ```
 

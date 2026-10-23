@@ -48,10 +48,10 @@ UI — проверка в браузере по quickstart.md.
 
 ## Phase 5: Documentation & Release
 
-- [ ] T011 [P] Update `docs/design/design.md`: карточка дня (кнопки «Симптомы», «Заметка»; диалог «Месячные» по нажатию на дату), быстрые действия «Сегодня» (2 кнопки), полоска недели (сегодня и прошедшие дни нажимаются)
-- [ ] T012 [P] Update `specs/001-cycle-calendar/spec.md` FR-006 and FR-008a and `specs/001-cycle-calendar/quickstart.md` scenarios 1a, 3, 6 (SC-001: дата → «Начало месячных», 2 нажатия)
-- [ ] T013 Run `npm test`, `npm run build`; verify quickstart.md scenarios 2–9 in the browser (CDP), incl. computed `user-select`/`-webkit-touch-callout` on day cells
-- [ ] T014 Merge `003-calendar-tap-actions` into `main` and `git push origin main` (CLAUDE.md rule; worker not changed)
+- [X] T011 [P] Update `docs/design/design.md`: карточка дня (кнопки «Симптомы», «Заметка»; диалог «Месячные» по нажатию на дату), быстрые действия «Сегодня» (2 кнопки), полоска недели (сегодня и прошедшие дни нажимаются)
+- [X] T012 [P] Update `specs/001-cycle-calendar/spec.md` FR-006 and FR-008a and `specs/001-cycle-calendar/quickstart.md` scenarios 1a, 3, 6 (SC-001: дата → «Начало месячных», 2 нажатия)
+- [X] T013 Run `npm test`, `npm run build`; verify quickstart.md scenarios 2–9 in the browser (CDP), incl. computed `user-select`/`-webkit-touch-callout` on day cells
+- [X] T014 Merge `003-calendar-tap-actions` into `main` and `git push origin main` (CLAUDE.md rule; worker not changed)
 - [ ] T015 Manually verify on iPhone: quickstart.md scenario 1 (no selection/loupe/menu, SC-003)
 
 ## Dependencies & Execution Order

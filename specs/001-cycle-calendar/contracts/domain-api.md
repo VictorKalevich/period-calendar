@@ -75,8 +75,9 @@ function cycleStats(cycles: Cycle[]): {
 function markPeriodStart(periods: Period[], day: LocalDate, today: LocalDate,
                          periodLength: number): Result<Period[]>;
 function markPeriodEnd(periods: Period[], day: LocalDate, today: LocalDate): Result<Period[]>;
-function movePeriodStart(periods: Period[], day: LocalDate): Result<Period[]>; // день внутри периода
 function unmarkPeriodDay(periods: Period[], day: LocalDate): Period[];
+// movePeriodStart заменена фичей 003 на setPeriodStart и periodActionsFor —
+// см. specs/003-calendar-tap-actions/contracts/period-actions.md
 
 // reminders.ts
 function planReminders(forecast: Forecast, settings: Settings, now: Date,
