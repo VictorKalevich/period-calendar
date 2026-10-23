@@ -247,12 +247,12 @@ UI проверяется вручную по quickstart.md.
 
 **Purpose**: проверки, затрагивающие все истории
 
-- [ ] T076 [P] Final pass of all screens against `docs/design/design.md` (FR-003 colours/markers, layout, typography) in light and dark themes — per-task checks were done along the way; fix remaining drift
+- [X] T076 [P] Final pass of all screens against `docs/design/design.md` (FR-003 colours/markers, layout, typography) in light and dark themes — per-task checks were done along the way; fix remaining drift
 - [ ] T077 [P] Audit tap targets ≥ 44 CSS px (= 44 pt) and `aria-label`s across `src/ui/components/` and `src/ui/screens/` with VoiceOver on iPhone
-- [ ] T078 [P] Add `src/storage/update.test.ts`: data written with schema v1 survives re-opening the DB with the same version and a new app build (FR-031); document the «new schema version» checklist in `src/storage/migrations/README.md`
+- [X] T078 [P] Add `src/storage/update.test.ts`: data written with schema v1 survives re-opening the DB with the same version and a new app build (FR-031); document the «new schema version» checklist in `src/storage/migrations/README.md`
 - [ ] T079 Measure startup to calendar (≤ 1 s offline, SC-003) and swipe smoothness (SC-002) on iPhone; fix regressions (e.g., limit rendered pages, memoize `dayInfo`)
 - [ ] T080 Run full quickstart.md validation (scenarios 1–14 incl. 1a, 5a, 5b, 5c), including scenario 12 (publish new version → data intact)
-- [ ] T081 [P] Write `README.md`: what the app is, privacy statement (data stays on device; the worker stores only the push subscription, reminder dates/texts, random `clientId` and token hash), install on iPhone, backup, development commands
+- [X] T081 [P] Write `README.md`: what the app is, privacy statement (data stays on device; the worker stores only the push subscription, reminder dates/texts, random `clientId` and token hash), install on iPhone, backup, development commands
 
 ---
 

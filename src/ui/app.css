@@ -409,11 +409,17 @@
 }
 
 .link-btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 4px;
+  margin: -12px 0;
+  vertical-align: middle;
   color: var(--violetText);
   font-weight: 800;
   text-decoration: underline;
   text-underline-offset: 2px;
-  min-height: 24px;
 }
 
 .prose p {
