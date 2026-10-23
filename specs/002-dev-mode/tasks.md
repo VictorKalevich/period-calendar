@@ -26,6 +26,6 @@
 ## Phase 4: Release
 
 - [X] T011 Run app and worker tests, typecheck, build; verify the version tapper and dev section in a browser
-- [ ] T012 Deploy the worker (`wrangler deploy`) and smoke-test `POST …/test` (401/404/429 paths)
-- [ ] T013 Merge `002-dev-mode` into `main` and push to GitHub
+- [X] T012 Deploy the worker (`wrangler deploy`) and smoke-test `POST …/test` (401/404/429 paths)
+- [X] T013 Merge `002-dev-mode` into `main` and push to GitHub
 - [ ] T014 Manually verify on iPhone: test notification arrives within 10 s (SC-002)
