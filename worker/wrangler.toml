@@ -6,15 +6,16 @@ compatibility_date = "2026-10-01"
 [triggers]
 crons = ["0 * * * *"]
 
-# Создать: npx wrangler kv namespace create SUBS — и вписать id.
+# Создано: npx wrangler kv namespace create SUBS
 [[kv_namespaces]]
 binding = "SUBS"
-id = "REPLACE_WITH_KV_NAMESPACE_ID"
+id = "aab7e54cf34d43b28cea499626b21c4c"
 
 [vars]
 # Публичный VAPID-ключ (base64url, 65 байт) — тот же, что VITE_VAPID_PUBLIC_KEY в приложении.
-VAPID_PUBLIC_KEY = "REPLACE_WITH_VAPID_PUBLIC_KEY"
-VAPID_SUBJECT = "mailto:REPLACE_WITH_CONTACT_EMAIL"
-ALLOWED_ORIGIN = "https://REPLACE_WITH_GITHUB_USER.github.io"
+VAPID_PUBLIC_KEY = "BCUejqVmnkm5H6gRhzCwIhY3DQD6_WQzvdtr2TfxrCUFsEsWD7TbTZk3iJ-iriHJGmI5mA-rQopAJzr5Vpns71A"
+# RFC 8292 допускает mailto: или https: — ссылка на репозиторий, чтобы не публиковать email.
+VAPID_SUBJECT = "https://github.com/VictorKalevich/period-calendar"
+ALLOWED_ORIGIN = "https://victorkalevich.github.io"
 
 # Секрет (не в репозитории): npx wrangler secret put VAPID_PRIVATE_KEY  — приватный ключ в формате JWK.
