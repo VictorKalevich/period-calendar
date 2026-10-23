@@ -791,6 +791,62 @@
   opacity: 0.5;
 }
 
+/* Статистика */
+.stat-tiles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.stat-tile {
+  padding: 16px;
+}
+
+.stat-tile__label,
+.stat-tile__value,
+.stat-tile__note {
+  margin: 0;
+}
+
+.stat-tile__value {
+  margin: 6px 0 2px;
+  color: var(--roseText);
+}
+
+.history {
+  padding: 18px 18px 6px;
+}
+
+.history__title {
+  margin: 0 0 4px;
+}
+
+.history__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.history__row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+
+.history__row:first-child {
+  border-top: 0;
+}
+
+.history__date {
+  font-weight: 800;
+}
+
+.history__outlier {
+  color: var(--roseText);
+}
+
 /* Нижний лист */
 .sheet {
   width: 100%;

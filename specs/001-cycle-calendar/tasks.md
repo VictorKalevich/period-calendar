@@ -232,12 +232,12 @@ UI проверяется вручную по quickstart.md.
 
 ### Tests for User Story 5 ⚠️
 
-- [ ] T073 [P] [US5] Write failing tests in `src/domain/stats.test.ts` — contract case 24: `cycleStats` returns `avgCycleLength = averageCycleLength(cycles)` and `avgPeriodLength = averagePeriodLength(cycles)` (last 6, no outliers, no estimated ends), equal to `Forecast.cycleLength`/`periodLength` when history exists; `null` when none; history newest first and includes outliers flagged `isOutlier`
+- [X] T073 [P] [US5] Write failing tests in `src/domain/stats.test.ts` — contract case 24: `cycleStats` returns `avgCycleLength = averageCycleLength(cycles)` and `avgPeriodLength = averagePeriodLength(cycles)` (last 6, no outliers, no estimated ends), equal to `Forecast.cycleLength`/`periodLength` when history exists; `null` when none; history newest first and includes outliers flagged `isOutlier`
 
 ### Implementation for User Story 5
 
-- [ ] T074 [US5] Implement `src/domain/stats.ts` until T073 passes
-- [ ] T075 [US5] Implement `src/ui/screens/StatsScreen.tsx`: tiles «Средняя длина цикла: N дн.», «Средняя длина месячных: N дн.» each with caption «по последним 6 циклам»; list rows «12 сентября 2026 · цикл 29 дн. · месячные 5 дн.» (outliers marked «не учитывается в прогнозе», estimated ends marked «≈»); empty state «Статистика появится после первого полного цикла»
+- [X] T074 [US5] Implement `src/domain/stats.ts` until T073 passes
+- [X] T075 [US5] Implement `src/ui/screens/StatsScreen.tsx`: tiles «Средняя длина цикла: N дн.», «Средняя длина месячных: N дн.» each with caption «по последним 6 циклам»; list rows «12 сентября 2026 · цикл 29 дн. · месячные 5 дн.» (outliers marked «не учитывается в прогнозе», estimated ends marked «≈»); empty state «Статистика появится после первого полного цикла»
 
 **Checkpoint**: все истории реализованы
 
