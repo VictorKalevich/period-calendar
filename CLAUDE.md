@@ -29,6 +29,20 @@
   сверять с макетом в каждой UI-задаче. Главный экран — «Календарь». Светлая/тёмная тема по системе,
   контраст ≥ 4.5:1, зоны нажатия ≥ 44 CSS px (= 44 pt).
 
+## Рабочий процесс (постоянное правило)
+
+- Новые функции — только через Spec Kit: `/speckit-specify` → `/speckit-plan` → `/speckit-tasks` →
+  `/speckit-analyze` → `/speckit-implement`, в отдельной ветке фичи. Логика — тестами вперёд
+  (Конституция IV): тест пишется первым и должен упасть.
+- После `/speckit-implement`: если `npm test`, `npm run build` и (при изменениях в `worker/`)
+  `npm test --prefix worker` + `npm run typecheck --prefix worker` зелёные — слить ветку фичи в `main`
+  и выполнить `git push origin main` без отдельного вопроса. Push в `main` запускает сборку и деплой
+  на GitHub Pages.
+- Если изменён воркер (`worker/`) — задеплоить его `npx wrangler deploy` (из папки `worker`) до push.
+- Если тесты или сборка падают — ничего не сливать и не отправлять, сообщить пользователю.
+- Секреты Worker загружать без BOM: не через конвейер Windows PowerShell 5.1 (`... | npx wrangler
+  secret put`), а через Node (stdin) или интерактивный ввод.
+
 ## Команды
 
 - `npm test` · `npm run dev` · `npm run build && npm run preview`
