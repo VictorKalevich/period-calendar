@@ -178,15 +178,15 @@ UI проверяется вручную по quickstart.md.
 
 ### Tests for User Story 6 ⚠️
 
-- [ ] T053 [P] [US6] Write failing tests in `src/storage/backup.test.ts` per contracts/backup-format.md: export produces `{ format: 'cycle-calendar-backup', schemaVersion: 1, exportedAt, data: { periods, days, settings } }` with `endEstimated` on every period and without push state; import rejects wrong `format` («Это не резервная копия Календаря цикла»), newer `schemaVersion` («…создана более новой версией приложения. Обновите приложение»), invalid records (bad dates, overlapping periods, period longer than 15 days, missing or non-boolean `endEstimated` (required in v1), `defaultCycleLength` outside 21…45, `defaultPeriodLength` outside 2…10, unknown symptom ids, note > 1000) leaving DB unchanged; valid import replaces all data in one transaction; importing the same file twice yields identical state; older `schemaVersion` passes through `migrations`
-- [ ] T054 [P] [US6] Write failing test in `src/storage/migrations/migrations.test.ts`: `migrateData(data, fromVersion)` applies migrations in order, is idempotent, preserves unknown fields (framework test for future v2)
+- [X] T053 [P] [US6] Write failing tests in `src/storage/backup.test.ts` per contracts/backup-format.md: export produces `{ format: 'cycle-calendar-backup', schemaVersion: 1, exportedAt, data: { periods, days, settings } }` with `endEstimated` on every period and without push state; import rejects wrong `format` («Это не резервная копия Календаря цикла»), newer `schemaVersion` («…создана более новой версией приложения. Обновите приложение»), invalid records (bad dates, overlapping periods, period longer than 15 days, missing or non-boolean `endEstimated` (required in v1), `defaultCycleLength` outside 21…45, `defaultPeriodLength` outside 2…10, unknown symptom ids, note > 1000) leaving DB unchanged; valid import replaces all data in one transaction; importing the same file twice yields identical state; older `schemaVersion` passes through `migrations`
+- [X] T054 [P] [US6] Write failing test in `src/storage/migrations/migrations.test.ts`: `migrateData(data, fromVersion)` applies migrations in order, is idempotent, preserves unknown fields (framework test for future v2)
 
 ### Implementation for User Story 6
 
-- [ ] T055 [US6] Implement `migrateData` in `src/storage/migrations/index.ts` until T054 passes
-- [ ] T056 [US6] Implement `src/storage/backup.ts` (`exportBackup(): Promise<Blob>`, `parseBackup(text): Result<BackupSummary>`, `applyBackup(parsed)`) until T053 passes
-- [ ] T057 [US6] Implement `src/ui/screens/SettingsScreen.tsx` section «Цикл»: steppers «Длина цикла по умолчанию» (21…45) and «Длина месячных по умолчанию» (2…10) with 44×44 round buttons, saved immediately via `saveSettings`
-- [ ] T058 [US6] Add section «Резервная копия» to `src/ui/screens/SettingsScreen.tsx`: «Экспорт» → `navigator.share({ files: [new File([blob], 'cycle-calendar-YYYY-MM-DD.json', { type: 'application/json' })] })` with `<a download>` fallback; «Импорт» → hidden `<input type="file" accept="application/json,.json">` → confirm sheet «Будет восстановлено: N месячных, M записей дней. Текущие данные будут заменены» → `applyBackup`; errors shown in Russian
+- [X] T055 [US6] Implement `migrateData` in `src/storage/migrations/index.ts` until T054 passes
+- [X] T056 [US6] Implement `src/storage/backup.ts` (`exportBackup(): Promise<Blob>`, `parseBackup(text): Result<BackupSummary>`, `applyBackup(parsed)`) until T053 passes
+- [X] T057 [US6] Implement `src/ui/screens/SettingsScreen.tsx` section «Цикл»: steppers «Длина цикла по умолчанию» (21…45) and «Длина месячных по умолчанию» (2…10) with 44×44 round buttons, saved immediately via `saveSettings`
+- [X] T058 [US6] Add section «Резервная копия» to `src/ui/screens/SettingsScreen.tsx`: «Экспорт» → `navigator.share({ files: [new File([blob], 'cycle-calendar-YYYY-MM-DD.json', { type: 'application/json' })] })` with `<a download>` fallback; «Импорт» → hidden `<input type="file" accept="application/json,.json">` → confirm sheet «Будет восстановлено: N месячных, M записей дней. Текущие данные будут заменены» → `applyBackup`; errors shown in Russian
 - [ ] T059 [US6] Manually verify quickstart.md scenarios 10–11 on iPhone
 
 **Checkpoint**: данные защищены резервной копией

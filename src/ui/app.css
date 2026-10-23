@@ -684,6 +684,108 @@
   align-self: flex-end;
 }
 
+/* Настройки */
+.settings-card {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.settings-card__title,
+.settings-card__text {
+  margin: 0;
+}
+
+.settings-card__ok {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: var(--sageSoft);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  border-top: 1px solid var(--line);
+}
+
+.stepper__label {
+  font-weight: 700;
+}
+
+.stepper__controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.stepper__controls .round-btn {
+  font-size: 22px;
+  font-weight: 700;
+  box-shadow: none;
+  background: var(--bg);
+}
+
+.stepper__value {
+  min-width: 56px;
+  text-align: center;
+  font-weight: 800;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 52px;
+  border-top: 1px solid var(--line);
+  font-weight: 700;
+}
+
+.toggle input {
+  appearance: none;
+  width: 52px;
+  height: 32px;
+  border-radius: 16px;
+  background: var(--track);
+  position: relative;
+  flex: 0 0 52px;
+  cursor: pointer;
+  margin: 6px 0;
+}
+
+.toggle input::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: 0 1px 3px rgba(43, 35, 48, 0.25);
+  transition: transform 0.15s;
+}
+
+.toggle input:checked {
+  background: var(--btnBg);
+}
+
+.toggle input:checked::after {
+  transform: translateX(20px);
+}
+
+.toggle input:disabled {
+  opacity: 0.5;
+}
+
 /* Нижний лист */
 .sheet {
   width: 100%;
