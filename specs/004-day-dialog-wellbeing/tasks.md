@@ -22,18 +22,18 @@ description: "Task list for feature 004-day-dialog-wellbeing"
 
 ## Phase 3: UI (US1, US2, US3)
 
-- [ ] T006 [US3] Replace `src/ui/components/PeriodSheet.tsx` with `src/ui/components/DayDialog.tsx`: title = date, period actions (with 003 delete confirmation), then «Самочувствие» / «Заметки» per `extras`, then «Отмена»; extras open the existing `SymptomPicker` / `NoteEditor`; update `src/ui/components/DaySheets.tsx`
-- [ ] T007 [US3] Update `src/ui/screens/CalendarScreen.tsx`: tap opens the dialog when `dayDialogFor(...).opens`; otherwise only selects
-- [ ] T008 [US1] Update `src/ui/components/DayCard.tsx`: remove «Симптомы»/«Заметка» buttons; phase line under the title via `cardPhase`; `src/ui/components/EntrySummary.tsx` shows only `visibleEntryParts`
-- [ ] T009 [US2] `src/hooks/useForecast.ts`: load day entries and build `ctx.entries` via `visibleEntryDates`; `src/ui/components/Legend.tsx`: «Есть записи» only if at least one toggle is on
-- [ ] T010 [US2] `src/ui/screens/SettingsScreen.tsx`: block «Записи дня» with switches «Самочувствие» and «Заметки» (`showWellbeing`, `showNotes`, ≥ 44 px)
-- [ ] T011 [US2] Rename «Симптомы» → «Самочувствие» in the UI (`SymptomPicker` legend and any remaining labels); verify `grep "Симптомы" src/ui` is empty
+- [X] T006 [US3] Replace `src/ui/components/PeriodSheet.tsx` with `src/ui/components/DayDialog.tsx`: title = date, period actions (with 003 delete confirmation), then «Самочувствие» / «Заметки» per `extras`, then «Отмена»; extras open the existing `SymptomPicker` / `NoteEditor`; update `src/ui/components/DaySheets.tsx`
+- [X] T007 [US3] Update `src/ui/screens/CalendarScreen.tsx`: tap opens the dialog when `dayDialogFor(...).opens`; otherwise only selects
+- [X] T008 [US1] Update `src/ui/components/DayCard.tsx`: remove «Симптомы»/«Заметка» buttons; phase line under the title via `cardPhase`; `src/ui/components/EntrySummary.tsx` shows only `visibleEntryParts`
+- [X] T009 [US2] `src/hooks/useForecast.ts`: load day entries and build `ctx.entries` via `visibleEntryDates`; `src/ui/components/Legend.tsx`: «Есть записи» only if at least one toggle is on
+- [X] T010 [US2] `src/ui/screens/SettingsScreen.tsx`: block «Записи дня» with switches «Самочувствие» and «Заметки» (`showWellbeing`, `showNotes`, ≥ 44 px)
+- [X] T011 [US2] Rename «Симптомы» → «Самочувствие» in the UI (`SymptomPicker` legend and any remaining labels); verify `grep "Симптомы" src/ui` is empty
 
 ## Phase 4: Docs & release
 
-- [ ] T012 [P] Update `docs/design/design.md` (card with phase, dialog, «Записи дня», legend), `specs/001-cycle-calendar` (spec FR-006/FR-007/FR-010–FR-012/US3, data-model Settings, backup-format `schemaVersion` 2, quickstart), `specs/003-calendar-tap-actions` (spec FR-002/FR-004, dialog title, quickstart)
-- [ ] T013 Run `npm test`, `npm run build`, staged-diff check (no BOM/mojibake); verify quickstart 1–8 in the browser
-- [ ] T014 Merge into `main` and `git push origin main` (CLAUDE.md; worker not changed)
+- [X] T012 [P] Update `docs/design/design.md` (card with phase, dialog, «Записи дня», legend), `specs/001-cycle-calendar` (spec FR-006/FR-007/FR-010–FR-012/US3, data-model Settings, backup-format `schemaVersion` 2, quickstart), `specs/003-calendar-tap-actions` (spec FR-002/FR-004, dialog title, quickstart)
+- [X] T013 Run `npm test`, `npm run build`, staged-diff check (no BOM/mojibake); verify quickstart 1–8 in the browser
+- [X] T014 Merge into `main` and `git push origin main` (CLAUDE.md; worker not changed)
 
 ## Dependencies
 

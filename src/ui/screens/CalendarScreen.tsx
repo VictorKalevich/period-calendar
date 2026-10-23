@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { cardPhase, dayDialogFor } from '../../domain/dayDialog';
 import { dayInfo } from '../../domain/forecast';
 import type { DayInfo, LocalDate } from '../../domain/types';
 import { useForecast } from '../../hooks/useForecast';
@@ -19,20 +20,23 @@ export function CalendarScreen() {
   const [sheet, setSheet] = useState<DaySheet>(null);
 
   const ctx = state?.ctx;
-  const today = ctx?.today;
-  const day = selected ?? today ?? null;
+  const day = selected ?? ctx?.today ?? null;
   const entry = useLiveQuery(() => (day ? getDayEntry(day) : undefined), [day]);
   const getInfo = useCallback((date: LocalDate) => dayInfo(date, ctx!), [ctx]);
-  // Сегодня и прошедшие дни — сразу диалог «Месячные»; будущие — только выбор (003 FR-002, FR-003).
+  // Нажатие выбирает день и открывает диалог, если в нём есть кнопки (003 FR-002, 004 FR-006/FR-007).
   const onSelect = useCallback(
     (info: DayInfo) => {
       setSelected(info.date);
-      if (today && info.date <= today) setSheet('period');
+      if (!ctx) return;
+      const periodLength = ctx.forecast?.periodLength ?? ctx.settings.defaultPeriodLength;
+      if (dayDialogFor(info.date, ctx.today, ctx.periods, periodLength, ctx.settings).opens) setSheet('day');
     },
-    [today],
+    [ctx],
   );
 
   if (!state || !ctx || !day) return null;
+  const info = getInfo(day);
+  const { showWellbeing, showNotes } = ctx.settings;
 
   return (
     <>
@@ -44,12 +48,12 @@ export function CalendarScreen() {
         onSelect={onSelect}
         banner={<StatusBanner summary={state.summary} />}
       />
-      <Legend />
-      <DayCard info={getInfo(day)} onSymptoms={() => setSheet('symptoms')} onNote={() => setSheet('note')}>
-        <EntrySummary entry={entry} />
+      <Legend showEntries={showWellbeing || showNotes} />
+      <DayCard info={info} phase={cardPhase(info, ctx.forecast)}>
+        <EntrySummary entry={entry} settings={ctx.settings} />
       </DayCard>
       <Disclaimer />
-      <DaySheets which={sheet} onClose={() => setSheet(null)} date={day} ctx={ctx} entry={entry} />
+      <DaySheets which={sheet} onChange={setSheet} date={day} ctx={ctx} entry={entry} />
     </>
   );
 }

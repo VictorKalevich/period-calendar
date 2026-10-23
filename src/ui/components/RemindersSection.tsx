@@ -11,7 +11,7 @@ import {
 } from '../../push/subscribe';
 import { syncReminders } from '../../push/sync';
 import { useLiveQuery } from '../../hooks/useLiveQuery';
-import { getPushState, saveSettings } from '../../storage/repository';
+import { getPushState, updateSettings } from '../../storage/repository';
 
 /** Push-напоминания (US4, FR-022–FR-025). */
 export function RemindersSection({ settings }: { settings: Settings }) {
@@ -32,7 +32,7 @@ export function RemindersSection({ settings }: { settings: Settings }) {
 
   const toggle = async (patch: Partial<Settings>) => {
     const next = { ...settings, ...patch };
-    await saveSettings(next);
+    await updateSettings(patch);
     if (!next.remindPeriod && !next.remindOvulation) await disableReminders();
     else if (!subscribed && permission !== 'denied') await enable();
   };

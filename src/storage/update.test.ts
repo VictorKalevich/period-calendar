@@ -11,7 +11,14 @@ describe('app update', () => {
     await db.open();
     await v1.savePeriods([{ id: 'a', start: '2026-09-27' as LocalDate, end: '2026-10-01' as LocalDate, endEstimated: false }]);
     await v1.saveDayEntry({ date: '2026-10-12' as LocalDate, symptoms: ['headache'], mood: 'calm', note: 'заметка' });
-    await v1.saveSettings({ defaultCycleLength: 30, defaultPeriodLength: 4, remindPeriod: false, remindOvulation: true });
+    await v1.saveSettings({
+      defaultCycleLength: 30,
+      defaultPeriodLength: 4,
+      remindPeriod: false,
+      remindOvulation: true,
+      showWellbeing: false,
+      showNotes: true,
+    });
     db.close();
 
     // «Новая сборка» — модули загружаются заново и открывают существующую базу.

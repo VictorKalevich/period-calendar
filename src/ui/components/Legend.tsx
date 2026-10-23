@@ -11,10 +11,12 @@ const ITEMS = [
   { key: 'entry', label: 'Есть записи' },
 ] as const;
 
-export function Legend() {
+/** `showEntries` — пункт «Есть записи», только если включено «Самочувствие» или «Заметки» (004 FR-011). */
+export function Legend({ showEntries }: { showEntries: boolean }) {
+  const items = showEntries ? ITEMS : ITEMS.filter((i) => i.key !== 'entry');
   return (
     <ul className="legend" aria-label="Обозначения">
-      {ITEMS.map(({ key, label }) => (
+      {items.map(({ key, label }) => (
         <li key={key} className="legend__item">
           {key === 'ovulation' ? (
             <Crown size={14} />

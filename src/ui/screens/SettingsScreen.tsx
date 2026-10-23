@@ -1,6 +1,6 @@
 import { CYCLE_LENGTH_RANGE, PERIOD_LENGTH_RANGE, type Settings } from '../../domain/types';
 import { useLiveQuery } from '../../hooks/useLiveQuery';
-import { getDevMode, getSettings, saveSettings } from '../../storage/repository';
+import { getDevMode, getSettings, updateSettings } from '../../storage/repository';
 import { BackupSection } from '../components/BackupSection';
 import { DevSection } from '../components/DevSection';
 import { RemindersSection } from '../components/RemindersSection';
@@ -11,7 +11,7 @@ export function SettingsScreen() {
   const settings = useLiveQuery(getSettings, []);
   const devMode = useLiveQuery(getDevMode, []);
   if (!settings) return null;
-  const update = (patch: Partial<Settings>) => saveSettings({ ...settings, ...patch });
+  const update = (patch: Partial<Settings>) => updateSettings(patch);
 
   return (
     <>
@@ -38,6 +38,34 @@ export function SettingsScreen() {
           unit="дн."
           onChange={(v) => update({ defaultPeriodLength: v })}
         />
+      </section>
+
+      <section className="card settings-card" aria-labelledby="entries-title">
+        <h2 id="entries-title" className="t-card-title settings-card__title">
+          Записи дня
+        </h2>
+        <p className="t-caption settings-card__text">
+          Включите, чтобы отмечать самочувствие и писать заметки в диалоге дня. Выключение ничего не удаляет —
+          записи просто скрываются.
+        </p>
+        <label className="toggle">
+          <span>Самочувствие</span>
+          <input
+            type="checkbox"
+            role="switch"
+            checked={settings.showWellbeing}
+            onChange={(e) => update({ showWellbeing: e.target.checked })}
+          />
+        </label>
+        <label className="toggle">
+          <span>Заметки</span>
+          <input
+            type="checkbox"
+            role="switch"
+            checked={settings.showNotes}
+            onChange={(e) => update({ showNotes: e.target.checked })}
+          />
+        </label>
       </section>
 
       <RemindersSection settings={settings} />

@@ -1,32 +1,38 @@
+import { dayDialogFor } from '../../domain/dayDialog';
 import type { DayContext, DayEntry, LocalDate } from '../../domain/types';
+import { DayDialog } from './DayDialog';
 import { NoteEditor } from './NoteEditor';
-import { PeriodSheet } from './PeriodSheet';
 import { SymptomPicker } from './SymptomPicker';
 
-export type DaySheet = 'period' | 'symptoms' | 'note' | null;
+export type DaySheet = 'day' | 'symptoms' | 'note' | null;
 
 interface Props {
   which: DaySheet;
-  onClose: () => void;
+  onChange: (which: DaySheet) => void;
   date: LocalDate;
   ctx: DayContext;
   entry: DayEntry | undefined;
 }
 
-/** Листы действий для дня: «Месячные», «Симптомы», «Заметка». */
-export function DaySheets({ which, onClose, date, ctx, entry }: Props) {
+/** Листы дня: диалог по нажатию на дату и открываемые из него «Самочувствие» и «Заметки». */
+export function DaySheets({ which, onChange, date, ctx, entry }: Props) {
+  const periodLength = ctx.forecast?.periodLength ?? ctx.settings.defaultPeriodLength;
+  const dialog = dayDialogFor(date, ctx.today, ctx.periods, periodLength, ctx.settings);
+  const close = () => onChange(null);
   return (
     <>
-      <PeriodSheet
-        open={which === 'period'}
-        onClose={onClose}
-        date={date}
-        today={ctx.today}
-        periods={ctx.periods}
-        periodLength={ctx.forecast?.periodLength ?? ctx.settings.defaultPeriodLength}
+      <DayDialog
+        open={which === 'day'}
+        // Переход «диалог дня → Самочувствие/Заметки» закрывает <dialog>; его событие close
+        // не должно сбрасывать уже открытый следующий лист.
+        onClose={() => {
+          if (which === 'day') close();
+        }}
+        dialog={dialog}
+        onExtra={(extra) => onChange(extra === 'wellbeing' ? 'symptoms' : 'note')}
       />
-      <SymptomPicker open={which === 'symptoms'} onClose={onClose} date={date} entry={entry} />
-      <NoteEditor open={which === 'note'} onClose={onClose} date={date} entry={entry} />
+      <SymptomPicker open={which === 'symptoms'} onClose={close} date={date} entry={entry} />
+      <NoteEditor open={which === 'note'} onClose={close} date={date} entry={entry} />
     </>
   );
 }

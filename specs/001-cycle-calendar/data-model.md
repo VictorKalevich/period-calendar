@@ -61,6 +61,8 @@
 | `defaultPeriodLength` | number | 5 | 2…10 |
 | `remindPeriod` | boolean | true | FR-024 |
 | `remindOvulation` | boolean | true | FR-024 |
+| `showWellbeing` | boolean | false | «Самочувствие» видно (004 FR-004); схема v2 |
+| `showNotes` | boolean | false | «Заметки» видны (004 FR-004); схема v2 |
 
 ### PushState — состояние подписки (одна запись, ключ `push`)
 
@@ -139,6 +141,7 @@ Settings; **не** включает PushState (токен — секрет ус�
 
 ## Версионирование схемы
 
-- `SCHEMA_VERSION = 1`. Каждая следующая версия добавляет `db.version(n)` и функцию
+- `SCHEMA_VERSION = 2` (v2 — фича 004: в настройки добавлены `showWellbeing`, `showNotes` = `false`
+  через `db.version(2).upgrade` и `migrations[1]`). Каждая следующая версия добавляет `db.version(n)` и функцию
   `migrate_{n-1}_to_{n}`, используемую и для IndexedDB, и для импорта старых резервных копий.
 - Миграции не удаляют неизвестные поля и идемпотентны (Конституция III).

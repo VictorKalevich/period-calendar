@@ -1,10 +1,12 @@
 import { moodLabel, symptomLabel } from '../../domain/catalog';
-import type { DayEntry } from '../../domain/types';
+import { visibleEntryParts } from '../../domain/dayDialog';
+import type { DayEntry, Settings } from '../../domain/types';
 
-/** Краткий показ записанного за день в карточке дня. */
-export function EntrySummary({ entry }: { entry: DayEntry | undefined }) {
-  if (!entry) return null;
-  const tags = [...entry.symptoms.map(symptomLabel), ...(entry.mood ? [moodLabel(entry.mood)] : [])];
+/** Краткий показ записанного за день в карточке дня — только включённые типы (004 FR-009). */
+export function EntrySummary({ entry, settings }: { entry: DayEntry | undefined; settings: Settings }) {
+  const parts = visibleEntryParts(entry, settings);
+  const tags = [...parts.symptoms.map(symptomLabel), ...(parts.mood ? [moodLabel(parts.mood)] : [])];
+  if (tags.length === 0 && !parts.note) return null;
   return (
     <div className="entry">
       {tags.length > 0 && (
@@ -16,7 +18,7 @@ export function EntrySummary({ entry }: { entry: DayEntry | undefined }) {
           ))}
         </ul>
       )}
-      {entry.note && <p className="t-body entry__note">{entry.note}</p>}
+      {parts.note && <p className="t-body entry__note">{parts.note}</p>}
     </div>
   );
 }

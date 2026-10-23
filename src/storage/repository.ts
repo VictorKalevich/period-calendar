@@ -70,6 +70,17 @@ export async function saveSettings(settings: Settings): Promise<void> {
   await db.kv.put({ key: SETTINGS_KEY, value: settings });
 }
 
+/**
+ * Меняет часть настроек поверх актуально сохранённых (в одной транзакции), чтобы быстрые
+ * переключения подряд не затирали друг друга.
+ */
+export async function updateSettings(patch: Partial<Settings>): Promise<void> {
+  await db.transaction('rw', db.kv, async () => {
+    const current = await getSettings();
+    await db.kv.put({ key: SETTINGS_KEY, value: { ...current, ...patch } });
+  });
+}
+
 /** Скрытый режим разработчика — только на устройстве, в резервную копию не входит (002 FR-003). */
 export async function getDevMode(): Promise<boolean> {
   return (await db.kv.get(DEV_MODE_KEY))?.value === true;

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { formatDayMonthRu } from '../../domain/dates';
-import type { DayInfo, Probability } from '../../domain/types';
+import { PHASE_LABELS, type DayInfo, type Phase, type Probability } from '../../domain/types';
 
 const LEVEL: Record<Probability, { label: string; cls: string }> = {
   high: { label: 'Высокая', cls: 'pill pill--violet' },
@@ -20,16 +20,16 @@ export function explainDay(info: DayInfo): string {
 
 interface Props {
   info: DayInfo;
-  onSymptoms?: () => void;
-  onNote?: () => void;
+  /** Фаза цикла для карточки (004 FR-001); null — не показывать (задержка, нет данных). */
+  phase: Phase | null;
   children?: ReactNode;
 }
 
 /**
- * Карточка выбранного дня под календарём (design.md «Экран „Календарь“», п. 5).
- * «Месячные» открываются нажатием на дату (003 FR-002), отдельной кнопки нет (FR-004).
+ * Карточка выбранного дня под календарём (design.md «Экран „Календарь“», п. 5): дата, день цикла,
+ * вероятность и фаза. Действия с днём — в диалоге по нажатию на дату (003, 004).
  */
-export function DayCard({ info, onSymptoms, onNote, children }: Props) {
+export function DayCard({ info, phase, children }: Props) {
   const level = info.probability ? LEVEL[info.probability] : null;
   return (
     <section className="card day-card" aria-label="Выбранный день">
@@ -39,16 +39,9 @@ export function DayCard({ info, onSymptoms, onNote, children }: Props) {
         </h2>
         {level && <span className={level.cls}>{level.label}</span>}
       </div>
+      {phase && <p className="t-caption day-card__phase">{PHASE_LABELS[phase]}</p>}
       <p className="t-caption day-card__text">{explainDay(info)}</p>
       {children}
-      <div className="day-card__actions">
-        <button type="button" className="pill-btn" onClick={onSymptoms} disabled={!onSymptoms}>
-          Симптомы
-        </button>
-        <button type="button" className="pill-btn" onClick={onNote} disabled={!onNote}>
-          Заметка
-        </button>
-      </div>
     </section>
   );
 }

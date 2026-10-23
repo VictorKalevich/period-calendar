@@ -5,7 +5,7 @@
 ```json
 {
   "format": "cycle-calendar-backup",
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "exportedAt": "2026-10-23T10:15:00.000Z",
   "data": {
     "periods": [{ "id": "6f1c…", "start": "2026-09-28", "end": "2026-10-02", "endEstimated": false }],
@@ -14,11 +14,16 @@
       "defaultCycleLength": 28,
       "defaultPeriodLength": 5,
       "remindPeriod": true,
-      "remindOvulation": true
+      "remindOvulation": true,
+      "showWellbeing": false,
+      "showNotes": false
     }
   }
 }
 ```
+
+`schemaVersion: 2` (фича 004) добавляет `showWellbeing` и `showNotes` (boolean, обязательны в v2).
+Копии `schemaVersion: 1` импортируются через `migrations[1]` — оба переключателя получают `false`.
 
 ## Правила импорта
 

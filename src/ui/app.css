@@ -64,21 +64,6 @@
   color: var(--ink);
 }
 
-.pill-btn {
-  min-height: 44px;
-  padding: 0 16px;
-  border-radius: 22px;
-  background: var(--bg);
-  border: 1px solid var(--line);
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--ink);
-}
-
-.pill-btn--rose {
-  color: var(--roseText);
-}
-
 .btn {
   min-height: 52px;
   padding: 0 20px;
@@ -305,18 +290,15 @@
 }
 
 .day-card__title,
+.day-card__phase,
 .day-card__text {
   margin: 0;
 }
 
-.day-card__actions {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-}
-
-.day-card__actions .pill-btn {
-  padding: 0 8px;
+/* Фаза цикла под заголовком (004 FR-001) */
+.day-card__phase {
+  margin-top: -4px;
+  font-weight: 700;
 }
 
 /* Плашка «Сегодня …» */

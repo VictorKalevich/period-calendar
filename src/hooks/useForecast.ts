@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { visibleEntryDates } from '../domain/dayDialog';
 import { buildForecast, todaySummary } from '../domain/forecast';
 import type { DayContext, TodaySummary } from '../domain/types';
 import { db } from '../storage/db';
@@ -16,12 +17,13 @@ export function useForecast(): ForecastState | null {
   const today = useToday();
   const periods = useLiveQuery(getPeriods, []);
   const settings = useLiveQuery(getSettings, []);
-  const entryDates = useLiveQuery(() => db.days.toCollection().primaryKeys(), []);
+  const entries = useLiveQuery(() => db.days.toArray(), []);
 
   return useMemo(() => {
-    if (!periods || !settings || !entryDates) return null;
+    if (!periods || !settings || !entries) return null;
     const forecast = buildForecast({ periods, settings, today });
-    const ctx: DayContext = { forecast, periods, settings, entries: new Set(entryDates), today };
+    // Индикатор записи — только по включённым типам (004 FR-010).
+    const ctx: DayContext = { forecast, periods, settings, entries: visibleEntryDates(entries, settings), today };
     return { ctx, summary: todaySummary(ctx) };
-  }, [periods, settings, entryDates, today]);
+  }, [periods, settings, entries, today]);
 }

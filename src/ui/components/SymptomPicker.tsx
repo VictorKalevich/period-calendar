@@ -12,7 +12,7 @@ interface Props {
   entry: DayEntry | undefined;
 }
 
-/** Симптомы (несколько) и настроение (одно) — FR-010, FR-011. */
+/** «Самочувствие»: симптомы (несколько) и настроение (одно) — FR-010, FR-011; 004 FR-003. */
 export function SymptomPicker({ open, onClose, date, entry }: Props) {
   const [symptoms, setSymptoms] = useState<SymptomId[]>([]);
   const [mood, setMood] = useState<MoodId | null>(null);
@@ -34,7 +34,7 @@ export function SymptomPicker({ open, onClose, date, entry }: Props) {
   return (
     <BottomSheet open={open} onClose={onClose} title={`Самочувствие · ${formatDayMonthRu(date)}`}>
       <fieldset className="chips">
-        <legend className="t-caption chips__legend">Симптомы</legend>
+        <legend className="t-caption chips__legend">Самочувствие</legend>
         {SYMPTOMS.map((s) => (
           <button
             key={s.id}

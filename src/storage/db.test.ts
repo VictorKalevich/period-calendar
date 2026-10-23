@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { db, SCHEMA_VERSION } from './db';
-import { getPeriods, getSettings, savePeriods, saveSettings } from './repository';
+import { getPeriods, getSettings, savePeriods, saveSettings, updateSettings } from './repository';
 import { DEFAULT_SETTINGS, type LocalDate, type Period } from '../domain/types';
 
 beforeEach(async () => {
@@ -35,6 +35,13 @@ describe('settings', () => {
       showNotes: false,
     });
     expect(DEFAULT_SETTINGS.defaultCycleLength).toBe(28);
+  });
+
+  it('applies quick consecutive patches without losing either (004)', async () => {
+    await Promise.all([updateSettings({ showWellbeing: true }), updateSettings({ showNotes: true })]);
+    expect(await getSettings()).toMatchObject({ showWellbeing: true, showNotes: true });
+    await updateSettings({ showNotes: false });
+    expect(await getSettings()).toMatchObject({ showWellbeing: true, showNotes: false, defaultCycleLength: 28 });
   });
 
   it('persists saved settings', async () => {
