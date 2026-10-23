@@ -2,7 +2,17 @@ import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { applyBackup, buildBackup, parseBackup, BACKUP_FORMAT } from './backup';
 import { db, SCHEMA_VERSION } from './db';
-import { getDayEntries, getPeriods, getPushState, getSettings, saveDayEntry, savePeriods, savePushState, saveSettings } from './repository';
+import {
+  getDayEntries,
+  getPeriods,
+  getPushState,
+  getSettings,
+  saveDayEntry,
+  savePeriods,
+  savePushState,
+  saveSettings,
+  setDevMode,
+} from './repository';
 import { DEFAULT_SETTINGS, type LocalDate, type Period } from '../domain/types';
 
 const ld = (s: string) => s as LocalDate;
@@ -57,6 +67,12 @@ describe('buildBackup', () => {
       },
     });
     expect(JSON.stringify(b)).not.toContain('secret');
+  });
+
+  it('does not export the dev mode flag (FR-003)', async () => {
+    await seed();
+    await setDevMode(true);
+    expect(JSON.stringify(await buildBackup(new Date()))).not.toMatch(/devMode/i);
   });
 
   it('round-trips through parse and apply', async () => {

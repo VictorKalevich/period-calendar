@@ -49,6 +49,11 @@ Cloudflare Worker. Хранит только push-подписку, список
 Удалить подписку и все напоминания (выключение обоих напоминаний или отзыв разрешения).
 Ответы: `204`, `401`, `404`.
 
+## `POST /v1/clients/{clientId}/test`
+
+Тестовый push для режима разработчика (фича 002) — см.
+[002 contracts/push-worker-test-api.md](../../002-dev-mode/contracts/push-worker-test-api.md).
+
 ## Cron `0 * * * *`
 
 Для каждой записи `sub:{clientId}` в KV:

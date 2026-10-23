@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from './db';
-import { getDayEntry, saveDayEntry } from './repository';
+import { getDayEntry, getDevMode, saveDayEntry, setDevMode } from './repository';
 import type { DayEntry, LocalDate, SymptomId } from '../domain/types';
 
 const date = '2026-10-23' as LocalDate;
@@ -48,5 +48,15 @@ describe('saveDayEntry', () => {
 
   it('rejects an invalid date', async () => {
     await expect(saveDayEntry(entry({ date: '2026-02-30' as LocalDate, note: 'x' }))).rejects.toThrow();
+  });
+});
+
+describe('dev mode flag', () => {
+  it('is off by default and persists when switched', async () => {
+    expect(await getDevMode()).toBe(false);
+    await setDevMode(true);
+    expect(await getDevMode()).toBe(true);
+    await setDevMode(false);
+    expect(await getDevMode()).toBe(false);
   });
 });

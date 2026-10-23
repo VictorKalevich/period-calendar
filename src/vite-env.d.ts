@@ -7,6 +7,9 @@ interface ImportMetaEnv {
   readonly VITE_PUSH_API_URL?: string;
 }
 
+/** Версия приложения из package.json (vite.config.ts → define). */
+declare const __APP_VERSION__: string;
+
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }

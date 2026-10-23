@@ -4,6 +4,7 @@ import { DEFAULT_SETTINGS, type DayEntry, type LocalDate, type Period, type Sett
 
 const SETTINGS_KEY = 'settings';
 const PUSH_KEY = 'push';
+const DEV_MODE_KEY = 'devMode';
 
 export interface PushState {
   clientId: string;
@@ -52,6 +53,15 @@ export async function getSettings(): Promise<Settings> {
 
 export async function saveSettings(settings: Settings): Promise<void> {
   await db.kv.put({ key: SETTINGS_KEY, value: settings });
+}
+
+/** Скрытый режим разработчика — только на устройстве, в резервную копию не входит (002 FR-003). */
+export async function getDevMode(): Promise<boolean> {
+  return (await db.kv.get(DEV_MODE_KEY))?.value === true;
+}
+
+export async function setDevMode(on: boolean): Promise<void> {
+  await db.kv.put({ key: DEV_MODE_KEY, value: on });
 }
 
 export async function getPushState(): Promise<PushState | undefined> {

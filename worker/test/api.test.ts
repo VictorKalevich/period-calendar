@@ -158,6 +158,91 @@ describe('CORS', () => {
   });
 });
 
+describe('POST /v1/clients/:id/test', () => {
+  const testReq = (opts: { token?: string | null; id?: string } = {}) => {
+    const headers: Record<string, string> = { Origin: ORIGIN };
+    if (opts.token !== null) headers.Authorization = `Bearer ${opts.token ?? TOKEN}`;
+    return new Request(`https://cycle-push.example.workers.dev/v1/clients/${opts.id ?? ID}/test`, { method: 'POST', headers });
+  };
+  const ok = () => vi.fn(async (_url: string, _init: RequestInit) => new Response(null, { status: 201 }));
+  const later = reminder('period:2026-11-01', '2026-11-01T09:00:00.000Z');
+
+  it('sends the fixed test notification to the stored subscription (204)', async () => {
+    await put({ subscription, reminders: [later] });
+    const fetcher = ok();
+    const res = await handleRequest(testReq(), env, NOW, fetcher);
+    expect(res.status).toBe(204);
+    expect(res.headers.get('Access-Control-Allow-Origin')).toBe(ORIGIN);
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(fetcher.mock.calls[0]![0]).toBe(subscription.endpoint);
+    const rec = JSON.parse(kv.store.get(`sub:${ID}`)!) as StoredRecord;
+    expect(rec.lastTestAt).toBe(new Date(NOW).toISOString());
+    expect(rec.reminders).toEqual([later]);
+  });
+
+  it('uses the server-side texts', async () => {
+    const { TEST_NOTIFICATION } = await import('../src/index');
+    expect(TEST_NOTIFICATION).toEqual({ title: 'Календарь цикла', body: 'Уведомления работают', id: 'test' });
+  });
+
+  it('rejects a wrong or missing token without sending (401)', async () => {
+    await put({ subscription, reminders: [] });
+    const before = kv.store.get(`sub:${ID}`);
+    const fetcher = ok();
+    expect((await handleRequest(testReq({ token: 'wrong_token_value_0000000' }), env, NOW, fetcher)).status).toBe(401);
+    expect((await handleRequest(testReq({ token: null }), env, NOW, fetcher)).status).toBe(401);
+    expect(fetcher).not.toHaveBeenCalled();
+    expect(kv.store.get(`sub:${ID}`)).toBe(before);
+  });
+
+  it('returns 404 for an unknown client and 400 for a bad id', async () => {
+    const fetcher = ok();
+    expect((await handleRequest(testReq(), env, NOW, fetcher)).status).toBe(404);
+    expect((await handleRequest(testReq({ id: 'nope' }), env, NOW, fetcher)).status).toBe(400);
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
+  it('allows at most one attempt per minute (429 with Retry-After)', async () => {
+    await put({ subscription, reminders: [] });
+    await handleRequest(testReq(), env, NOW, vi.fn(async () => new Response(null, { status: 503 })));
+    const fetcher = ok();
+    const second = await handleRequest(testReq(), env, NOW + 20_000, fetcher);
+    expect(second.status).toBe(429);
+    expect(second.headers.get('Retry-After')).toBe('40');
+    expect(fetcher).not.toHaveBeenCalled();
+    expect((await handleRequest(testReq(), env, NOW + 60_000, fetcher)).status).toBe(204);
+  });
+
+  it('deletes the record when the subscription is gone (410)', async () => {
+    await put({ subscription, reminders: [] });
+    const res = await handleRequest(testReq(), env, NOW, vi.fn(async () => new Response(null, { status: 410 })));
+    expect(res.status).toBe(410);
+    expect(kv.store.has(`sub:${ID}`)).toBe(false);
+  });
+
+  it('reports other push failures as 502', async () => {
+    await put({ subscription, reminders: [] });
+    expect((await handleRequest(testReq(), env, NOW, vi.fn(async () => new Response(null, { status: 500 })))).status).toBe(502);
+  });
+
+  it('keeps lastTestAt when the schedule is replaced by PUT', async () => {
+    await put({ subscription, reminders: [] });
+    await handleRequest(testReq(), env, NOW, ok());
+    await put({ subscription, reminders: [later] });
+    expect((JSON.parse(kv.store.get(`sub:${ID}`)!) as StoredRecord).lastTestAt).toBe(new Date(NOW).toISOString());
+  });
+
+  it('allows POST in the CORS preflight', async () => {
+    const res = await handleRequest(
+      new Request(`https://cycle-push.example.workers.dev/v1/clients/${ID}/test`, { method: 'OPTIONS', headers: { Origin: ORIGIN } }),
+      env,
+      NOW,
+    );
+    expect(res.status).toBe(204);
+    expect(res.headers.get('Access-Control-Allow-Methods')).toContain('POST');
+  });
+});
+
 describe('scheduled', () => {
   const due = reminder('ovulation:2026-10-23', '2026-10-23T09:00:00.000Z');
   const later = reminder('period:2026-11-01', '2026-11-01T09:00:00.000Z');

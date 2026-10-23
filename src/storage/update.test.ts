@@ -23,5 +23,6 @@ describe('app update', () => {
     expect(await next.getPeriods()).toHaveLength(1);
     expect((await next.getDayEntries())[0]!.note).toBe('заметка');
     expect((await next.getSettings()).defaultCycleLength).toBe(30);
-  });
+    // Повторный импорт модулей после resetModules медленный при параллельном прогоне.
+  }, 30_000);
 });

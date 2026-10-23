@@ -17,10 +17,16 @@ export interface StoredRecord {
   tokenHash: string;
   subscription: PushSubscriptionJSON;
   reminders: ReminderJSON[];
+  /** Последняя попытка тестовой отправки (002), для ограничения частоты. */
+  lastTestAt?: string;
 }
 
+/** Тексты тестового уведомления задаёт сервер, клиент их не передаёт (002 FR-005). */
+export const TEST_NOTIFICATION = { title: 'Календарь цикла', body: 'Уведомления работают', id: 'test' } as const;
+
 const STALE_MS = 24 * 3600 * 1000;
-const PATH_RE = /^\/v1\/clients\/([^/]+)$/;
+const TEST_INTERVAL_MS = 60 * 1000;
+const PATH_RE = /^\/v1\/clients\/([^/]+)(\/test)?$/;
 
 async function sha256Hex(s: string): Promise<string> {
   const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)));
@@ -31,7 +37,7 @@ function corsHeaders(request: Request, env: Env): Record<string, string> {
   if (request.headers.get('Origin') !== env.ALLOWED_ORIGIN) return {};
   return {
     'Access-Control-Allow-Origin': env.ALLOWED_ORIGIN,
-    'Access-Control-Allow-Methods': 'PUT, DELETE',
+    'Access-Control-Allow-Methods': 'PUT, DELETE, POST',
     'Access-Control-Allow-Headers': 'Authorization, Content-Type',
     'Access-Control-Max-Age': '86400',
     Vary: 'Origin',
@@ -40,16 +46,24 @@ function corsHeaders(request: Request, env: Env): Record<string, string> {
 
 const bearer = (request: Request) => /^Bearer (.{16,200})$/.exec(request.headers.get('Authorization') ?? '')?.[1] ?? null;
 
-export async function handleRequest(request: Request, env: Env, now: number = Date.now()): Promise<Response> {
+export async function handleRequest(
+  request: Request,
+  env: Env,
+  now: number = Date.now(),
+  fetcher: Fetcher = fetch,
+): Promise<Response> {
   const cors = corsHeaders(request, env);
-  const reply = (status: number) => new Response(null, { status, headers: cors });
+  const reply = (status: number, extra: Record<string, string> = {}) =>
+    new Response(null, { status, headers: { ...cors, ...extra } });
 
   const match = PATH_RE.exec(new URL(request.url).pathname);
   if (request.method === 'OPTIONS') return reply(match ? 204 : 404);
   if (!match) return reply(404);
   const clientId = match[1]!;
+  const isTest = match[2] !== undefined;
   if (!isUuid(clientId)) return reply(400);
-  if (request.method !== 'PUT' && request.method !== 'DELETE') return reply(405);
+  const allowed = isTest ? ['POST'] : ['PUT', 'DELETE'];
+  if (!allowed.includes(request.method)) return reply(405);
 
   const token = bearer(request);
   if (!token) return reply(401);
@@ -57,6 +71,11 @@ export async function handleRequest(request: Request, env: Env, now: number = Da
   const existing = await env.SUBS.get<StoredRecord>(key, 'json');
   const tokenHash = await sha256Hex(token);
   if (existing && existing.tokenHash !== tokenHash) return reply(401);
+
+  if (isTest) {
+    if (!existing) return reply(404);
+    return sendTest(key, existing, env, now, fetcher, reply);
+  }
 
   if (request.method === 'DELETE') {
     if (!existing) return reply(404);
@@ -76,9 +95,46 @@ export async function handleRequest(request: Request, env: Env, now: number = Da
   const body = validatePutBody(json, now);
   if (!body) return reply(400);
 
-  const record: StoredRecord = { tokenHash, subscription: body.subscription, reminders: body.reminders };
+  const record: StoredRecord = {
+    tokenHash,
+    subscription: body.subscription,
+    reminders: body.reminders,
+    ...(existing?.lastTestAt ? { lastTestAt: existing.lastTestAt } : {}),
+  };
   await env.SUBS.put(key, JSON.stringify(record));
   return reply(204);
+}
+
+/** Тестовый push на подписку этого клиента, не чаще раза в минуту (002, contracts/push-worker-test-api.md). */
+async function sendTest(
+  key: string,
+  rec: StoredRecord,
+  env: Env,
+  now: number,
+  fetcher: Fetcher,
+  reply: (status: number, extra?: Record<string, string>) => Response,
+): Promise<Response> {
+  const last = rec.lastTestAt ? Date.parse(rec.lastTestAt) : NaN;
+  if (now - last < TEST_INTERVAL_MS) {
+    return reply(429, { 'Retry-After': String(Math.ceil((last + TEST_INTERVAL_MS - now) / 1000)) });
+  }
+  // Попытка засчитывается до отправки — ограничение действует и при неудачах push-сервиса.
+  await env.SUBS.put(key, JSON.stringify({ ...rec, lastTestAt: new Date(now).toISOString() }));
+
+  const vapid: VapidKeys = { privateJwk: env.VAPID_PRIVATE_KEY, publicKey: env.VAPID_PUBLIC_KEY, subject: env.VAPID_SUBJECT };
+  let status = 0;
+  try {
+    status = await sendPush(rec.subscription, TEST_NOTIFICATION, vapid, Math.floor(now / 1000), fetcher);
+  } catch {
+    status = 0;
+  }
+  if (status >= 200 && status < 300) return reply(204);
+  if (status === 404 || status === 410) {
+    await env.SUBS.delete(key);
+    return reply(410);
+  }
+  console.warn(`test push failed with status ${status}`);
+  return reply(502);
 }
 
 /** Cron: отправляет наступившие напоминания всем подпискам. */

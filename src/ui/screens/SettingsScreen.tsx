@@ -1,12 +1,15 @@
 import { CYCLE_LENGTH_RANGE, PERIOD_LENGTH_RANGE, type Settings } from '../../domain/types';
 import { useLiveQuery } from '../../hooks/useLiveQuery';
-import { getSettings, saveSettings } from '../../storage/repository';
+import { getDevMode, getSettings, saveSettings } from '../../storage/repository';
 import { BackupSection } from '../components/BackupSection';
+import { DevSection } from '../components/DevSection';
 import { RemindersSection } from '../components/RemindersSection';
 import { Stepper } from '../components/Stepper';
+import { VersionTapper } from '../components/VersionTapper';
 
 export function SettingsScreen() {
   const settings = useLiveQuery(getSettings, []);
+  const devMode = useLiveQuery(getDevMode, []);
   if (!settings) return null;
   const update = (patch: Partial<Settings>) => saveSettings({ ...settings, ...patch });
 
@@ -40,6 +43,10 @@ export function SettingsScreen() {
       <RemindersSection settings={settings} />
 
       <BackupSection />
+
+      {devMode && <DevSection />}
+
+      <VersionTapper devMode={devMode === true} />
     </>
   );
 }
