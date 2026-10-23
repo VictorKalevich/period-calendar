@@ -1,5 +1,7 @@
 import { db } from './db';
 import { isEmptyDayEntry, normalizeDayEntry } from '../domain/dayEntry';
+import { buildForecast } from '../domain/forecast';
+import { normalizePeriods } from '../domain/periods';
 import { DEFAULT_SETTINGS, type DayEntry, type LocalDate, type Period, type Settings } from '../domain/types';
 
 const SETTINGS_KEY = 'settings';
@@ -25,6 +27,19 @@ export async function savePeriods(periods: Period[]): Promise<void> {
     await db.periods.clear();
     await db.periods.bulkPut(periods);
   });
+}
+
+/**
+ * Приводит сохранённые месячные к инварианту «нет пересекающихся и соседних» (003 FR-016).
+ * Вызывается при запуске; пишет в базу, только если что-то объединилось.
+ */
+export async function normalizeStoredPeriods(today: LocalDate): Promise<boolean> {
+  const [periods, settings] = await Promise.all([getPeriods(), getSettings()]);
+  const periodLength = buildForecast({ periods, settings, today })?.periodLength ?? settings.defaultPeriodLength;
+  const normalized = normalizePeriods(periods, today, periodLength);
+  if (JSON.stringify(normalized) === JSON.stringify(periods)) return false;
+  await savePeriods(normalized);
+  return true;
 }
 
 export async function getDayEntry(date: LocalDate): Promise<DayEntry | undefined> {

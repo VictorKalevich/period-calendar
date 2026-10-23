@@ -1,4 +1,5 @@
 import { normalizeDayEntry } from '../domain/dayEntry';
+import { normalizePeriods, periodEnd } from '../domain/periods';
 import { diffDays, isLocalDate, toLocalDate } from '../domain/dates';
 import {
   CYCLE_LENGTH_RANGE,
@@ -63,10 +64,18 @@ function parsePeriods(input: unknown): Period[] | string {
     ids.add(id);
     out.push({ id, start, end, endEstimated });
   }
-  out.sort((a, b) => (a.start < b.start ? -1 : 1));
+  return out;
+}
+
+/**
+ * Импорт объединяет пересекающиеся и соседние месячные (003 FR-015); для оценки незакрытых —
+ * длина по умолчанию из файла. Пересечения, которые нельзя объединить (> 15 дней), — ошибка.
+ */
+function mergeImported(periods: Period[], periodLength: number): Period[] | string {
+  const out = normalizePeriods(periods, toLocalDate(new Date()), periodLength);
   for (let i = 1; i < out.length; i++) {
     const prev = out[i - 1]!;
-    if ((prev.end ?? prev.start) >= out[i]!.start) return `месячные пересекаются: ${prev.start} и ${out[i]!.start}`;
+    if (periodEnd(prev, periodLength) >= out[i]!.start) return `месячные пересекаются: ${prev.start} и ${out[i]!.start}`;
   }
   return out;
 }
@@ -120,12 +129,14 @@ export function parseBackup(text: string): { ok: true; value: ParsedBackup } | {
     return { ok: false, error: corrupted((e as Error).message) };
   }
 
-  const periods = parsePeriods(data.periods);
+  const settings = parseSettings(data.settings);
+  if (typeof settings === 'string') return { ok: false, error: corrupted(settings) };
+  const parsed = parsePeriods(data.periods);
+  if (typeof parsed === 'string') return { ok: false, error: corrupted(parsed) };
+  const periods = mergeImported(parsed, settings.defaultPeriodLength);
   if (typeof periods === 'string') return { ok: false, error: corrupted(periods) };
   const days = parseDays(data.days);
   if (typeof days === 'string') return { ok: false, error: corrupted(days) };
-  const settings = parseSettings(data.settings);
-  if (typeof settings === 'string') return { ok: false, error: corrupted(settings) };
 
   return { ok: true, value: { periods, days, settings, summary: { periods: periods.length, days: days.length } } };
 }

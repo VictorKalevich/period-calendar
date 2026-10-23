@@ -23,13 +23,18 @@ interface Props {
   periodLength: number;
 }
 
-/** Диалог «Месячные»: кнопки строго из periodActionsFor (003 FR-006), UI только рисует. */
+/**
+ * Диалог «Месячные»: кнопки строго из periodActionsFor (003 FR-006), UI только рисует.
+ * Действия с `confirm` («Удалить период») сначала спрашивают подтверждение (FR-007).
+ */
 export function PeriodSheet({ open, onClose, date, today, periods, periodLength }: Props) {
   const [error, setError] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState<PeriodAction | null>(null);
   const actions = periodActionsFor(date, today, periods, periodLength);
 
   const close = () => {
     setError(null);
+    setConfirming(null);
     onClose();
   };
 
@@ -43,21 +48,42 @@ export function PeriodSheet({ open, onClose, date, today, periods, periodLength 
     close();
   };
 
+  const title = confirming ? 'Удалить месячные?' : `Месячные · ${formatDayMonthRu(date)}`;
+
   return (
-    <BottomSheet open={open && actions.length > 0} onClose={close} title={`Месячные · ${formatDayMonthRu(date)}`}>
-      {actions.map((a, i) => (
-        <button key={a.kind} type="button" className={i === 0 ? 'btn btn--primary' : 'btn'} onClick={() => run(a)}>
-          {a.label}
-        </button>
-      ))}
-      {error && (
-        <p className="sheet__error" role="alert">
-          {error}
-        </p>
+    <BottomSheet open={open && actions.length > 0} onClose={close} title={title}>
+      {confirming ? (
+        <>
+          <p className="t-body sheet__note">{confirming.confirm}</p>
+          <button type="button" className="btn btn--primary" onClick={() => run(confirming)}>
+            Удалить
+          </button>
+          <button type="button" className="btn btn--ghost" onClick={() => setConfirming(null)}>
+            Отмена
+          </button>
+        </>
+      ) : (
+        <>
+          {actions.map((a, i) => (
+            <button
+              key={a.kind}
+              type="button"
+              className={i === 0 ? 'btn btn--primary' : 'btn'}
+              onClick={() => (a.confirm ? setConfirming(a) : run(a))}
+            >
+              {a.label}
+            </button>
+          ))}
+          {error && (
+            <p className="sheet__error" role="alert">
+              {error}
+            </p>
+          )}
+          <button type="button" className="btn btn--ghost" onClick={close}>
+            Отмена
+          </button>
+        </>
       )}
-      <button type="button" className="btn btn--ghost" onClick={close}>
-        Отмена
-      </button>
     </BottomSheet>
   );
 }

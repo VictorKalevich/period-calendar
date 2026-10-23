@@ -1,7 +1,15 @@
 import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from './db';
-import { getDayEntry, getDevMode, saveDayEntry, setDevMode } from './repository';
+import {
+  getDayEntry,
+  getDevMode,
+  getPeriods,
+  normalizeStoredPeriods,
+  saveDayEntry,
+  savePeriods,
+  setDevMode,
+} from './repository';
 import type { DayEntry, LocalDate, SymptomId } from '../domain/types';
 
 const date = '2026-10-23' as LocalDate;
@@ -48,6 +56,22 @@ describe('saveDayEntry', () => {
 
   it('rejects an invalid date', async () => {
     await expect(saveDayEntry(entry({ date: '2026-02-30' as LocalDate, note: 'x' }))).rejects.toThrow();
+  });
+});
+
+describe('normalizeStoredPeriods (003 FR-016)', () => {
+  it('merges adjacent stored periods once and reports whether it changed anything', async () => {
+    await savePeriods([
+      { id: 'a', start: '2026-10-01' as LocalDate, end: '2026-10-04' as LocalDate, endEstimated: false },
+      { id: 'b', start: '2026-10-05' as LocalDate, end: '2026-10-07' as LocalDate, endEstimated: false },
+      { id: 'c', start: '2026-10-29' as LocalDate, end: null, endEstimated: false },
+    ]);
+    expect(await normalizeStoredPeriods('2026-10-30' as LocalDate)).toBe(true);
+    expect(await getPeriods()).toEqual([
+      { id: 'a', start: '2026-10-01', end: '2026-10-07', endEstimated: false },
+      { id: 'c', start: '2026-10-29', end: null, endEstimated: false },
+    ]);
+    expect(await normalizeStoredPeriods('2026-10-30' as LocalDate)).toBe(false);
   });
 });
 

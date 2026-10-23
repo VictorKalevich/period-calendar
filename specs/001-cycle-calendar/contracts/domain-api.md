@@ -74,7 +74,8 @@ function cycleStats(cycles: Cycle[]): {
 // используется для автозакрытия предыдущего открытого периода (endEstimated = true)
 function markPeriodStart(periods: Period[], day: LocalDate, today: LocalDate,
                          periodLength: number): Result<Period[]>;
-function markPeriodEnd(periods: Period[], day: LocalDate, today: LocalDate): Result<Period[]>;
+function markPeriodEnd(periods: Period[], day: LocalDate, today: LocalDate,
+                       periodLength: number): Result<Period[]>; // результат нормализуется (003)
 function unmarkPeriodDay(periods: Period[], day: LocalDate): Period[];
 // movePeriodStart заменена фичей 003 на setPeriodStart и periodActionsFor —
 // см. specs/003-calendar-tap-actions/contracts/period-actions.md

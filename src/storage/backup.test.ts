@@ -119,7 +119,13 @@ describe('parseBackup', () => {
     ['period longer than 15 days', (f) => void (f.data.periods[0]!.end = '2026-08-16')],
     ['missing endEstimated', (f) => void delete (f.data.periods[0] as Partial<Period>).endEstimated],
     ['non-boolean endEstimated', (f) => void ((f.data.periods[0] as unknown as { endEstimated: string }).endEstimated = 'no')],
-    ['overlapping periods', (f) => void f.data.periods.push({ id: 'y', start: '2026-08-04', end: '2026-08-06', endEstimated: false })],
+    [
+      'overlapping periods that cannot be merged (> 15 days)',
+      (f) => {
+        f.data.periods[0]!.end = '2026-08-10';
+        f.data.periods.push({ id: 'y', start: '2026-08-08', end: '2026-08-17', endEstimated: false });
+      },
+    ],
     ['duplicate ids', (f) => void f.data.periods.push({ id: 'x', start: '2026-09-01', end: null, endEstimated: false })],
     ['cycle length out of range', (f) => void (f.data.settings.defaultCycleLength = 50)],
     ['period length out of range', (f) => void (f.data.settings.defaultPeriodLength = 1)],
@@ -128,6 +134,15 @@ describe('parseBackup', () => {
     ['duplicate day', (f) => void f.data.days.push({ ...f.data.days[0]! })],
     ['missing data', (f) => void delete (f as Partial<typeof f>).data],
   ];
+
+  it('merges adjacent and overlapping periods on import (003 FR-015)', () => {
+    const f = validFile();
+    f.data.periods.push({ id: 'y', start: '2026-08-06', end: '2026-08-08', endEstimated: false }); // вплотную к 1–5
+    f.data.periods.push({ id: 'z', start: '2026-08-08', end: '2026-08-09', endEstimated: true }); // перекрытие
+    const r = parseBackup(JSON.stringify(f));
+    expect(r.ok && r.value.periods).toEqual([{ id: 'x', start: '2026-08-01', end: '2026-08-09', endEstimated: true }]);
+    expect(r.ok && r.value.summary.periods).toBe(1);
+  });
 
   it.each(broken)('rejects %s', (_name, mutate) => {
     const f = validFile();
