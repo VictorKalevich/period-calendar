@@ -8,7 +8,7 @@
   "schemaVersion": 1,
   "exportedAt": "2026-10-23T10:15:00.000Z",
   "data": {
-    "periods": [{ "id": "6f1c…", "start": "2026-09-28", "end": "2026-10-02" }],
+    "periods": [{ "id": "6f1c…", "start": "2026-09-28", "end": "2026-10-02", "endEstimated": false }],
     "days": [{ "date": "2026-10-01", "symptoms": ["cramps"], "mood": "calm", "note": "" }],
     "settings": {
       "defaultCycleLength": 28,

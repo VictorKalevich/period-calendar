@@ -6,6 +6,7 @@
 ```ts
 type LocalDate = string & { readonly __brand: 'LocalDate' }; // 'YYYY-MM-DD'
 type Probability = 'low' | 'medium' | 'high';
+type Confidence = 'normal' | 'low';
 
 // dates.ts
 function toLocalDate(d: Date): LocalDate;
@@ -14,9 +15,13 @@ function diffDays(a: LocalDate, b: LocalDate): number;      // a − b в кал
 function monthGrid(year: number, month: number): LocalDate[]; // 35 или 42 дня, с понедельника
 
 // cycles.ts
-function buildCycles(periods: Period[], settings: Settings): Cycle[];
-function averageCycleLength(cycles: Cycle[], fallback: number): number;  // последние 6, без выбросов
-function averagePeriodLength(cycles: Cycle[], fallback: number): number; // последние 6 с концом
+function buildCycles(periods: Period[]): Cycle[];
+// последние 6 завершённых не-выбросов; null — таких нет
+function averageCycleLength(cycles: Cycle[]): number | null;
+// последние 6 периодов с концом и endEstimated = false; null — таких нет
+function averagePeriodLength(cycles: Cycle[]): number | null;
+// 'low', если не-выбросов < 3 или max − min длин, учтённых в среднем, > 7
+function forecastConfidence(cycles: Cycle[]): Confidence;
 
 // forecast.ts
 function buildForecast(input: {
@@ -25,9 +30,19 @@ function buildForecast(input: {
   today: LocalDate;
   horizonMonths?: number; // по умолчанию 12
 }): Forecast | null;     // null — нет ни одной отметки
+// Forecast.cycleLength  = averageCycleLength ?? settings.defaultCycleLength
+// Forecast.periodLength = averagePeriodLength ?? settings.defaultPeriodLength
+// Forecast.confidence   = forecastConfidence(cycles)
 
-function dayInfo(date: LocalDate, forecast: Forecast | null, periods: Period[],
-                 entries: ReadonlySet<LocalDate>, today: LocalDate): DayInfo;
+type DayContext = {
+  forecast: Forecast | null;          // null — прогноза нет (нет отметок)
+  periods: Period[];
+  settings: Settings;                 // defaultPeriodLength, когда forecast = null
+  entries: ReadonlySet<LocalDate>;    // дни с симптомами/настроением/заметкой
+  today: LocalDate;
+};
+// Незакрытый период дорисовывается по forecast.periodLength, без прогноза — по defaultPeriodLength.
+function dayInfo(date: LocalDate, ctx: DayContext): DayInfo;
 
 function todaySummary(forecast: Forecast | null, today: LocalDate): {
   cycleDay: number | null;
@@ -35,17 +50,29 @@ function todaySummary(forecast: Forecast | null, today: LocalDate): {
   daysToPeriod: number | null;    // 0 — сегодня
   daysToOvulation: number | null; // до ближайшей будущей овуляции
   delayDays: number;
+  confidence: Confidence | null;
+};
+
+// stats.ts — те же средние, что в прогнозе (FR-027)
+function cycleStats(cycles: Cycle[]): {
+  avgCycleLength: number | null;  // = averageCycleLength(cycles)
+  avgPeriodLength: number | null; // = averagePeriodLength(cycles)
+  history: Cycle[];               // от новых к старым, включая выбросы
 };
 
 // periods.ts — правила редактирования (возвращают новый массив или ошибку)
+// periodLength — прогнозируемая длина месячных (forecast?.periodLength ?? defaultPeriodLength),
+// используется для автозакрытия предыдущего открытого периода (endEstimated = true)
 function markPeriodStart(periods: Period[], day: LocalDate, today: LocalDate,
-                         settings: Settings): Result<Period[]>;
+                         periodLength: number): Result<Period[]>;
 function markPeriodEnd(periods: Period[], day: LocalDate, today: LocalDate): Result<Period[]>;
+function movePeriodStart(periods: Period[], day: LocalDate): Result<Period[]>; // день внутри периода
 function unmarkPeriodDay(periods: Period[], day: LocalDate): Period[];
 
 // reminders.ts
 function planReminders(forecast: Forecast, settings: Settings, now: Date,
                        cyclesAhead?: number /* 6 */): Reminder[];
+// при forecast.delayDays > 0 возвращает [] — напоминания на следующие циклы не планируются
 
 type Reminder = {
   id: string;        // детерминированный: `${kind}:${date}`
@@ -71,12 +98,19 @@ type PeriodError = 'future-date' | 'inside-existing' | 'end-before-start' | 'too
 | 6 | цикл через границу года (начало 2026-12-20) | следующие 2027-01-17 |
 | 7 | февраль високосного года (2028-02-15, 28 дн.) | следующие 2028-03-14 |
 | 8 | задержка 3 дня | `delayDays = 3`, прогнозные месячные с «сегодня» |
-| 9 | начало без конца | длина месячных = default; отмеченные дни ≤ сегодня = `actual` |
-| 10 | новое начало при открытом периоде | предыдущий закрывается автоматически |
+| 9 | начало без конца | без прогноза — длина = default; с историей — `forecast.periodLength`; дни ≤ сегодня = `actual`, позже = `predicted` |
+| 10 | новое начало при открытом периоде | предыдущий закрывается по `periodLength`, `endEstimated = true` |
 | 11 | начало в будущем | ошибка `future-date` |
-| 12 | начало внутри существующего периода | ошибка `inside-existing` |
+| 12 | начало внутри существующего периода | ошибка `inside-existing`; `movePeriodStart` переносит начало на этот день |
 | 13 | `dayInfo` до первой отметки | `cycleDay = null`, `probability = null` |
 | 14 | `planReminders`: смена летнего времени | `sendAt` соответствует 12:00 местного времени |
 | 15 | `planReminders`: напоминание в прошлом | не включается |
 | 16 | `planReminders`: выключено `remindOvulation` | только `kind: 'period'` |
 | 17 | `monthGrid` для любого месяца | начинается с понедельника, содержит все дни месяца |
+| 18 | `confidence`: 0, 1 или 2 завершённых цикла | `low` |
+| 19 | `confidence`: циклы 26, 28, 35 (разброс 9) | `low`; циклы 27, 28, 30 (разброс 3) — `normal` |
+| 20 | `averagePeriodLength`: периоды 4, 6 (ручные) и 5 (`endEstimated`) | 5 (оценочный не учитывается) |
+| 21 | конец позже 15-го дня от начала | ошибка `too-long` |
+| 22 | `planReminders` при `delayDays > 0` | `[]` |
+| 23 | смена часового пояса (`TZ` = Asia/Tokyo vs America/Los_Angeles) | `buildForecast` и `dayInfo` дают одинаковые даты |
+| 24 | `cycleStats` | средние совпадают с `Forecast.cycleLength`/`periodLength` при наличии истории |

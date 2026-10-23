@@ -14,19 +14,25 @@
 | `id` | string (UUID) | первичный ключ |
 | `start` | LocalDate | индекс; не позже «сегодня» |
 | `end` | LocalDate \| null | `end >= start`; не позже «сегодня»; `null` — конец не отмечен |
+| `endEstimated` | boolean | `true` — конец проставлен автоматически; такие периоды не входят в среднюю длину месячных (FR-014). По умолчанию `false` |
 
 - Периоды не пересекаются: для любых двух `a.start < b.start` выполняется `(a.end ?? a.start) < b.start`.
 - Если отмечено новое начало, а у предыдущего периода `end = null`, предыдущий закрывается днём
-  `min(start_prev + defaultPeriodLength − 1, start_new − 1)`.
-- Длина периода (`end − start + 1`) — 1…15 дней; больше — ошибка ввода с подсказкой.
+  `min(start_prev + periodLength − 1, start_new − 1)`, где `periodLength` — прогнозируемая длина
+  месячных (без истории — `defaultPeriodLength`), и получает `endEstimated = true`.
+- Длина периода (`end − start + 1`) — 1…15 дней; больше — ошибка `too-long` с подсказкой.
+- Начало внутри существующего периода — ошибка `inside-existing`; UI предлагает «Сдвинуть начало на
+  этот день» (`movePeriodStart`) или «Отметить конец» (`markPeriodEnd`).
 
 **Переходы состояний** (через карточку дня, FR-009):
 
 ```text
-(нет) --«Начало» в день D--> {start: D, end: null}
-{start, end: null} --«Конец» в день E (E >= start)--> {start, end: E}
-{start, end} --«Конец» в другой день E'--> {start, end: E'}
-любой --«Снять отметку»--> удалён (если день = start) / end = день − 1 (если день внутри)
+(нет) --«Начало» в день D--> {start: D, end: null, endEstimated: false}
+{start, end: null} --«Конец» в день E (E >= start)--> {start, end: E, endEstimated: false}
+{start, end: null} --«Начало» следующих месячных--> {start, end: оценка, endEstimated: true}
+{start, end} --«Конец» в другой день E'--> {start, end: E', endEstimated: false}
+{start, end} --«Сдвинуть начало» на день D внутри--> {start: D, end}
+любой --«Снять отметку»--> удалён (если день = start) / end = день − 1, endEstimated: false (если день внутри)
 ```
 
 ### DayEntry — запись дня
@@ -74,6 +80,7 @@
 | `start` | LocalDate | начало месячных |
 | `length` | number \| null | дней до начала следующих месячных; `null` для текущего цикла |
 | `periodLength` | number \| null | длина месячных, если конец отмечен |
+| `periodEndEstimated` | boolean | конец месячных проставлен автоматически |
 | `isOutlier` | boolean | `length < 15 \|\| length > 60` — не участвует в среднем |
 
 ### Forecast
@@ -81,7 +88,8 @@
 | Поле | Тип | Описание |
 |------|-----|----------|
 | `cycleLength` | number | среднее последних 6 не-выбросов, округлённое, или `defaultCycleLength` |
-| `periodLength` | number | среднее последних 6 периодов с концом, или `defaultPeriodLength` |
+| `periodLength` | number | среднее последних 6 периодов с концом и `endEstimated = false`, или `defaultPeriodLength` |
+| `confidence` | `'normal' \| 'low'` | `low`, если не-выбросов среди завершённых циклов < 3 или `max − min` длин циклов, учтённых в среднем, > 7 (FR-019a) |
 | `delayDays` | number | `max(0, today − predictedStart)`; при > 0 прогноз сдвигается на «сегодня» |
 | `cycles` | PredictedCycle[] | текущий + прогнозируемые циклы на 12 месяцев вперёд |
 
@@ -103,8 +111,18 @@
 | `isToday` | boolean |
 | `hasEntry` | boolean |
 
+Незакрытые текущие месячные (`end = null`) дорисовываются до `start + forecast.periodLength − 1`, а
+без прогноза — до `start + defaultPeriodLength − 1`: дни ≤ сегодня — `actual`, позже — `predicted`.
+
 Приоритет при пересечении: отмеченные месячные > прогнозные месячные; фертильность и
 овуляция сохраняются и при пересечении (для очень коротких циклов), вероятность — максимальная.
+
+### CycleStats — статистика
+
+`avgCycleLength` и `avgPeriodLength` — **те же** значения, что `Forecast.cycleLength` и
+`Forecast.periodLength` (последние 6, без выбросов и оценочных концов), либо `null`, если
+завершённых циклов / периодов с отмеченным концом нет; подпись в UI — «по последним 6 циклам».
+`history` — все циклы от новых к старым, включая выбросы.
 
 ## Резервная копия
 

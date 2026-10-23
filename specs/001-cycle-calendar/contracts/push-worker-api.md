@@ -1,6 +1,7 @@
 # Contract: Push Worker HTTP API (`worker/`)
 
-Cloudflare Worker. Хранит только push-подписку и список напоминаний (Конституция I).
+Cloudflare Worker. Хранит только push-подписку, список напоминаний и технические идентификаторы
+авторизации — случайный `clientId` и SHA-256 хэш токена, без персональных данных (Конституция I, v1.0.1).
 Базовый URL — `VITE_PUSH_API_URL` (например, `https://cycle-push.<account>.workers.dev`).
 
 ## Общие правила

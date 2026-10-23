@@ -1,21 +1,13 @@
 <!--
 Sync Impact Report
-- Version change: (template, unversioned) → 1.0.0
-- Modified principles: placeholders → 7 concrete principles
-  - [PRINCIPLE_1_NAME] → I. Приватность
-  - [PRINCIPLE_2_NAME] → II. Офлайн-PWA без платной инфраструктуры
-  - [PRINCIPLE_3_NAME] → III. Сохранность данных
-  - [PRINCIPLE_4_NAME] → IV. Корректность прогноза (TDD, NON-NEGOTIABLE)
-  - [PRINCIPLE_5_NAME] → V. Простота
-  - added → VI. Дизайн и доступность
-  - added → VII. Честность
-- Added sections: «Технические ограничения», «Процесс разработки и контроль качества»
+- Version change: 1.0.0 → 1.0.1 (PATCH: clarifications, no principle added or removed)
+- Modified principles:
+  - I. Приватность — explicitly allows technical auth identifiers on the server (random clientId
+    and token hash, no personal data)
+  - VI. Дизайн и доступность — tap target unit written as «44 CSS px (= 44 pt)»
+- Added sections: none
 - Removed sections: none
-- Templates requiring updates: none modified by this command (templates read the constitution
-  at runtime)
-  - ✅ .specify/templates/plan-template.md — Constitution Check gates derive from this file
-  - ✅ .specify/templates/spec-template.md — no mandatory section changes
-  - ✅ .specify/templates/tasks-template.md — TDD for domain module reflected via Principle IV
+- Templates requiring updates: none (templates read the constitution at runtime)
 - Follow-up TODOs: none
 -->
 
@@ -29,6 +21,9 @@ Sync Impact Report
   пользователя в IndexedDB.
 - На сервер MAY передаваться только push-подписка и даты/тексты запланированных напоминаний.
   Тексты напоминаний MUST NOT раскрывать данные цикла сверх необходимого для уведомления.
+- Для авторизации запросов к серверу MAY храниться технические идентификаторы: случайный
+  `clientId` и хэш секретного токена устройства. Они MUST NOT содержать или выводиться из
+  персональных данных и данных цикла.
 - В приложении MUST NOT быть аккаунтов, регистрации, аналитики, трекеров, телеметрии и
   сторонних скриптов, отправляющих данные на внешние серверы.
 - Любой новый сетевой запрос MUST быть явно обоснован в плане фичи со ссылкой на этот принцип.
@@ -93,7 +88,7 @@ Sync Impact Report
 - Светлая и тёмная темы MUST переключаться автоматически по системной настройке iPhone
   (`prefers-color-scheme`).
 - Контраст текста MUST быть не ниже 4.5:1 (WCAG AA) в обеих темах; зоны нажатия MUST быть
-  не меньше 44×44 px.
+  не меньше 44×44 CSS px (= 44 pt).
 - Язык интерфейса — русский; все пользовательские тексты, даты и форматы MUST быть
   локализованы под русский язык (`ru-RU`, неделя с понедельника).
 
@@ -142,4 +137,4 @@ Sync Impact Report
 - Каждый план фичи MUST содержать проверку соответствия конституции; любое отступление MUST
   быть явно обосновано в разделе Complexity Tracking.
 
-**Version**: 1.0.0 | **Ratified**: 2026-10-23 | **Last Amended**: 2026-10-23
+**Version**: 1.0.1 | **Ratified**: 2026-10-23 | **Last Amended**: 2026-10-23
