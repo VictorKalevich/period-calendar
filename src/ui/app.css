@@ -27,7 +27,7 @@
   bottom: 0;
   z-index: 10;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   background: var(--surface);
   border-top: 1px solid var(--line);
   padding: 8px calc(12px + var(--safe-right)) calc(20px + var(--safe-bottom)) calc(12px + var(--safe-left));
@@ -77,18 +77,6 @@
 
 .pill-btn--rose {
   color: var(--roseText);
-}
-
-.pill-btn--main {
-  min-height: 52px;
-  border-radius: 26px;
-  background: var(--surface);
-}
-
-.pill-btn--filled {
-  background: var(--btnBg);
-  border-color: var(--btnBg);
-  color: var(--btnInk);
 }
 
 .btn {
@@ -163,9 +151,7 @@
 .calendar-card,
 .pager,
 .month-grid,
-.day-cell,
-.week,
-.week-tile {
+.day-cell {
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
@@ -417,10 +403,6 @@
   text-align: center;
 }
 
-.hero .disclaimer {
-  text-align: left;
-}
-
 .link-btn {
   display: inline-flex;
   align-items: center;
@@ -437,191 +419,6 @@
 
 .prose p {
   margin: 0 0 10px;
-}
-
-/* Экран «Сегодня» (макет C) */
-.today-head__wd {
-  margin: 0;
-}
-
-.hero {
-  border-radius: var(--radius-hero);
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.hero__phase,
-.hero__day,
-.hero__empty {
-  margin: 0;
-}
-
-.hero__row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.hero__delay {
-  align-self: flex-start;
-  margin: 0;
-}
-
-.hero__chance {
-  background: var(--violetSoft);
-  border-radius: var(--radius-inner);
-  padding: 16px;
-}
-
-.hero__chance-title,
-.hero__explain {
-  margin: 0;
-  color: var(--violetText);
-}
-
-.hero__explain {
-  color: var(--muted);
-}
-
-.hero__level {
-  margin: 2px 0 4px;
-  font-size: 30px;
-  font-weight: 800;
-  color: var(--violetText);
-  line-height: 1.15;
-}
-
-.hero__level::first-letter {
-  text-transform: uppercase;
-}
-
-.week {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 6px;
-}
-
-.week > li {
-  display: flex;
-}
-
-.week-tile {
-  width: 100%;
-  height: 76px;
-  border-radius: var(--radius-inner);
-  background: var(--surface);
-  border: 1px solid var(--line);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-}
-
-.week-tile--today {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: var(--bg);
-}
-
-.week-tile__wd {
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.week-tile__num {
-  font-size: 18px;
-  font-weight: 800;
-}
-
-.week-tile__dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-}
-
-.week-tile__dot--period {
-  background: var(--rose);
-}
-
-.week-tile__dot--low {
-  background: var(--sage);
-}
-
-.week-tile__dot--medium {
-  background: var(--violetMid);
-}
-
-.week-tile__dot--high {
-  background: var(--violetDeep);
-}
-
-.upcoming {
-  padding: 18px 18px 6px;
-}
-
-.upcoming__title {
-  margin: 0 0 4px;
-}
-
-.upcoming__list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.upcoming__row {
-  display: grid;
-  grid-template-columns: 16px 1fr auto;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 0;
-  border-top: 1px solid var(--line);
-  font-weight: 700;
-}
-
-.upcoming__row:first-child {
-  border-top: 0;
-}
-
-.upcoming__when {
-  text-align: right;
-  font-size: 14px;
-}
-
-.upcoming__dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  justify-self: center;
-}
-
-.upcoming__dot--fertile {
-  background: var(--violetMid);
-}
-
-.upcoming__dot--period {
-  background: var(--rose);
-}
-
-.today-actions {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-}
-
-.today-actions .pill-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 0 8px;
 }
 
 /* Записи дня */
@@ -644,10 +441,6 @@
   margin: 0;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-}
-
-.today-entry {
-  padding: 16px 18px;
 }
 
 /* Выбор симптомов и настроения */

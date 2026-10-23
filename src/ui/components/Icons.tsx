@@ -23,13 +23,6 @@ function Svg({ size = 22, children, ...rest }: IconProps) {
   );
 }
 
-export const TodayIcon = (p: IconProps) => (
-  <Svg {...p}>
-    <circle cx="12" cy="12" r="8.5" />
-    <circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none" />
-  </Svg>
-);
-
 export const CalendarIcon = (p: IconProps) => (
   <Svg {...p}>
     <rect x="3.5" y="5" width="17" height="15.5" rx="3.5" />
@@ -60,12 +53,6 @@ export const ChevronLeft = (p: IconProps) => (
 export const ChevronRight = (p: IconProps) => (
   <Svg size={20} {...p}>
     <path d="M9.5 5.5 16 12l-6.5 6.5" />
-  </Svg>
-);
-
-export const DropIcon = (p: IconProps) => (
-  <Svg size={20} {...p}>
-    <path d="M12 3.5c3.2 4.2 6 7.6 6 10.8a6 6 0 0 1-12 0c0-3.2 2.8-6.6 6-10.8z" />
   </Svg>
 );
 

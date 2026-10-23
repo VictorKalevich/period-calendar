@@ -68,7 +68,7 @@ Cloudflare Worker. Хранит только push-подписку, список
 ## Payload в Service Worker
 
 `push`-событие получает `{ title, body }` и показывает `showNotification(title, { body, icon,
-badge, tag: id })`. `notificationclick` открывает/фокусирует приложение на вкладке «Сегодня».
+badge, tag: id })`. `notificationclick` открывает/фокусирует приложение на вкладке «Календарь».
 
 ## Секреты и переменные Worker
 

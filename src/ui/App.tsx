@@ -1,26 +1,27 @@
 import { useEffect, useState, type ComponentType } from 'react';
-import { CalendarIcon, SettingsIcon, StatsIcon, TodayIcon } from './components/Icons';
+import { CalendarIcon, SettingsIcon, StatsIcon } from './components/Icons';
 import { UpdateBanner } from './components/UpdateBanner';
 import { CalendarScreen } from './screens/CalendarScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { StatsScreen } from './screens/StatsScreen';
-import { TodayScreen } from './screens/TodayScreen';
 
-type Tab = 'today' | 'calendar' | 'stats' | 'settings';
+type Tab = 'calendar' | 'stats' | 'settings';
 
 const TABS: ReadonlyArray<{ id: Tab; label: string; Icon: ComponentType; Screen: ComponentType }> = [
-  { id: 'today', label: 'Сегодня', Icon: TodayIcon, Screen: TodayScreen },
   { id: 'calendar', label: 'Календарь', Icon: CalendarIcon, Screen: CalendarScreen },
   { id: 'stats', label: 'Статистика', Icon: StatsIcon, Screen: StatsScreen },
   { id: 'settings', label: 'Настройки', Icon: SettingsIcon, Screen: SettingsScreen },
 ];
 
-// Главный экран — «Календарь» (FR-001, design.md).
+// Главный экран — «Календарь» (FR-001, design.md). Неизвестная или удалённая вкладка
+// (например, сохранённая в адресе старая «#today») открывает «Календарь».
 const DEFAULT_TAB: Tab = 'calendar';
 
 function tabFromHash(): Tab {
   const id = location.hash.replace('#', '');
-  return TABS.some((t) => t.id === id) ? (id as Tab) : DEFAULT_TAB;
+  if (TABS.some((t) => t.id === id)) return id as Tab;
+  if (id) history.replaceState(null, '', `#${DEFAULT_TAB}`);
+  return DEFAULT_TAB;
 }
 
 export function App() {
