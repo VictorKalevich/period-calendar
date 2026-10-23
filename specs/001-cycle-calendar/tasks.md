@@ -41,15 +41,15 @@ UI проверяется вручную по quickstart.md.
 
 **Purpose**: каркас проекта, который собирается, тестируется и деплоится с первого коммита
 
-- [ ] T001 Verify git repo and add `.gitignore` (node_modules, dist, .wrangler, coverage) at repository root
-- [ ] T002 Create `package.json` with Vite + React 19 + TypeScript (strict), runtime deps `react`, `react-dom`, `dexie@4`, `date-fns@4`; dev deps `vite`, `@vitejs/plugin-react`, `vite-plugin-pwa`, `vitest`, `fake-indexeddb`, `typescript`, `@types/react`, `@types/react-dom`; scripts `dev`, `build` (`tsc --noEmit && vite build`), `preview`, `test` (`vitest run`), `typecheck`
-- [ ] T003 [P] Create `tsconfig.json` (strict, `noUncheckedIndexedAccess`, `lib: ["ES2022","DOM","WebWorker"]`, `jsx: react-jsx`) and `vitest.config.ts` (environment `node`, include `src/**/*.test.ts`)
-- [ ] T004 Create `vite.config.ts` with `base: '/period-calendar/'`, `@vitejs/plugin-react`, and `VitePWA({ strategies: 'injectManifest', srcDir: 'src', filename: 'sw.ts', registerType: 'autoUpdate', manifest: { name: 'Календарь цикла', short_name: 'Цикл', lang: 'ru', display: 'standalone', start_url: '/period-calendar/', scope: '/period-calendar/', theme_color: '#FBF7F5', background_color: '#FBF7F5', icons } })`; precache includes `woff2`
-- [ ] T005 [P] Create `index.html` (lang `ru`, `viewport-fit=cover`, `apple-mobile-web-app-capable`, `apple-mobile-web-app-status-bar-style=default`, `theme-color` `#FBF7F5` light / `#1A1620` dark via `media`, `apple-touch-icon`) and placeholder `src/main.tsx` rendering «Календарь цикла»
-- [ ] T006 [P] Add icons to `public/`: `icon-192.png`, `icon-512.png`, `icon-maskable-512.png`, `apple-touch-icon.png` (180×180) in the palette of `docs/design/design.md`
-- [ ] T007 Create minimal `src/sw.ts` with Workbox `precacheAndRoute(self.__WB_MANIFEST)` and `cleanupOutdatedCaches()`; register SW in `src/main.tsx` via `virtual:pwa-register`
-- [ ] T008 Create `.github/workflows/deploy.yml`: on push to `main` → Node 24, `npm ci`, `npm test`, `npm run build` (env `VITE_VAPID_PUBLIC_KEY`, `VITE_PUSH_API_URL` from repo variables), `actions/upload-pages-artifact` (path `dist`), `actions/deploy-pages`; deploy job runs only if tests pass
-- [ ] T009 Verify `npm test`, `npm run build`, `npm run preview` work and the built app loads offline after first visit (DevTools → Offline)
+- [X] T001 Verify git repo and add `.gitignore` (node_modules, dist, .wrangler, coverage) at repository root
+- [X] T002 Create `package.json` with Vite + React 19 + TypeScript (strict), runtime deps `react`, `react-dom`, `dexie@4`, `date-fns@4`; dev deps `vite`, `@vitejs/plugin-react`, `vite-plugin-pwa`, `vitest`, `fake-indexeddb`, `typescript`, `@types/react`, `@types/react-dom`; scripts `dev`, `build` (`tsc --noEmit && vite build`), `preview`, `test` (`vitest run`), `typecheck`
+- [X] T003 [P] Create `tsconfig.json` (strict, `noUncheckedIndexedAccess`, `lib: ["ES2022","DOM","WebWorker"]`, `jsx: react-jsx`) and `vitest.config.ts` (environment `node`, include `src/**/*.test.ts`)
+- [X] T004 Create `vite.config.ts` with `base: '/period-calendar/'`, `@vitejs/plugin-react`, and `VitePWA({ strategies: 'injectManifest', srcDir: 'src', filename: 'sw.ts', registerType: 'autoUpdate', manifest: { name: 'Календарь цикла', short_name: 'Цикл', lang: 'ru', display: 'standalone', start_url: '/period-calendar/', scope: '/period-calendar/', theme_color: '#FBF7F5', background_color: '#FBF7F5', icons } })`; precache includes `woff2`
+- [X] T005 [P] Create `index.html` (lang `ru`, `viewport-fit=cover`, `apple-mobile-web-app-capable`, `apple-mobile-web-app-status-bar-style=default`, `theme-color` `#FBF7F5` light / `#1A1620` dark via `media`, `apple-touch-icon`) and placeholder `src/main.tsx` rendering «Календарь цикла»
+- [X] T006 [P] Add icons to `public/`: `icon-192.png`, `icon-512.png`, `icon-maskable-512.png`, `apple-touch-icon.png` (180×180) in the palette of `docs/design/design.md`
+- [X] T007 Create minimal `src/sw.ts` with Workbox `precacheAndRoute(self.__WB_MANIFEST)` and `cleanupOutdatedCaches()`; register SW in `src/main.tsx` via `virtual:pwa-register`
+- [X] T008 Create `.github/workflows/deploy.yml`: on push to `main` → Node 24, `npm ci`, `npm test`, `npm run build` (env `VITE_VAPID_PUBLIC_KEY`, `VITE_PUSH_API_URL` from repo variables), `actions/upload-pages-artifact` (path `dist`), `actions/deploy-pages`; deploy job runs only if tests pass
+- [X] T009 Verify `npm test`, `npm run build`, `npm run preview` work and the built app loads offline after first visit (DevTools → Offline)
 
 **Checkpoint**: пустое PWA деплоится на GitHub Pages и устанавливается на экран «Домой»
 
