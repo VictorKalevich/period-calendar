@@ -48,11 +48,15 @@ type DayContext = {
 // Незакрытый период дорисовывается по forecast.periodLength, без прогноза — по defaultPeriodLength.
 function dayInfo(date: LocalDate, ctx: DayContext): DayInfo;
 
-function todaySummary(forecast: Forecast | null, today: LocalDate): {
+// Принимает тот же контекст, что dayInfo: фазе нужны фактические дни месячных.
+function todaySummary(ctx: DayContext): {
   cycleDay: number | null;
   probability: Probability | null;
   daysToPeriod: number | null;    // 0 — сегодня
   daysToOvulation: number | null; // до ближайшей будущей овуляции
+  nextPeriod: LocalDate | null;
+  nextOvulation: LocalDate | null;
+  nextFertile: { from: LocalDate; to: LocalDate } | null; // ближайшее окно, ещё не закончившееся
   delayDays: number;
   confidence: Confidence | null;
   phase: Phase | null;            // null при задержке (delayDays > 0) и без данных

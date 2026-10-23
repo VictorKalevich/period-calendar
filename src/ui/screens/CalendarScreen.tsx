@@ -1,49 +1,47 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { dayInfo } from '../../domain/forecast';
-import { DEFAULT_SETTINGS, type DayContext, type DayInfo, type LocalDate } from '../../domain/types';
-import { useLiveQuery } from '../../hooks/useLiveQuery';
-import { useToday } from '../../hooks/useToday';
-import { db } from '../../storage/db';
-import { getPeriods, getSettings } from '../../storage/repository';
+import type { DayInfo, LocalDate } from '../../domain/types';
+import { useForecast } from '../../hooks/useForecast';
 import { DayCard } from '../components/DayCard';
+import { Disclaimer } from '../components/Disclaimer';
+import { Legend } from '../components/Legend';
 import { MonthPager } from '../components/MonthPager';
 import { PeriodSheet } from '../components/PeriodSheet';
+import { StatusBanner } from '../components/StatusBanner';
 
+/** Главный экран (design.md «Экран „Календарь“»). */
 export function CalendarScreen() {
-  const today = useToday();
-  const periods = useLiveQuery(getPeriods, []);
-  const settings = useLiveQuery(getSettings, []);
-  const entryDates = useLiveQuery(() => db.days.toCollection().primaryKeys(), []);
-  const [selected, setSelected] = useState<LocalDate>(today);
+  const state = useForecast();
+  const [selected, setSelected] = useState<LocalDate | null>(null);
   const [sheet, setSheet] = useState(false);
 
-  const ctx = useMemo<DayContext | null>(() => {
-    if (!periods || !settings || !entryDates) return null;
-    return { forecast: null, periods, settings, entries: new Set(entryDates), today };
-  }, [periods, settings, entryDates, today]);
-
+  const ctx = state?.ctx;
   const getInfo = useCallback((date: LocalDate) => dayInfo(date, ctx!), [ctx]);
   const onSelect = useCallback((info: DayInfo) => setSelected(info.date), []);
 
-  if (!ctx) return null;
+  if (!state || !ctx) return null;
 
-  const periodLength = ctx.forecast?.periodLength ?? (settings ?? DEFAULT_SETTINGS).defaultPeriodLength;
+  const day = selected ?? ctx.today;
+  const periodLength = ctx.forecast?.periodLength ?? ctx.settings.defaultPeriodLength;
 
   return (
     <>
       <MonthPager
-        today={today}
+        today={ctx.today}
         earliest={ctx.periods[0]?.start ?? null}
         getInfo={getInfo}
-        selected={selected}
+        selected={day}
         onSelect={onSelect}
+        banner={<StatusBanner summary={state.summary} />}
       />
-      <DayCard info={getInfo(selected)} onPeriod={() => setSheet(true)} />
+      <Legend />
+      <DayCard info={getInfo(day)} onPeriod={() => setSheet(true)} />
+      <Disclaimer />
       <PeriodSheet
         open={sheet}
         onClose={() => setSheet(false)}
-        date={selected}
-        today={today}
+        date={day}
+        today={ctx.today}
         periods={ctx.periods}
         periodLength={periodLength}
       />

@@ -97,8 +97,23 @@ export interface PredictedCycle {
   fertile: LocalDate[];
   /** `ovulation − 7`, `ovulation − 6`, `ovulation + 1` */
   mediumDays: LocalDate[];
-  /** Цикл завершён (следующие месячные отмечены). */
-  completed: boolean;
+  /** completed — следующие месячные отмечены; current — идёт сейчас; predicted — прогноз. */
+  kind: 'completed' | 'current' | 'predicted';
+}
+
+export interface TodaySummary {
+  cycleDay: number | null;
+  probability: Probability | null;
+  /** null при задержке и без данных (FR-019b). */
+  phase: Phase | null;
+  /** 0 — сегодня. */
+  daysToPeriod: number | null;
+  daysToOvulation: number | null;
+  nextPeriod: LocalDate | null;
+  nextOvulation: LocalDate | null;
+  nextFertile: { from: LocalDate; to: LocalDate } | null;
+  delayDays: number;
+  confidence: Confidence | null;
 }
 
 export interface Forecast {

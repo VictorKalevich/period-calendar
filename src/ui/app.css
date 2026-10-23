@@ -320,6 +320,286 @@
   padding: 0 8px;
 }
 
+/* Плашка «Сегодня …» */
+.status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.status-pill {
+  margin: 0;
+  padding: 8px 16px;
+  border-radius: 20px;
+  background: var(--violetSoft);
+  color: var(--violetText);
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.status-pill--delay {
+  background: var(--roseSoft);
+  color: var(--roseText);
+}
+
+.status__note {
+  margin: 0;
+  text-align: center;
+}
+
+/* Легенда 2 × 3 */
+.legend {
+  list-style: none;
+  margin: 0;
+  padding: 0 6px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.legend__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legend__swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex: 0 0 14px;
+  border: 2px solid transparent;
+}
+
+.legend__swatch--period {
+  background: var(--btnBg);
+}
+
+.legend__swatch--period-predicted {
+  border: 2px dashed var(--rose);
+}
+
+.legend__swatch--fertile {
+  background: var(--violetSoft);
+  border: 2px dashed var(--violetMid);
+}
+
+.legend__swatch--today {
+  border: 2px solid var(--ink);
+}
+
+.legend__swatch--entry {
+  border: 0;
+  background: radial-gradient(circle, var(--muted) 0 2.5px, transparent 3px);
+}
+
+/* Пометка о прогнозе */
+.disclaimer {
+  margin: 0;
+  text-align: center;
+}
+
+.hero .disclaimer {
+  text-align: left;
+}
+
+.link-btn {
+  color: var(--violetText);
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  min-height: 24px;
+}
+
+.prose p {
+  margin: 0 0 10px;
+}
+
+/* Экран «Сегодня» (макет C) */
+.today-head__wd {
+  margin: 0;
+}
+
+.hero {
+  border-radius: var(--radius-hero);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.hero__phase,
+.hero__day,
+.hero__empty {
+  margin: 0;
+}
+
+.hero__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.hero__delay {
+  align-self: flex-start;
+  margin: 0;
+}
+
+.hero__chance {
+  background: var(--violetSoft);
+  border-radius: var(--radius-inner);
+  padding: 16px;
+}
+
+.hero__chance-title,
+.hero__explain {
+  margin: 0;
+  color: var(--violetText);
+}
+
+.hero__explain {
+  color: var(--muted);
+}
+
+.hero__level {
+  margin: 2px 0 4px;
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--violetText);
+  line-height: 1.15;
+}
+
+.hero__level::first-letter {
+  text-transform: uppercase;
+}
+
+.week {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.week-tile {
+  height: 76px;
+  border-radius: var(--radius-inner);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.week-tile--today {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--bg);
+}
+
+.week-tile__wd {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.week-tile__num {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.week-tile__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.week-tile__dot--period {
+  background: var(--rose);
+}
+
+.week-tile__dot--low {
+  background: var(--sage);
+}
+
+.week-tile__dot--medium {
+  background: var(--violetMid);
+}
+
+.week-tile__dot--high {
+  background: var(--violetDeep);
+}
+
+.upcoming {
+  padding: 18px 18px 6px;
+}
+
+.upcoming__title {
+  margin: 0 0 4px;
+}
+
+.upcoming__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.upcoming__row {
+  display: grid;
+  grid-template-columns: 16px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+  font-weight: 700;
+}
+
+.upcoming__row:first-child {
+  border-top: 0;
+}
+
+.upcoming__when {
+  text-align: right;
+  font-size: 14px;
+}
+
+.upcoming__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  justify-self: center;
+}
+
+.upcoming__dot--fertile {
+  background: var(--violetMid);
+}
+
+.upcoming__dot--period {
+  background: var(--rose);
+}
+
+.today-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.today-actions .pill-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 8px;
+}
+
 /* Нижний лист */
 .sheet {
   width: 100%;
