@@ -105,14 +105,19 @@
 | `date` | LocalDate |
 | `cycleDay` | number \| null (null до первой отметки) |
 | `period` | `'actual' \| 'predicted' \| null` |
-| `fertile` | boolean |
-| `ovulation` | boolean |
+| `fertile` | `'predicted' \| 'past' \| null` (`past` — окно завершённого цикла: заливка без пунктира) |
+| `ovulation` | boolean (для прошлых циклов тоже, с короной) |
+| `phase` | `'menstrual' \| 'follicular' \| 'ovulation' \| 'luteal' \| null` (FR-019b; null до первой отметки) |
 | `probability` | `'low' \| 'medium' \| 'high' \| null` |
 | `isToday` | boolean |
 | `hasEntry` | boolean |
 
 Незакрытые текущие месячные (`end = null`) дорисовываются до `start + forecast.periodLength − 1`, а
 без прогноза — до `start + defaultPeriodLength − 1`: дни ≤ сегодня — `actual`, позже — `predicted`.
+
+Фаза: дни месячных (`actual` или `predicted`) → `menstrual`; день овуляции → `ovulation`; между
+концом месячных и овуляцией → `follicular`; после овуляции до следующих месячных → `luteal`.
+Приоритет фазы при пересечении: `menstrual` > `ovulation`.
 
 Приоритет при пересечении: отмеченные месячные > прогнозные месячные; фертильность и
 овуляция сохраняются и при пересечении (для очень коротких циклов), вероятность — максимальная.

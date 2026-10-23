@@ -7,6 +7,10 @@
 type LocalDate = string & { readonly __brand: 'LocalDate' }; // 'YYYY-MM-DD'
 type Probability = 'low' | 'medium' | 'high';
 type Confidence = 'normal' | 'low';
+type Phase = 'menstrual' | 'follicular' | 'ovulation' | 'luteal';
+// Подписи: 'Менструальная фаза' | 'Фолликулярная фаза' | 'Овуляция' | 'Лютеиновая фаза'
+// DayInfo.fertile: 'predicted' | 'past' | null — 'past' для окон завершённых циклов
+// DayInfo.phase: Phase | null (FR-019b)
 
 // dates.ts
 function toLocalDate(d: Date): LocalDate;
@@ -51,6 +55,7 @@ function todaySummary(forecast: Forecast | null, today: LocalDate): {
   daysToOvulation: number | null; // до ближайшей будущей овуляции
   delayDays: number;
   confidence: Confidence | null;
+  phase: Phase | null;            // null при задержке (delayDays > 0) и без данных
 };
 
 // stats.ts — те же средние, что в прогнозе (FR-027)
@@ -114,3 +119,7 @@ type PeriodError = 'future-date' | 'inside-existing' | 'end-before-start' | 'too
 | 22 | `planReminders` при `delayDays > 0` | `[]` |
 | 23 | смена часового пояса (`TZ` = Asia/Tokyo vs America/Los_Angeles) | `buildForecast` и `dayInfo` дают одинаковые даты |
 | 24 | `cycleStats` | средние совпадают с `Forecast.cycleLength`/`periodLength` при наличии истории |
+| 25 | фазы: начало 2026-03-01, месячные 5 дн., цикл 28 | 03-01…03-05 `menstrual`, 03-06…03-14 `follicular`, 03-15 `ovulation`, 03-16…03-28 `luteal`, 03-29 `menstrual` |
+| 26 | фаза при пересечении (цикл 15 дн., месячные 5 дн. → овуляция на 2-й день) | 2-й день — `menstrual` |
+| 27 | `todaySummary.phase` при задержке и без отметок | `null` |
+| 28 | `dayInfo.fertile` | завершённый цикл → `'past'`, текущий и будущие → `'predicted'`; `ovulation = true` для обоих |
