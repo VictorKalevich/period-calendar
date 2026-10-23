@@ -65,8 +65,8 @@ UI — проверка в браузере по quickstart.md.
 - [X] T020 [US3] Write failing tests and implement: `src/storage/backup.test.ts` — import of adjacent/overlapping periods returns merged periods, un-mergeable overlap (> 15 days) is still an error; `src/storage/repository.test.ts` — `normalizeStoredPeriods(today)` merges adjacent stored periods and writes only when something changed; implement in `src/storage/backup.ts` (`parseBackup` normalizes with the file's `defaultPeriodLength`) and `src/storage/repository.ts`; call `normalizeStoredPeriods` once at startup in `src/main.tsx`
 - [X] T021 [US3] Update `src/ui/components/PeriodSheet.tsx`: confirmation step for actions with `confirm` («Удалить», «Отмена»)
 - [X] T022 [P] Update docs: `specs/001-cycle-calendar/data-model.md` (invariant: no adjacent/overlapping periods), `specs/001-cycle-calendar/contracts/backup-format.md` (import merges; un-mergeable overlap is an error), `specs/001-cycle-calendar/contracts/domain-api.md` (`markPeriodEnd` signature), `docs/design/design.md` (диалог «Месячные» ссылается на таблицу 003)
-- [ ] T023 Run `npm test`, `npm run build`; verify quickstart.md scenarios 6–11 in the browser
-- [ ] T024 Merge into `main` and `git push origin main` (CLAUDE.md rule; worker not changed)
+- [X] T023 Run `npm test`, `npm run build`; verify quickstart.md scenarios 6–11 in the browser
+- [X] T024 Merge into `main` and `git push origin main` (CLAUDE.md rule; worker not changed)
 
 ## Dependencies & Execution Order
 
