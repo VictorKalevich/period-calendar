@@ -74,6 +74,20 @@ describe('dayInfo without forecast', () => {
   });
 });
 
+describe('dayInfo — оценочный конец в будущем (003 FR-018)', () => {
+  it('shows days up to today as actual and later days as predicted', () => {
+    const periods: Period[] = [{ id: 'a', start: ld('2026-10-24'), end: ld('2026-11-01'), endEstimated: true }];
+    const c = ctx(periods, '2026-10-30');
+    const kinds = ['2026-10-24', '2026-10-30', '2026-10-31', '2026-11-01', '2026-11-02'].map((d) => dayInfo(ld(d), c).period);
+    expect(kinds).toEqual(['actual', 'actual', 'predicted', 'predicted', null]);
+  });
+
+  it('keeps days of a manually closed period actual', () => {
+    const periods: Period[] = [{ id: 'a', start: ld('2026-10-24'), end: ld('2026-10-28'), endEstimated: false }];
+    expect(dayInfo(ld('2026-10-28'), ctx(periods, '2026-10-30')).period).toBe('actual');
+  });
+});
+
 describe('dayInfo with forecast', () => {
   function withForecast(periods: Period[], today: string): DayContext {
     const forecast = buildForecast({ periods, settings: DEFAULT_SETTINGS, today: ld(today) });

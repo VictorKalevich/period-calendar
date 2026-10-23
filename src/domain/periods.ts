@@ -32,8 +32,9 @@ function closeEarlierOpenPeriods(sorted: Period[], periodLength: number): Period
 function endFrom(src: Period, today: LocalDate, periodLength: number): Pick<Period, 'end' | 'endEstimated'> {
   if (src.end !== null) return { end: src.end, endEstimated: src.endEstimated };
   const estimate = periodEnd(src, periodLength);
-  // Будущий конец не храним: у ещё идущих месячных конец — сегодня, оценочный.
-  return { end: estimate <= today ? estimate : today, endEstimated: true };
+  // Прошедшая оценка — оценочный конец. У ещё идущих (оценка > сегодня) конец — прогноз
+  // max(оценка, сегодня) = оценка, может быть в будущем (ревизия 3, FR-018).
+  return { end: estimate <= today ? estimate : maxLD(estimate, today), endEstimated: true };
 }
 
 /**

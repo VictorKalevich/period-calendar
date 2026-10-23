@@ -62,9 +62,17 @@ describe('normalizePeriods', () => {
     expect(norm([p('a', '2026-10-01', '2026-10-04'), p('b', '2026-10-05')])).toEqual([p('a', '2026-10-01', '2026-10-09', true)]);
   });
 
-  it('merges with a later open period that is still going: end = today, estimated', () => {
-    // b: 28 октября – 1 ноября по оценке, сегодня 30-е
-    expect(norm([p('a', '2026-10-24', '2026-10-27'), p('b', '2026-10-28')])).toEqual([p('a', '2026-10-24', '2026-10-30', true)]);
+  it('merges with a later open period that is still going: end = max(its estimate, today), estimated, may be in the future', () => {
+    // b: 28 октября – 1 ноября по оценке, сегодня 30-е → конец 1 ноября (прогноз)
+    expect(norm([p('a', '2026-10-24', '2026-10-27'), p('b', '2026-10-28')])).toEqual([p('a', '2026-10-24', '2026-11-01', true)]);
+    // идущие начались сегодня: оценка 30.10–3.11
+    expect(norm([p('a', '2026-10-26', '2026-10-29'), p('b', '2026-10-30')])).toEqual([p('a', '2026-10-26', '2026-11-03', true)]);
+  });
+
+  it('respects the 15-day limit with a future estimated end', () => {
+    // 17–27 + идущие с 28-го (оценка до 1.11) = 16 дней → не объединяются
+    const periods = [p('a', '2026-10-17', '2026-10-27'), p('b', '2026-10-28')];
+    expect(norm(periods)).toEqual(periods);
   });
 
   it('merges across a month boundary', () => {

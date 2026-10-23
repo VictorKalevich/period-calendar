@@ -68,6 +68,12 @@ UI — проверка в браузере по quickstart.md.
 - [X] T023 Run `npm test`, `npm run build`; verify quickstart.md scenarios 6–11 in the browser
 - [X] T024 Merge into `main` and `git push origin main` (CLAUDE.md rule; worker not changed)
 
+## Phase 7: Ревизия 3 — оценочный конец при слиянии с идущими месячными
+
+- [X] T025 [US3] Update failing tests: `src/domain/normalize.test.ts` — merge with an ongoing open period → `end = max(start + L − 1, today)` (future), `endEstimated = true`; `src/domain/dayInfo.test.ts` — period with a future estimated end: days ≤ today `actual`, days after today `predicted`, after the end `null`
+- [X] T026 [US3] Implement in `src/domain/periods.ts` (`endFrom`) and `src/domain/forecast.ts` (`dayInfo`) until T025 passes
+- [X] T027 Run `npm test`, `npm run build`; merge into `main` and `git push origin main` (CLAUDE.md rule; worker not changed)
+
 ## Dependencies & Execution Order
 
 - T001 → T002 (formatRangeRu used in labels) → T003, T004 → T005 → T006 → US2 (T007–T009) → T010 → T011–T013 → T014 → T015

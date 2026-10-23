@@ -120,7 +120,9 @@ export function dayInfo(date: LocalDate, ctx: DayContext): DayInfo {
   const own = lastStartOnOrBefore(periods, date);
   let period: DayInfo['period'] = null;
   if (own && date <= periodEnd(own, periodLength)) {
-    period = own.end !== null || date <= today ? 'actual' : 'predicted';
+    // После сегодняшнего дня отмеченным считается только конец, поставленный вручную; оценочный
+    // конец в будущем (003 FR-018) и незакрытые месячные — прогноз.
+    period = date <= today || (own.end !== null && !own.endEstimated) ? 'actual' : 'predicted';
   }
 
   const base: DayInfo = {
