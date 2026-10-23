@@ -1,4 +1,5 @@
 import { db } from './db';
+import { isEmptyDayEntry, normalizeDayEntry } from '../domain/dayEntry';
 import { DEFAULT_SETTINGS, type DayEntry, type LocalDate, type Period, type Settings } from '../domain/types';
 
 const SETTINGS_KEY = 'settings';
@@ -33,13 +34,15 @@ export async function getDayEntries(): Promise<DayEntry[]> {
   return db.days.toArray();
 }
 
-/** Сохраняет запись дня; пустая запись удаляется. */
+/** Проверяет и сохраняет запись дня; пустая запись удаляется. Некорректная — исключение. */
 export async function saveDayEntry(entry: DayEntry): Promise<void> {
-  if (entry.symptoms.length === 0 && entry.mood === null && entry.note === '') {
-    await db.days.delete(entry.date);
+  const res = normalizeDayEntry(entry);
+  if (!res.ok) throw new Error(`Invalid day entry: ${res.error}`);
+  if (isEmptyDayEntry(res.value)) {
+    await db.days.delete(res.value.date);
     return;
   }
-  await db.days.put(entry);
+  await db.days.put(res.value);
 }
 
 export async function getSettings(): Promise<Settings> {

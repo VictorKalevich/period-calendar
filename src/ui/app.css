@@ -600,6 +600,90 @@
   padding: 0 8px;
 }
 
+/* Записи дня */
+.entry {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.entry__tags {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.entry__note {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.today-entry {
+  padding: 16px 18px;
+}
+
+/* Выбор симптомов и настроения */
+.chips {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chips__legend {
+  padding: 0;
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+
+.chip {
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 22px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.chip[aria-pressed='true'] {
+  background: var(--violetSoft);
+  border-color: var(--violetSoft);
+  color: var(--violetText);
+  font-weight: 800;
+}
+
+/* Заметка */
+.note {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.note__input {
+  width: 100%;
+  resize: vertical;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--ink);
+  padding: 12px 14px;
+  font: inherit;
+  font-size: 16px; /* 16 px — iOS не зумит поле при фокусе */
+  line-height: 1.45;
+}
+
+.note__counter {
+  align-self: flex-end;
+}
+
 /* Нижний лист */
 .sheet {
   width: 100%;

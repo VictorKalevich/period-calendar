@@ -154,15 +154,15 @@ UI проверяется вручную по quickstart.md.
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T047 [P] [US3] Write failing tests in `src/storage/repository.test.ts` (fake-indexeddb): `saveDayEntry` dedupes `symptoms` ("уникальные значения из справочника"), rejects unknown ids, trims `note`, rejects `note` longer than 1000 characters ("0…1000 символов"), deletes the record when symptoms empty, mood null and note empty
+- [X] T047 [P] [US3] Write failing tests in `src/storage/repository.test.ts` (fake-indexeddb): `saveDayEntry` dedupes `symptoms` ("уникальные значения из справочника"), rejects unknown ids, trims `note`, rejects `note` longer than 1000 characters ("0…1000 символов"), deletes the record when symptoms empty, mood null and note empty
 
 ### Implementation for User Story 3
 
-- [ ] T048 [US3] Add validation to `saveDayEntry` in `src/storage/repository.ts` until T047 passes
-- [ ] T049 [P] [US3] Create `src/ui/components/SymptomPicker.tsx` in `BottomSheet`: symptom pills (multi-select) and mood pills (single-select, tap again to clear) from `catalog.ts`, each pill ≥ 44 CSS px (= 44 pt), selected state `--violetSoft`/`--violetText`, «Готово» as main 54 px `--btnBg` button
-- [ ] T050 [P] [US3] Create `src/ui/components/NoteEditor.tsx` in `BottomSheet`: `<textarea maxLength={1000}>` (15 px, line-height 1.45) with counter «N / 1000», «Сохранить», «Удалить заметку»
-- [ ] T051 [US3] Enable «Симптомы» and «Заметка» in `src/ui/components/DayCard.tsx` and in `TodayScreen`; show selected symptoms, mood and note preview in the card; allow for any date (past, today, future)
-- [ ] T052 [US3] Ensure `DayCell` entry dot reflects `hasEntry` from `useForecast` entries set; manually verify quickstart.md scenario 6
+- [X] T048 [US3] Add validation to `saveDayEntry` in `src/storage/repository.ts` until T047 passes
+- [X] T049 [P] [US3] Create `src/ui/components/SymptomPicker.tsx` in `BottomSheet`: symptom pills (multi-select) and mood pills (single-select, tap again to clear) from `catalog.ts`, each pill ≥ 44 CSS px (= 44 pt), selected state `--violetSoft`/`--violetText`, «Готово» as main 54 px `--btnBg` button
+- [X] T050 [P] [US3] Create `src/ui/components/NoteEditor.tsx` in `BottomSheet`: `<textarea maxLength={1000}>` (15 px, line-height 1.45) with counter «N / 1000», «Сохранить», «Удалить заметку»
+- [X] T051 [US3] Enable «Симптомы» and «Заметка» in `src/ui/components/DayCard.tsx` and in `TodayScreen`; show selected symptoms, mood and note preview in the card; allow for any date (past, today, future)
+- [X] T052 [US3] Ensure `DayCell` entry dot reflects `hasEntry` from `useForecast` entries set; manually verify quickstart.md scenario 6
 
 **Checkpoint**: US1–US3 работают независимо
 

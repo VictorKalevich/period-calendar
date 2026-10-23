@@ -4,10 +4,13 @@ import { addDaysLD, diffDays, formatDayMonthRu, formatWeekdayRu, parseLD, toLoca
 import { dayInfo } from '../../domain/forecast';
 import { PHASE_LABELS, PROBABILITY_LABELS, type DayContext, type DayInfo } from '../../domain/types';
 import { useForecast } from '../../hooks/useForecast';
+import { useLiveQuery } from '../../hooks/useLiveQuery';
+import { getDayEntry } from '../../storage/repository';
 import { explainDay } from '../components/DayCard';
+import { DaySheets, type DaySheet } from '../components/DaySheets';
 import { Disclaimer } from '../components/Disclaimer';
+import { EntrySummary } from '../components/EntrySummary';
 import { Crown, DropIcon } from '../components/Icons';
-import { PeriodSheet } from '../components/PeriodSheet';
 import { LOW_CONFIDENCE_TEXT } from '../components/StatusBanner';
 
 const WEEKDAYS_SHORT = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
@@ -49,12 +52,13 @@ function WeekStrip({ ctx }: { ctx: DayContext }) {
 /** Вкладка «Сегодня» — макет C (FR-008a, FR-019b). */
 export function TodayScreen() {
   const state = useForecast();
-  const [sheet, setSheet] = useState(false);
+  const [sheet, setSheet] = useState<DaySheet>(null);
+  const todayDate = state?.ctx.today;
+  const entry = useLiveQuery(() => (todayDate ? getDayEntry(todayDate) : undefined), [todayDate]);
   if (!state) return null;
   const { ctx, summary } = state;
   const today = ctx.today;
   const info = dayInfo(today, ctx);
-  const periodLength = ctx.forecast?.periodLength ?? ctx.settings.defaultPeriodLength;
   const fertileNow = summary.nextFertile && summary.nextFertile.from <= today;
 
   return (
@@ -138,25 +142,24 @@ export function TodayScreen() {
       )}
 
       <div className="today-actions">
-        <button type="button" className="pill-btn pill-btn--main pill-btn--filled" onClick={() => setSheet(true)}>
+        <button type="button" className="pill-btn pill-btn--main pill-btn--filled" onClick={() => setSheet('period')}>
           <DropIcon /> Месячные
         </button>
-        <button type="button" className="pill-btn pill-btn--main" disabled>
+        <button type="button" className="pill-btn pill-btn--main" onClick={() => setSheet('symptoms')}>
           Симптомы
         </button>
-        <button type="button" className="pill-btn pill-btn--main" disabled>
+        <button type="button" className="pill-btn pill-btn--main" onClick={() => setSheet('note')}>
           Заметка
         </button>
       </div>
 
-      <PeriodSheet
-        open={sheet}
-        onClose={() => setSheet(false)}
-        date={today}
-        today={today}
-        periods={ctx.periods}
-        periodLength={periodLength}
-      />
+      {entry && (
+        <section className="card today-entry" aria-label="Записи за сегодня">
+          <EntrySummary entry={entry} />
+        </section>
+      )}
+
+      <DaySheets which={sheet} onClose={() => setSheet(null)} date={today} ctx={ctx} entry={entry} />
     </>
   );
 }
