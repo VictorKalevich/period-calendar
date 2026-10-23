@@ -1,0 +1,127 @@
+import { isUuid, MAX_BODY_BYTES, validatePutBody, type ReminderJSON } from './validate';
+import { sendPush, type Fetcher, type PushSubscriptionJSON, type VapidKeys } from './webpush';
+
+// Push-воркер (contracts/push-worker-api.md). Хранит только подписку, напоминания и технические
+// идентификаторы авторизации — clientId и SHA-256 токена (Конституция I, v1.0.1).
+// В логи не пишутся тела запросов, endpoint подписок и тексты напоминаний.
+
+export interface Env {
+  SUBS: KVNamespace;
+  VAPID_PRIVATE_KEY: string;
+  VAPID_PUBLIC_KEY: string;
+  VAPID_SUBJECT: string;
+  ALLOWED_ORIGIN: string;
+}
+
+export interface StoredRecord {
+  tokenHash: string;
+  subscription: PushSubscriptionJSON;
+  reminders: ReminderJSON[];
+}
+
+const STALE_MS = 24 * 3600 * 1000;
+const PATH_RE = /^\/v1\/clients\/([^/]+)$/;
+
+async function sha256Hex(s: string): Promise<string> {
+  const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)));
+  return [...digest].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+function corsHeaders(request: Request, env: Env): Record<string, string> {
+  if (request.headers.get('Origin') !== env.ALLOWED_ORIGIN) return {};
+  return {
+    'Access-Control-Allow-Origin': env.ALLOWED_ORIGIN,
+    'Access-Control-Allow-Methods': 'PUT, DELETE',
+    'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+    'Access-Control-Max-Age': '86400',
+    Vary: 'Origin',
+  };
+}
+
+const bearer = (request: Request) => /^Bearer (.{16,200})$/.exec(request.headers.get('Authorization') ?? '')?.[1] ?? null;
+
+export async function handleRequest(request: Request, env: Env, now: number = Date.now()): Promise<Response> {
+  const cors = corsHeaders(request, env);
+  const reply = (status: number) => new Response(null, { status, headers: cors });
+
+  const match = PATH_RE.exec(new URL(request.url).pathname);
+  if (request.method === 'OPTIONS') return reply(match ? 204 : 404);
+  if (!match) return reply(404);
+  const clientId = match[1]!;
+  if (!isUuid(clientId)) return reply(400);
+  if (request.method !== 'PUT' && request.method !== 'DELETE') return reply(405);
+
+  const token = bearer(request);
+  if (!token) return reply(401);
+  const key = `sub:${clientId.toLowerCase()}`;
+  const existing = await env.SUBS.get<StoredRecord>(key, 'json');
+  const tokenHash = await sha256Hex(token);
+  if (existing && existing.tokenHash !== tokenHash) return reply(401);
+
+  if (request.method === 'DELETE') {
+    if (!existing) return reply(404);
+    await env.SUBS.delete(key);
+    return reply(204);
+  }
+
+  if (Number(request.headers.get('Content-Length') ?? 0) > MAX_BODY_BYTES) return reply(413);
+  const text = await request.text();
+  if (new TextEncoder().encode(text).length > MAX_BODY_BYTES) return reply(413);
+  let json: unknown;
+  try {
+    json = JSON.parse(text);
+  } catch {
+    return reply(400);
+  }
+  const body = validatePutBody(json, now);
+  if (!body) return reply(400);
+
+  const record: StoredRecord = { tokenHash, subscription: body.subscription, reminders: body.reminders };
+  await env.SUBS.put(key, JSON.stringify(record));
+  return reply(204);
+}
+
+/** Cron: отправляет наступившие напоминания всем подпискам. */
+export async function runSchedule(env: Env, now: number = Date.now(), fetcher: Fetcher = fetch): Promise<void> {
+  const vapid: VapidKeys = { privateJwk: env.VAPID_PRIVATE_KEY, publicKey: env.VAPID_PUBLIC_KEY, subject: env.VAPID_SUBJECT };
+  let cursor: string | undefined;
+  do {
+    const page = await env.SUBS.list({ prefix: 'sub:', cursor });
+    for (const { name } of page.keys) {
+      const rec = await env.SUBS.get<StoredRecord>(name, 'json');
+      if (!rec) continue;
+      const keep: ReminderJSON[] = [];
+      let gone = false;
+      for (const r of rec.reminders) {
+        const at = Date.parse(r.sendAt);
+        if (gone || at > now) {
+          keep.push(r);
+          continue;
+        }
+        let status = 0;
+        try {
+          status = await sendPush(rec.subscription, { title: r.title, body: r.body, id: r.id }, vapid, Math.floor(now / 1000), fetcher);
+        } catch {
+          status = 0;
+        }
+        if (status === 404 || status === 410) {
+          gone = true;
+          continue;
+        }
+        const delivered = status >= 200 && status < 300;
+        if (!delivered && now - at < STALE_MS) keep.push(r);
+        if (!delivered) console.warn(`push failed with status ${status}`);
+      }
+      if (gone) await env.SUBS.delete(name);
+      else if (keep.length !== rec.reminders.length) await env.SUBS.put(name, JSON.stringify({ ...rec, reminders: keep }));
+    }
+    cursor = page.list_complete ? undefined : page.cursor;
+  } while (cursor);
+}
+
+export default {
+  fetch: (request: Request, env: Env) => handleRequest(request, env),
+  scheduled: (_controller: ScheduledController, env: Env, ctx: ExecutionContext) => {
+    ctx.waitUntil(runSchedule(env));
+  },
+} satisfies ExportedHandler<Env>;

@@ -749,6 +749,11 @@
   font-weight: 700;
 }
 
+.toggle__hint {
+  display: block;
+  font-weight: 600;
+}
+
 .toggle input {
   appearance: none;
   width: 52px;

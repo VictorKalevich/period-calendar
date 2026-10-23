@@ -2,6 +2,7 @@ import { CYCLE_LENGTH_RANGE, PERIOD_LENGTH_RANGE, type Settings } from '../../do
 import { useLiveQuery } from '../../hooks/useLiveQuery';
 import { getSettings, saveSettings } from '../../storage/repository';
 import { BackupSection } from '../components/BackupSection';
+import { RemindersSection } from '../components/RemindersSection';
 import { Stepper } from '../components/Stepper';
 
 export function SettingsScreen() {
@@ -35,6 +36,8 @@ export function SettingsScreen() {
           onChange={(v) => update({ defaultPeriodLength: v })}
         />
       </section>
+
+      <RemindersSection settings={settings} />
 
       <BackupSection />
     </>
