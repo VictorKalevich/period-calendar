@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { diffDays, formatDayMonthRu } from '../../domain/dates';
-import { markPeriodEnd, markPeriodStart, movePeriodStart, periodEnd, unmarkPeriodDay } from '../../domain/periods';
-import { MAX_PERIOD_DAYS, type LocalDate, type Period, type PeriodError, type Result } from '../../domain/types';
+import { formatDayMonthRu } from '../../domain/dates';
+import { periodActionsFor, type PeriodAction } from '../../domain/periods';
+import { MAX_PERIOD_DAYS, type LocalDate, type Period, type PeriodError } from '../../domain/types';
 import { savePeriods } from '../../storage/repository';
 import { BottomSheet } from './BottomSheet';
 
@@ -13,12 +13,6 @@ const ERRORS: Record<PeriodError, string> = {
   'no-open-period': 'Сначала отметьте начало месячных',
 };
 
-interface Action {
-  label: string;
-  run: () => Result<Period[]>;
-  primary?: boolean;
-}
-
 interface Props {
   open: boolean;
   onClose: () => void;
@@ -29,47 +23,18 @@ interface Props {
   periodLength: number;
 }
 
-function actionsFor(date: LocalDate, today: LocalDate, periods: Period[], periodLength: number): Action[] {
-  const containing = periods.find((p) => p.start <= date && date <= periodEnd(p, periodLength));
-  if (containing) {
-    const actions: Action[] = [];
-    if (containing.start !== date) {
-      actions.push({ label: 'Отметить конец в этот день', run: () => markPeriodEnd(periods, date, today), primary: true });
-      // U3: при пересечении — сдвинуть начало
-      actions.push({ label: 'Сдвинуть начало на этот день', run: () => movePeriodStart(periods, date) });
-      actions.push({ label: 'Убрать отметку с этого дня', run: () => ({ ok: true, value: unmarkPeriodDay(periods, date) }) });
-    } else {
-      actions.push({ label: 'Конец месячных (один день)', run: () => markPeriodEnd(periods, date, today) });
-      actions.push({ label: 'Убрать отметку', run: () => ({ ok: true, value: unmarkPeriodDay(periods, date) }) });
-    }
-    return actions;
-  }
-  const actions: Action[] = [
-    { label: 'Начало месячных', run: () => markPeriodStart(periods, date, today, periodLength), primary: true },
-  ];
-  const before = periods.filter((p) => p.start < date).at(-1);
-  if (before && diffDays(date, before.start) < MAX_PERIOD_DAYS) {
-    actions.push({
-      label: `Конец месячных (начались ${formatDayMonthRu(before.start)})`,
-      run: () => markPeriodEnd(periods, date, today),
-    });
-  }
-  return actions;
-}
-
-/** Действия «Месячные» для выбранного дня (FR-009, U3). */
+/** Диалог «Месячные»: кнопки строго из periodActionsFor (003 FR-006), UI только рисует. */
 export function PeriodSheet({ open, onClose, date, today, periods, periodLength }: Props) {
   const [error, setError] = useState<string | null>(null);
-  const future = date > today;
-  const actions = future ? [] : actionsFor(date, today, periods, periodLength);
+  const actions = periodActionsFor(date, today, periods, periodLength);
 
   const close = () => {
     setError(null);
     onClose();
   };
 
-  const run = async (action: Action) => {
-    const res = action.run();
+  const run = async (action: PeriodAction) => {
+    const res = action.apply();
     if (!res.ok) {
       setError(ERRORS[res.error]);
       return;
@@ -79,10 +44,9 @@ export function PeriodSheet({ open, onClose, date, today, periods, periodLength 
   };
 
   return (
-    <BottomSheet open={open} onClose={close} title={`Месячные · ${formatDayMonthRu(date)}`}>
-      {future && <p className="t-caption sheet__note">{ERRORS['future-date']}</p>}
-      {actions.map((a) => (
-        <button key={a.label} type="button" className={a.primary ? 'btn btn--primary' : 'btn'} onClick={() => run(a)}>
+    <BottomSheet open={open && actions.length > 0} onClose={close} title={`Месячные · ${formatDayMonthRu(date)}`}>
+      {actions.map((a, i) => (
+        <button key={a.kind} type="button" className={i === 0 ? 'btn btn--primary' : 'btn'} onClick={() => run(a)}>
           {a.label}
         </button>
       ))}

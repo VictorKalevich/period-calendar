@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { startOfWeek } from 'date-fns';
 import { addDaysLD, diffDays, formatDayMonthRu, formatWeekdayRu, parseLD, toLocalDate } from '../../domain/dates';
 import { dayInfo } from '../../domain/forecast';
-import { PHASE_LABELS, PROBABILITY_LABELS, type DayContext, type DayInfo } from '../../domain/types';
+import { PHASE_LABELS, PROBABILITY_LABELS, type DayContext, type DayInfo, type LocalDate } from '../../domain/types';
 import { useForecast } from '../../hooks/useForecast';
 import { useLiveQuery } from '../../hooks/useLiveQuery';
 import { getDayEntry } from '../../storage/repository';
@@ -10,7 +10,7 @@ import { explainDay } from '../components/DayCard';
 import { DaySheets, type DaySheet } from '../components/DaySheets';
 import { Disclaimer } from '../components/Disclaimer';
 import { EntrySummary } from '../components/EntrySummary';
-import { Crown, DropIcon } from '../components/Icons';
+import { Crown } from '../components/Icons';
 import { LOW_CONFIDENCE_TEXT } from '../components/StatusBanner';
 
 const WEEKDAYS_SHORT = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
@@ -29,19 +29,37 @@ function dotClass(info: DayInfo): string {
   return '';
 }
 
-function WeekStrip({ ctx }: { ctx: DayContext }) {
+/** Полоска недели: сегодня и прошедшие дни открывают «Месячные», будущие не нажимаются (003 FR-005). */
+function WeekStrip({ ctx, onPeriod }: { ctx: DayContext; onPeriod: (date: LocalDate) => void }) {
   const monday = toLocalDate(startOfWeek(parseLD(ctx.today), { weekStartsOn: 1 }));
   return (
     <ol className="week" aria-label="Эта неделя">
       {WEEKDAYS_SHORT.map((wd, i) => {
         const date = addDaysLD(monday, i);
         const info = dayInfo(date, ctx);
-        const dot = dotClass(info);
-        return (
-          <li key={date} className={info.isToday ? 'week-tile week-tile--today' : 'week-tile'} aria-current={info.isToday ? 'date' : undefined}>
+        const content = (
+          <>
             <span className="week-tile__wd">{wd}</span>
             <span className="week-tile__num">{Number(date.slice(8))}</span>
-            <span className={`week-tile__dot ${dot}`} aria-hidden="true" />
+            <span className={`week-tile__dot ${dotClass(info)}`} aria-hidden="true" />
+          </>
+        );
+        const cls = info.isToday ? 'week-tile week-tile--today' : 'week-tile';
+        return (
+          <li key={date} aria-current={info.isToday ? 'date' : undefined}>
+            {date <= ctx.today ? (
+              <button
+                type="button"
+                className={cls}
+                aria-label={`${formatDayMonthRu(date)} — месячные`}
+                onClick={() => onPeriod(date)}
+                onContextMenu={(e) => e.preventDefault()}
+              >
+                {content}
+              </button>
+            ) : (
+              <div className={cls}>{content}</div>
+            )}
           </li>
         );
       })}
@@ -53,6 +71,7 @@ function WeekStrip({ ctx }: { ctx: DayContext }) {
 export function TodayScreen() {
   const state = useForecast();
   const [sheet, setSheet] = useState<DaySheet>(null);
+  const [sheetDate, setSheetDate] = useState<LocalDate | null>(null);
   const todayDate = state?.ctx.today;
   const entry = useLiveQuery(() => (todayDate ? getDayEntry(todayDate) : undefined), [todayDate]);
   if (!state) return null;
@@ -70,7 +89,7 @@ export function TodayScreen() {
 
       <section className="card hero" aria-label="Сегодня">
         {summary.cycleDay === null ? (
-          <p className="t-body hero__empty">Отметьте начало последних месячных, чтобы увидеть день цикла и прогноз.</p>
+          <p className="t-body hero__empty">Нажмите на день начала последних месячных в полоске недели или в календаре, чтобы увидеть день цикла и прогноз.</p>
         ) : (
           <>
             {summary.phase && <p className="t-caption hero__phase">{PHASE_LABELS[summary.phase]}</p>}
@@ -92,7 +111,13 @@ export function TodayScreen() {
         <Disclaimer />
       </section>
 
-      <WeekStrip ctx={ctx} />
+      <WeekStrip
+        ctx={ctx}
+        onPeriod={(date) => {
+          setSheetDate(date);
+          setSheet('period');
+        }}
+      />
 
       {ctx.forecast && (
         <section className="card upcoming" aria-label="Ближайшие даты">
@@ -142,9 +167,6 @@ export function TodayScreen() {
       )}
 
       <div className="today-actions">
-        <button type="button" className="pill-btn pill-btn--main pill-btn--filled" onClick={() => setSheet('period')}>
-          <DropIcon /> Месячные
-        </button>
         <button type="button" className="pill-btn pill-btn--main" onClick={() => setSheet('symptoms')}>
           Симптомы
         </button>
@@ -159,7 +181,16 @@ export function TodayScreen() {
         </section>
       )}
 
-      <DaySheets which={sheet} onClose={() => setSheet(null)} date={today} ctx={ctx} entry={entry} />
+      <DaySheets
+        which={sheet}
+        onClose={() => {
+          setSheet(null);
+          setSheetDate(null);
+        }}
+        date={sheet === 'period' && sheetDate ? sheetDate : today}
+        ctx={ctx}
+        entry={entry}
+      />
     </>
   );
 }

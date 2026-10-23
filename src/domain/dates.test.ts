@@ -4,6 +4,7 @@ import {
   diffDays,
   formatDayRu,
   formatMonthRu,
+  formatRangeRu,
   monthGrid,
   parseLD,
   toLocalDate,
@@ -94,5 +95,12 @@ describe('Russian formatting', () => {
 
   it('formats a month title capitalised', () => {
     expect(formatMonthRu(2026, 10)).toBe('Октябрь 2026');
+  });
+
+  it('formats date ranges', () => {
+    expect(formatRangeRu(ld('2026-10-01'), ld('2026-10-05'))).toBe('1–5 октября');
+    expect(formatRangeRu(ld('2026-09-30'), ld('2026-10-04'))).toBe('30 сентября – 4 октября');
+    expect(formatRangeRu(ld('2026-12-28'), ld('2027-01-02'))).toBe('28 декабря 2026 – 2 января 2027');
+    expect(formatRangeRu(ld('2026-10-05'), ld('2026-10-05'))).toBe('5 октября');
   });
 });

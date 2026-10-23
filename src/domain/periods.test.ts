@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { markPeriodEnd, markPeriodStart, movePeriodStart, unmarkPeriodDay } from './periods';
+import { markPeriodEnd, markPeriodStart, unmarkPeriodDay } from './periods';
 import type { LocalDate, Period, Result } from './types';
 
 const ld = (s: string) => s as LocalDate;
@@ -122,22 +122,6 @@ describe('markPeriodEnd', () => {
 
   it('reports no-open-period without any periods', () => {
     expect(markPeriodEnd([], ld('2026-10-20'), TODAY)).toEqual({ ok: false, error: 'no-open-period' });
-  });
-});
-
-describe('movePeriodStart', () => {
-  it('moves the start to a day inside the period and keeps the end', () => {
-    const res = ok(movePeriodStart([{ id: 'a', ...p('2026-10-01', '2026-10-06') }], ld('2026-10-03')));
-    expect(strip(res)).toEqual([p('2026-10-03', '2026-10-06')]);
-  });
-
-  it('works for an open period', () => {
-    const res = ok(movePeriodStart([{ id: 'a', ...p('2026-10-18', null) }], ld('2026-10-20')));
-    expect(strip(res)).toEqual([p('2026-10-20', null)]);
-  });
-
-  it('fails when the day is not inside a period', () => {
-    expect(movePeriodStart([{ id: 'a', ...p('2026-10-01', '2026-10-05') }], ld('2026-10-09')).ok).toBe(false);
   });
 });
 

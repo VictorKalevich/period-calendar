@@ -159,6 +159,19 @@
   flex: 1;
 }
 
+/* Даты не выделяются и не вызывают лупу/меню/подсветку iOS при нажатии (003 FR-001) */
+.calendar-card,
+.pager,
+.month-grid,
+.day-cell,
+.week,
+.week-tile {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
 /* Карточка с сеткой и пейджер */
 .calendar-card {
   padding: 14px 8px 12px;
@@ -312,7 +325,7 @@
 
 .day-card__actions {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 8px;
 }
 
@@ -494,7 +507,12 @@
   gap: 6px;
 }
 
+.week > li {
+  display: flex;
+}
+
 .week-tile {
+  width: 100%;
   height: 76px;
   border-radius: var(--radius-inner);
   background: var(--surface);
@@ -594,7 +612,7 @@
 
 .today-actions {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 8px;
 }
 

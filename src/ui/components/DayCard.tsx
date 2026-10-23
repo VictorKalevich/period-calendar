@@ -15,19 +15,21 @@ export function explainDay(info: DayInfo): string {
   if (info.probability === 'high') return 'Фертильное окно — высокая вероятность зачатия.';
   if (info.probability === 'medium') return 'Рядом с фертильным окном — средняя вероятность зачатия.';
   if (info.probability === 'low') return 'Низкая вероятность зачатия.';
-  return 'Отметьте начало месячных, чтобы увидеть прогноз.';
+  return 'Нажмите на день, чтобы отметить начало месячных.';
 }
 
 interface Props {
   info: DayInfo;
-  onPeriod: () => void;
   onSymptoms?: () => void;
   onNote?: () => void;
   children?: ReactNode;
 }
 
-/** Карточка выбранного дня под календарём (design.md «Экран „Календарь“», п. 5). */
-export function DayCard({ info, onPeriod, onSymptoms, onNote, children }: Props) {
+/**
+ * Карточка выбранного дня под календарём (design.md «Экран „Календарь“», п. 5).
+ * «Месячные» открываются нажатием на дату (003 FR-002), отдельной кнопки нет (FR-004).
+ */
+export function DayCard({ info, onSymptoms, onNote, children }: Props) {
   const level = info.probability ? LEVEL[info.probability] : null;
   return (
     <section className="card day-card" aria-label="Выбранный день">
@@ -40,9 +42,6 @@ export function DayCard({ info, onPeriod, onSymptoms, onNote, children }: Props)
       <p className="t-caption day-card__text">{explainDay(info)}</p>
       {children}
       <div className="day-card__actions">
-        <button type="button" className="pill-btn pill-btn--rose" onClick={onPeriod}>
-          Месячные
-        </button>
         <button type="button" className="pill-btn" onClick={onSymptoms} disabled={!onSymptoms}>
           Симптомы
         </button>

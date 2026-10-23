@@ -41,6 +41,7 @@ export const DayCell = memo(function DayCell({ info, inMonth, selected, onSelect
       aria-label={describe(info)}
       aria-pressed={selected}
       onClick={() => onSelect(info)}
+      onContextMenu={(e) => e.preventDefault()}
     >
       <span className={cls.join(' ')}>
         {Number(info.date.slice(8))}

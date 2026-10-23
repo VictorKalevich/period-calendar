@@ -19,10 +19,18 @@ export function CalendarScreen() {
   const [sheet, setSheet] = useState<DaySheet>(null);
 
   const ctx = state?.ctx;
-  const day = selected ?? ctx?.today ?? null;
+  const today = ctx?.today;
+  const day = selected ?? today ?? null;
   const entry = useLiveQuery(() => (day ? getDayEntry(day) : undefined), [day]);
   const getInfo = useCallback((date: LocalDate) => dayInfo(date, ctx!), [ctx]);
-  const onSelect = useCallback((info: DayInfo) => setSelected(info.date), []);
+  // Сегодня и прошедшие дни — сразу диалог «Месячные»; будущие — только выбор (003 FR-002, FR-003).
+  const onSelect = useCallback(
+    (info: DayInfo) => {
+      setSelected(info.date);
+      if (today && info.date <= today) setSheet('period');
+    },
+    [today],
+  );
 
   if (!state || !ctx || !day) return null;
 
@@ -37,12 +45,7 @@ export function CalendarScreen() {
         banner={<StatusBanner summary={state.summary} />}
       />
       <Legend />
-      <DayCard
-        info={getInfo(day)}
-        onPeriod={() => setSheet('period')}
-        onSymptoms={() => setSheet('symptoms')}
-        onNote={() => setSheet('note')}
-      >
+      <DayCard info={getInfo(day)} onSymptoms={() => setSheet('symptoms')} onNote={() => setSheet('note')}>
         <EntrySummary entry={entry} />
       </DayCard>
       <Disclaimer />

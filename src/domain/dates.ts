@@ -75,6 +75,17 @@ export function formatDayMonthRu(d: LocalDate): string {
   return format(parseLD(d), 'd MMMM', { locale: ru });
 }
 
+/** «1–5 октября», «30 сентября – 4 октября», «28 декабря 2026 – 2 января 2027», «5 октября». */
+export function formatRangeRu(from: LocalDate, to: LocalDate): string {
+  if (from === to) return formatDayMonthRu(from);
+  if (from.slice(0, 4) !== to.slice(0, 4)) {
+    const full = (d: LocalDate) => format(parseLD(d), 'd MMMM yyyy', { locale: ru });
+    return `${full(from)} – ${full(to)}`;
+  }
+  if (from.slice(0, 7) === to.slice(0, 7)) return `${Number(from.slice(8))}–${formatDayMonthRu(to)}`;
+  return `${formatDayMonthRu(from)} – ${formatDayMonthRu(to)}`;
+}
+
 /** «Пятница» */
 export function formatWeekdayRu(d: LocalDate): string {
   return capitalize(format(parseLD(d), 'EEEE', { locale: ru }));

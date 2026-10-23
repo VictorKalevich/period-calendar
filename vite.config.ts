@@ -1,7 +1,9 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
-import { version } from './package.json';
+import pkg from './package.json' with { type: 'json' };
+
+const { version } = pkg;
 
 export default defineConfig({
   base: '/period-calendar/',

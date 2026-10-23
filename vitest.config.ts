@@ -1,5 +1,7 @@
 import { defineConfig } from 'vitest/config';
-import { version } from './package.json';
+import pkg from './package.json' with { type: 'json' };
+
+const { version } = pkg;
 
 export default defineConfig({
   define: { __APP_VERSION__: JSON.stringify(version), __APP_BUILD__: JSON.stringify('test') },
