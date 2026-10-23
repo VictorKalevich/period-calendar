@@ -9,7 +9,7 @@ type Probability = 'low' | 'medium' | 'high';
 type Confidence = 'normal' | 'low';
 type Phase = 'menstrual' | 'follicular' | 'ovulation' | 'luteal';
 // Подписи: 'Менструальная фаза' | 'Фолликулярная фаза' | 'Овуляция' | 'Лютеиновая фаза'
-// DayInfo.fertile: 'predicted' | 'past' | null — 'past' для окон завершённых циклов
+// DayInfo.fertile: 'predicted' | 'past' | null — 'past' для дней окна раньше today (любой цикл)
 // DayInfo.phase: Phase | null (FR-019b)
 
 // dates.ts
@@ -122,4 +122,4 @@ type PeriodError = 'future-date' | 'inside-existing' | 'end-before-start' | 'too
 | 25 | фазы: начало 2026-03-01, месячные 5 дн., цикл 28 | 03-01…03-05 `menstrual`, 03-06…03-14 `follicular`, 03-15 `ovulation`, 03-16…03-28 `luteal`, 03-29 `menstrual` |
 | 26 | фаза при пересечении (цикл 15 дн., месячные 5 дн. → овуляция на 2-й день) | 2-й день — `menstrual` |
 | 27 | `todaySummary.phase` при задержке и без отметок | `null` |
-| 28 | `dayInfo.fertile` | завершённый цикл → `'past'`, текущий и будущие → `'predicted'`; `ovulation = true` для обоих |
+| 28 | `dayInfo.fertile` | дни окна раньше `today` (в прошлом и в текущем цикле) → `'past'`; сегодня и позже → `'predicted'`; `ovulation = true` в обоих случаях |

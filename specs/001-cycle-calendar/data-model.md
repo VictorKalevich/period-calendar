@@ -105,7 +105,7 @@
 | `date` | LocalDate |
 | `cycleDay` | number \| null (null до первой отметки) |
 | `period` | `'actual' \| 'predicted' \| null` |
-| `fertile` | `'predicted' \| 'past' \| null` (`past` — окно завершённого цикла: заливка без пунктира) |
+| `fertile` | `'predicted' \| 'past' \| null` (`past` — день окна раньше `today`, в любом цикле, включая текущий: заливка без пунктира; `predicted` — сегодня и позже) |
 | `ovulation` | boolean (для прошлых циклов тоже, с короной) |
 | `phase` | `'menstrual' \| 'follicular' \| 'ovulation' \| 'luteal' \| null` (FR-019b; null до первой отметки) |
 | `probability` | `'low' \| 'medium' \| 'high' \| null` |
