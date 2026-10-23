@@ -1,7 +1,7 @@
-# Data Model: Нажатие на дату и умные действия «Месячные»
+# Data Model: Нажатие на дату и умные действия «Месячные» (ревизия 2)
 
 Схема хранения **не меняется** (IndexedDB v1, `Period { id, start, end, endEstimated }` — см.
-[001 data-model](../001-cycle-calendar/data-model.md)). Новые сущности — производные, в домене.
+[001 data-model](../001-cycle-calendar/data-model.md)). Новый инвариант и производные сущности — в домене.
 
 ## Понятия
 
@@ -10,26 +10,38 @@
 - `containing(date)` — месячные с `start ≤ date ≤ lastDay`.
 - `prev(date)` / `next(date)` — ближайшие месячные с `start < date` / `start > date`.
 
+## Инвариант: слияние (FR-015–FR-017)
+
+`normalizePeriods(periods, today, L)` — после сортировки по началу, пока следующие месячные
+начинаются не позже `lastDay(текущих) + 1` и объединение не длиннее 15 дней:
+
+| Поле объединённых | Значение |
+|-------------------|----------|
+| `id` | id более ранних месячных |
+| `start` | более раннее начало |
+| последний день | `max(lastDay(a), lastDay(b))` |
+| `end`, `endEstimated` | от источника более позднего последнего дня: отмеченный конец → он же; незакрытые с оценкой ≤ сегодня → `end = оценка`, `endEstimated = true`; незакрытые, ещё идущие (оценка > сегодня) → `end = сегодня`, `endEstimated = true`. При равных последних днях `endEstimated = a.endEstimated && b.endEstimated` |
+
+Если объединение дало бы > 15 дней — месячные не объединяются (для пересекающихся это ошибка
+действия/импорта).
+
 ## PeriodAction
 
 | Поле | Тип | Описание |
 |------|-----|----------|
 | `kind` | см. ниже | тип действия |
-| `label` | string | подпись кнопки по-русски |
-| `apply` | `() => Result<Period[]>` | новые отметки (исходные не меняются) |
-
-`kind`:
+| `label` | string | подпись кнопки |
+| `confirm` | string? | текст подтверждения (только `delete-period`) |
+| `apply` | `() => Result<Period[]>` | новые нормализованные отметки |
 
 | kind | Случай | Подпись | Условие показа | Результат |
 |------|--------|---------|----------------|-----------|
-| `extend-by-length` | А, Б | «Продлить месячные: {start}–{start+L−1}» | `end = null` или `endEstimated`; `newEnd = start+L−1 ≤ today`; `newEnd < next.start`; при `end ≠ null` — `newEnd > end` | `end = newEnd`, `endEstimated = false` |
-| `end-one-day` | А | «Конец месячных (один день)» | всегда | `end = start`, `endEstimated = false` |
-| `unmark` | А | «Убрать отметку» | всегда | месячные удалены |
+| `delete-period` | А | «Удалить период»; confirm «Удалить месячные {start}–{lastDay}?» | всегда | месячные удалены |
 | `end-here` | Б | «Отметить конец в этот день» | всегда | `end = date`, `endEstimated = false` |
-| `set-start` | Б | «Установить как начало» | всегда | `start = date`, конец — правило R3 |
-| `unmark-day` | Б | «Убрать отметку с этого дня» | всегда | `end = date − 1`, `endEstimated = false` |
-| `start` | В | «Начало месячных» | всегда | новые месячные (правило 001) |
-| `extend-to` | В | «Продлить месячные до {date}» | `prev`: `1 ≤ date − lastDay(prev) ≤ 7`, `date − prev.start + 1 ≤ 15` | `prev.end = date`, `endEstimated = false` |
-| `set-next-start` | В | «Установить как начало месячных» | `next`: `1 ≤ next.start − date ≤ 3`; `!prev || date > lastDay(prev)`; `lastDay(next) − date + 1 ≤ 15` | `next.start = date`, конец — правило R3 |
+| `set-start` | Б | «Установить как начало» | всегда | `start = date`, конец — правило FR-009 |
+| `start` | В | «Начало месячных» | всегда | новые месячные (+ слияние) |
+| `extend-to` | В | «Продлить месячные до {date}» | `1 ≤ date − lastDay(prev) ≤ 7`, итог после слияния ≤ 15 дней | `prev.end = date`, `endEstimated = false` (+ слияние) |
+| `set-next-start` | В | «Установить как начало месячных» | `1 ≤ next.start − date ≤ 3`, `date > lastDay(prev)`, итог после слияния ≤ 15 дней | `next.start = date`, конец — FR-009 (+ слияние) |
 
-Порядок кнопок — как в таблице спецификации. Будущий день (`date > today`) → `[]`.
+Будущий день → `[]`. Все `apply` возвращают результат `normalizePeriods`; если в нём есть месячные
+длиннее 15 дней — `{ ok: false, error: 'too-long' }`, и условные кнопки с таким результатом не показываются.
