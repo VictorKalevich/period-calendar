@@ -103,6 +103,51 @@ describe('migrations[3] (v3 → v4)', () => {
   });
 });
 
+// Реальная миграция v4 → v5 (фича 007): напоминание о неотмеченном начале месячных.
+describe('migrations[4] (v4 → v5)', () => {
+  const v4 = {
+    periods: [],
+    settings: {
+      defaultCycleLength: 28,
+      defaultPeriodLength: 5,
+      remindPeriod: false,
+      remindOvulation: true,
+      showWellbeing: false,
+      showNotes: true,
+      ovulationShiftEnabled: true,
+      ovulationShift: 2,
+      ovulationFromNextPeriod: true,
+    },
+  };
+
+  it('adds the reminder as on when missing and keeps other fields', () => {
+    expect(migrations[4]!(v4)).toEqual({ ...v4, settings: { ...v4.settings, remindMissedPeriod: true } });
+  });
+
+  it('keeps an explicit value and is idempotent', () => {
+    const withValue = { ...v4, settings: { ...v4.settings, remindMissedPeriod: false } };
+    expect(migrations[4]!(withValue)).toEqual(withValue);
+    const once = migrations[4]!(v4);
+    expect(migrations[4]!(once)).toEqual(once);
+  });
+
+  it('leaves data without settings untouched', () => {
+    expect(migrations[4]!({ periods: [] })).toEqual({ periods: [] });
+  });
+
+  it('migrates a v1 copy through all steps', () => {
+    const v1 = { settings: { defaultCycleLength: 28, defaultPeriodLength: 5, remindPeriod: true, remindOvulation: true } };
+    expect(migrateData(v1, 1, 5).settings).toMatchObject({
+      showWellbeing: false,
+      showNotes: false,
+      ovulationShiftEnabled: false,
+      ovulationShift: 0,
+      ovulationFromNextPeriod: false,
+      remindMissedPeriod: true,
+    });
+  });
+});
+
 // Механизм миграций для будущих версий схемы: проверяется на вымышленных миграциях v1 → v2 → v3.
 const registry: Record<number, (d: MigrationData) => MigrationData> = {
   1: (d) => ({ ...d, renamed: d.old ?? d.renamed, old: undefined }),

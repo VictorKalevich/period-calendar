@@ -35,10 +35,19 @@ function addOvulationMode(data: MigrationData): MigrationData {
   return { ...data, settings: { ...s, ovulationFromNextPeriod: s.ovulationFromNextPeriod ?? false } };
 }
 
+/** v4 → v5 (фича 007): напоминание о неотмеченном начале месячных, по умолчанию включено. */
+function addMissedPeriodReminder(data: MigrationData): MigrationData {
+  const settings = data.settings;
+  if (typeof settings !== 'object' || settings === null) return data;
+  const s = settings as Record<string, unknown>;
+  return { ...data, settings: { ...s, remindMissedPeriod: s.remindMissedPeriod ?? true } };
+}
+
 export const migrations: Record<number, Migration> = {
   1: addEntrySwitches,
   2: addOvulationShift,
   3: addOvulationMode,
+  4: addMissedPeriodReminder,
 };
 
 /** Последовательно применяет миграции from → to. Неизвестные поля не трогает. */

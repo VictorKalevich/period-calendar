@@ -83,14 +83,18 @@ function unmarkPeriodDay(periods: Period[], day: LocalDate): Period[];
 // reminders.ts
 function planReminders(forecast: Forecast, settings: Settings, now: Date,
                        cyclesAhead?: number /* 6 */): Reminder[];
-// при forecast.delayDays > 0 возвращает [] — напоминания на следующие циклы не планируются
+// при forecast.delayDays > 0 — только 'missedPeriod' текущего цикла (ревизия 007); прочие виды на
+// следующие циклы не планируются. Контракт 007: specs/007-missed-period-reminder/contracts/
+
+function toServerReminders(reminders: Reminder[]): Array<Omit<Reminder, 'kind'>>; // 007: ровно id, sendAt, title, body
 
 type Reminder = {
   id: string;        // детерминированный: `${kind}:${date}`
-  kind: 'period' | 'ovulation';
+  kind: 'period' | 'ovulation' | 'missedPeriod';
   sendAt: string;    // ISO-8601 UTC; 12:00 местного времени в дату напоминания
-  title: string;     // 'Календарь цикла' | 'Овуляция'
-  body: string;      // 'Ближайшие дни будь аккуратна, скоро начало цикла' | 'Сегодня Ты КОРОЛЕВА'
+  title: string;     // всегда 'Календарь цикла' (NOTIFICATION_TITLE, ревизия 007)
+  body: string;      // 'Ближайшие дни будь аккуратна, скоро начало цикла' | 'Сегодня Ты КОРОЛЕВА' |
+                     // 'Похоже, месячные уже начались — не забудь отметить их в календаре'
 };
 
 type Result<T> = { ok: true; value: T } | { ok: false; error: PeriodError };
@@ -116,13 +120,13 @@ type PeriodError = 'future-date' | 'inside-existing' | 'end-before-start' | 'too
 | 13 | `dayInfo` до первой отметки | `cycleDay = null`, `probability = null` |
 | 14 | `planReminders`: смена летнего времени | `sendAt` соответствует 12:00 местного времени |
 | 15 | `planReminders`: напоминание в прошлом | не включается |
-| 16 | `planReminders`: выключено `remindOvulation` | только `kind: 'period'` |
+| 16 | `planReminders`: выключены `remindOvulation` и `remindMissedPeriod` | только `kind: 'period'` |
 | 17 | `monthGrid` для любого месяца | начинается с понедельника, содержит все дни месяца |
 | 18 | `confidence`: 0, 1 или 2 завершённых цикла | `low` |
 | 19 | `confidence`: циклы 26, 28, 35 (разброс 9) | `low`; циклы 27, 28, 30 (разброс 3) — `normal` |
 | 20 | `averagePeriodLength`: 4 (ручной), 5×5 (`endEstimated`, закрыты следующим началом), текущие без конца | 5 (4,83; закрытые автоматически учитываются, оценочный конец текущих — нет) |
 | 21 | конец позже 15-го дня от начала | ошибка `too-long` |
-| 22 | `planReminders` при `delayDays > 0` | `[]` |
+| 22 | `planReminders` при `delayDays > 0` | только `missedPeriod` на «исходный прогноз + 2», если его время не прошло; иначе `[]` (ревизия 007) |
 | 23 | смена часового пояса (`TZ` = Asia/Tokyo vs America/Los_Angeles) | `buildForecast` и `dayInfo` дают одинаковые даты |
 | 24 | `cycleStats` | средние совпадают с `Forecast.cycleLength`/`periodLength` при наличии истории |
 | 25 | фазы: начало 2026-03-01, месячные 5 дн., цикл 28 | 03-01…03-05 `menstrual`, 03-06…03-13 `follicular`, 03-14 `ovulation`, 03-15…03-28 `luteal`, 03-29 `menstrual` |

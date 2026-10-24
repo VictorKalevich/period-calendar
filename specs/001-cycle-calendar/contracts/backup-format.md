@@ -5,7 +5,7 @@
 ```json
 {
   "format": "cycle-calendar-backup",
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "exportedAt": "2026-10-23T10:15:00.000Z",
   "data": {
     "periods": [{ "id": "6f1c…", "start": "2026-09-28", "end": "2026-10-02", "endEstimated": false }],
@@ -19,7 +19,8 @@
       "showNotes": false,
       "ovulationShiftEnabled": false,
       "ovulationShift": 0,
-      "ovulationFromNextPeriod": false
+      "ovulationFromNextPeriod": false,
+      "remindMissedPeriod": true
     }
   }
 }
@@ -34,6 +35,9 @@
 
 `schemaVersion: 4` (фича 006) добавляет `ovulationFromNextPeriod` (boolean, обязателен в v4; иначе —
 ошибка «некорректный способ расчёта овуляции»). Копии v1–v3 проходят `migrations[3]` — `false`.
+
+`schemaVersion: 5` (фича 007) добавляет `remindMissedPeriod` (boolean, обязателен в v5; иначе — ошибка
+«некорректные настройки напоминаний»). Копии v1–v4 проходят `migrations[4]` — `true`.
 
 ## Правила импорта
 
