@@ -5,7 +5,7 @@
 ```json
 {
   "format": "cycle-calendar-backup",
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "exportedAt": "2026-10-23T10:15:00.000Z",
   "data": {
     "periods": [{ "id": "6f1c…", "start": "2026-09-28", "end": "2026-10-02", "endEstimated": false }],
@@ -18,7 +18,8 @@
       "showWellbeing": false,
       "showNotes": false,
       "ovulationShiftEnabled": false,
-      "ovulationShift": 0
+      "ovulationShift": 0,
+      "ovulationFromNextPeriod": false
     }
   }
 }
@@ -30,6 +31,9 @@
 `schemaVersion: 3` (фича 005) добавляет `ovulationShiftEnabled` (boolean) и `ovulationShift` (целое
 −5…+5), оба обязательны в v3; иначе — ошибка «некорректный личный сдвиг овуляции». Копии v1 и v2
 проходят `migrations[2]` — сдвиг выключен, значение 0.
+
+`schemaVersion: 4` (фича 006) добавляет `ovulationFromNextPeriod` (boolean, обязателен в v4; иначе —
+ошибка «некорректный способ расчёта овуляции»). Копии v1–v3 проходят `migrations[3]` — `false`.
 
 ## Правила импорта
 

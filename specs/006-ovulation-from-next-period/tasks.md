@@ -61,10 +61,10 @@ description: "Task list for feature 006-ovulation-from-next-period"
 
 ## Phase 7: Polish & документы
 
-- [ ] T012 [P] Ревизии `specs/005-ovulation-shift-theme/spec.md`: FR-003 (режим выбирается переключателем 006), FR-006 (расположение — карточка «Цикл»), FR-009 (текст по режиму) — пометкой «Ревизия 006»
-- [ ] T013 [P] `specs/001-cycle-calendar/spec.md` (FR-016 и связанные места о правиле овуляции — два режима со ссылкой на 006 FR-003–FR-005), `specs/001-cycle-calendar/data-model.md` (Settings + схема v4), `specs/001-cycle-calendar/contracts/domain-api.md` (`ovulationFor`, режим), `specs/001-cycle-calendar/contracts/backup-format.md` (v4, новое поле)
-- [ ] T014 `npm test`, `npm run build`, проверка `git diff` (кириллица, BOM); браузер: quickstart 1–7, светлая и тёмная темы
-- [ ] T015 Слить ветку в `main` и `git push origin main` (CLAUDE.md; worker не менялся)
+- [X] T012 [P] Ревизии `specs/005-ovulation-shift-theme/spec.md`: FR-003 (режим выбирается переключателем 006), FR-006 (расположение — карточка «Цикл»), FR-009 (текст по режиму) — пометкой «Ревизия 006»
+- [X] T013 [P] `specs/001-cycle-calendar/spec.md` (FR-016 и связанные места о правиле овуляции — два режима со ссылкой на 006 FR-003–FR-005), `specs/001-cycle-calendar/data-model.md` (Settings + схема v4), `specs/001-cycle-calendar/contracts/domain-api.md` (`ovulationFor`, режим), `specs/001-cycle-calendar/contracts/backup-format.md` (v4, новое поле)
+- [X] T014 `npm test`, `npm run build`, проверка `git diff` (кириллица, BOM); браузер: quickstart 1–7, светлая и тёмная темы
+- [X] T015 Слить ветку в `main` и `git push origin main` (CLAUDE.md; worker не менялся)
 
 ## Dependencies
 

@@ -65,6 +65,7 @@
 | `showNotes` | boolean | false | «Заметки» видны (004 FR-004); схема v2 |
 | `ovulationShiftEnabled` | boolean | false | учитывать личный сдвиг овуляции (005); схема v3 |
 | `ovulationShift` | number | 0 | целое −5…+5; применяется только при `ovulationShiftEnabled`, при выключении сохраняется (005); схема v3 |
+| `ovulationFromNextPeriod` | boolean | false | считать овуляцию от следующей менструации (006); схема v4 |
 
 ### PushState — состояние подписки (одна запись, ключ `push`)
 
@@ -103,7 +104,8 @@
 `PredictedCycle`: `start`, `periodDays` (`start…start+periodLength−1`), `ovulation`
 (`min(start + 13 + сдвиг, nextStart − 1)` — 14-й день цикла, но не позже дня перед следующими
 месячными; сдвиг = `ovulationShift` при `ovulationShiftEnabled`, иначе 0; у текущего цикла граница —
-прогнозное начало без учёта задержки; фича 005, FR-003a), `fertile` (`ovulation − 5 … ovulation`), `mediumDays`
+прогнозное начало без учёта задержки; фича 005, FR-003a; при `ovulationFromNextPeriod` —
+`min(max(nextStart − 14 + сдвиг, последний день месячных цикла + 1), nextStart − 1)`, фича 006), `fertile` (`ovulation − 5 … ovulation`), `mediumDays`
 (`ovulation − 7`, `ovulation − 6`, `ovulation + 1`). Для завершённых циклов те же поля вычисляются
 от их фактического начала.
 
@@ -146,7 +148,8 @@ Settings; **не** включает PushState (токен — секрет ус�
 
 ## Версионирование схемы
 
-- `SCHEMA_VERSION = 2` (v2 — фича 004: в настройки добавлены `showWellbeing`, `showNotes` = `false`
-  через `db.version(2).upgrade` и `migrations[1]`). Каждая следующая версия добавляет `db.version(n)` и функцию
+- `SCHEMA_VERSION = 4`: v2 — фича 004 (`showWellbeing`, `showNotes` = `false`, `migrations[1]`);
+  v3 — фича 005 (`ovulationShiftEnabled` = `false`, `ovulationShift` = 0, `migrations[2]`); v4 — фича
+  006 (`ovulationFromNextPeriod` = `false`, `migrations[3]`). Каждая следующая версия добавляет `db.version(n)` и функцию
   `migrate_{n-1}_to_{n}`, используемую и для IndexedDB, и для импорта старых резервных копий.
 - Миграции не удаляют неизвестные поля и идемпотентны (Конституция III).

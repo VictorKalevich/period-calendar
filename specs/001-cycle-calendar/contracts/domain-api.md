@@ -128,5 +128,6 @@ type PeriodError = 'future-date' | 'inside-existing' | 'end-before-start' | 'too
 | 25 | фазы: начало 2026-03-01, месячные 5 дн., цикл 28 | 03-01…03-05 `menstrual`, 03-06…03-13 `follicular`, 03-14 `ovulation`, 03-15…03-28 `luteal`, 03-29 `menstrual` |
 | 26 | фаза при пересечении (отмеченные месячные 10 дн., сдвиг −5 → овуляция на 9-й день) | 9-й день — `menstrual`, `fertile = null`, `ovulation = false` (005) |
 | 29 | овуляция = `min(начало + 13 (+ сдвиг при `ovulationShiftEnabled`), следующие − 1)` для прошлых и прогнозных циклов, циклы 21 и 45, через месяц и год; выключенный сдвиг не применяется | см. specs/005-ovulation-shift-theme/contracts/ovulation.md |
+| 30 | `ovulationFor({ start, periodLast, nextStart }, settings)` при `ovulationFromNextPeriod`: `min(max(nextStart − 14 + сдвиг, periodLast + 1), nextStart − 1)`; режим не меняет прогноз месячных и длины | см. specs/006-ovulation-from-next-period/contracts/ovulation-mode.md |
 | 27 | `todaySummary.phase` при задержке и без отметок | `null` |
 | 28 | `dayInfo.fertile` | дни окна раньше `today` (в прошлом и в текущем цикле) → `'past'`; сегодня и позже → `'predicted'`; `ovulation = true` в обоих случаях |
