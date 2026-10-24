@@ -39,8 +39,8 @@ description: "Task list for feature 006-ovulation-from-next-period"
 
 **Independent Test**: quickstart шаги 1–4 в браузере.
 
-- [ ] T007 [US2] Обновить `docs/design/design.md` (раздел «Ещё не нарисовано», Настройки): блок сдвига — в конце карточки «Цикл»; ниже — переключатель «Считать от следующей менструации» (по умолчанию выключен) и описание 13 px `muted` «Овуляция будет рассчитана примерно за 14 дней до ожидаемого начала месячных», виден всегда; в «Записи дня» — только «Самочувствие» и «Заметки»
-- [ ] T008 [US2] `src/ui/screens/SettingsScreen.tsx`: перенести `<label className="toggle">` сдвига, подсказку и `Stepper` из секции `entries-title` в конец секции `cycle-title`; добавить ниже `<label className="toggle">` «Считать от следующей менструации» (`checked={settings.ovulationFromNextPeriod}`, `update({ ovulationFromNextPeriod })`) и `<p className="t-caption settings-card__hint">` с описанием; сверить с design.md (зона нажатия ≥ 44 px, контраст в обеих темах)
+- [X] T007 [US2] Обновить `docs/design/design.md` (раздел «Ещё не нарисовано», Настройки): блок сдвига — в конце карточки «Цикл»; ниже — переключатель «Считать от следующей менструации» (по умолчанию выключен) и описание 13 px `muted` «Овуляция будет рассчитана примерно за 14 дней до ожидаемого начала месячных», виден всегда; в «Записи дня» — только «Самочувствие» и «Заметки»
+- [X] T008 [US2] `src/ui/screens/SettingsScreen.tsx`: перенести `<label className="toggle">` сдвига, подсказку и `Stepper` из секции `entries-title` в конец секции `cycle-title`; добавить ниже `<label className="toggle">` «Считать от следующей менструации» (`checked={settings.ovulationFromNextPeriod}`, `update({ ovulationFromNextPeriod })`) и `<p className="t-caption settings-card__hint">` с описанием; сверить с design.md (зона нажатия ≥ 44 px, контраст в обеих темах)
 
 ## Phase 5: User Story 3 — «Подробнее» (P2)
 
@@ -48,7 +48,7 @@ description: "Task list for feature 006-ovulation-from-next-period"
 
 **Independent Test**: quickstart шаг 5.
 
-- [ ] T009 [US3] `src/ui/components/Disclaimer.tsx`: абзац об овуляции по `settings.ovulationFromNextPeriod` — выключено: текущий текст «на 14-й день цикла …»; включено: «Овуляция — примерно за 14 дней до ожидаемого начала следующих месячных, но не раньше дня после месячных и не позже дня перед следующими. Способ расчёта меняется в Настройках.»; окно и строка о сдвиге без изменений; обновить описание «Подробнее» в `docs/design/design.md`
+- [X] T009 [US3] `src/ui/components/Disclaimer.tsx`: абзац об овуляции по `settings.ovulationFromNextPeriod` — выключено: текущий текст «на 14-й день цикла …»; включено: «Овуляция — примерно за 14 дней до ожидаемого начала следующих месячных, но не раньше дня после месячных и не позже дня перед следующими. Способ расчёта меняется в Настройках.»; окно и строка о сдвиге без изменений; обновить описание «Подробнее» в `docs/design/design.md`
 
 ## Phase 6: User Story 4 — резервная копия (P2)
 
