@@ -15,8 +15,8 @@ description: "Task list for feature 007-missed-period-reminder"
 
 ## Phase 2: Foundational — настройки v5 (блокирует US1, US3, US4)
 
-- [ ] T001 Failing tests: `src/storage/migrations/migrations.test.ts` — `migrations[4]` добавляет `remindMissedPeriod: true`, сохраняет явное `false`, идемпотентна, данные без `settings` не меняет; `migrateData(v1, 1, 5)` даёт все поля 004–007; `src/storage/db.test.ts` — `SCHEMA_VERSION === 5`, `DEFAULT_SETTINGS.remindMissedPeriod === true`, `getSettings()` без сохранённых настроек — `remindMissedPeriod: true`; `src/storage/update.test.ts` — база v4 с сохранёнными настройками (`remindPeriod: false`) открывается новой сборкой, `remindMissedPeriod: true`, прочие настройки и месячные на месте
-- [ ] T002 Implement: `Settings.remindMissedPeriod: boolean` с комментарием «Напоминать о неотмеченном начале месячных — фича 007» и `DEFAULT_SETTINGS.remindMissedPeriod = true` в `src/domain/types.ts`; `migrations[4]` (`addMissedPeriodReminder`: `remindMissedPeriod ?? true`, по образцу `addOvulationMode`) в `src/storage/migrations/index.ts`; `SCHEMA_VERSION = 5` + `this.version(5).stores({ periods: 'id, start', days: 'date', kv: 'key' }).upgrade(...)` через `migrations[4]` по образцу v4 в `src/storage/db.ts`; поправить фикстуры тестов, где `Settings` собирается полностью (TS strict) — до прохождения T001
+- [X] T001 Failing tests: `src/storage/migrations/migrations.test.ts` — `migrations[4]` добавляет `remindMissedPeriod: true`, сохраняет явное `false`, идемпотентна, данные без `settings` не меняет; `migrateData(v1, 1, 5)` даёт все поля 004–007; `src/storage/db.test.ts` — `SCHEMA_VERSION === 5`, `DEFAULT_SETTINGS.remindMissedPeriod === true`, `getSettings()` без сохранённых настроек — `remindMissedPeriod: true`; `src/storage/update.test.ts` — база v4 с сохранёнными настройками (`remindPeriod: false`) открывается новой сборкой, `remindMissedPeriod: true`, прочие настройки и месячные на месте
+- [X] T002 Implement: `Settings.remindMissedPeriod: boolean` с комментарием «Напоминать о неотмеченном начале месячных — фича 007» и `DEFAULT_SETTINGS.remindMissedPeriod = true` в `src/domain/types.ts`; `migrations[4]` (`addMissedPeriodReminder`: `remindMissedPeriod ?? true`, по образцу `addOvulationMode`) в `src/storage/migrations/index.ts`; `SCHEMA_VERSION = 5` + `this.version(5).stores({ periods: 'id, start', days: 'date', kv: 'key' }).upgrade(...)` через `migrations[4]` по образцу v4 в `src/storage/db.ts`; поправить фикстуры тестов, где `Settings` собирается полностью (TS strict) — до прохождения T001
 
 **Checkpoint**: `npm test` зелёный, поведение приложения не изменилось.
 
@@ -57,8 +57,8 @@ description: "Task list for feature 007-missed-period-reminder"
 
 **Independent Test**: `npm test` (backup.test.ts), quickstart шаг 6.
 
-- [ ] T011 [US4] Failing tests `src/storage/backup.test.ts`: экспорт — `schemaVersion: 5` и `remindMissedPeriod` в `data.settings`; импорт копий v4, v3, v1 — `true`; импорт v5 с `false` — `false`; v5 с не-boolean `remindMissedPeriod` — ошибка «некорректные настройки напоминаний»
-- [ ] T012 [US4] `src/storage/backup.ts`: проверка (`typeof remindMissedPeriod !== 'boolean'` → «некорректные настройки напоминаний», комментарий «Старые копии получают поле миграцией v4 → v5 (migrations[4])») и перенос `remindMissedPeriod` в разборе настроек — до прохождения T011
+- [X] T011 [US4] Failing tests `src/storage/backup.test.ts`: экспорт — `schemaVersion: 5` и `remindMissedPeriod` в `data.settings`; импорт копий v4, v3, v1 — `true`; импорт v5 с `false` — `false`; v5 с не-boolean `remindMissedPeriod` — ошибка «некорректные настройки напоминаний»
+- [X] T012 [US4] `src/storage/backup.ts`: проверка (`typeof remindMissedPeriod !== 'boolean'` → «некорректные настройки напоминаний», комментарий «Старые копии получают поле миграцией v4 → v5 (migrations[4])») и перенос `remindMissedPeriod` в разборе настроек — до прохождения T011
 
 ## Phase 7: Polish & документы
 

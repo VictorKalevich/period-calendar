@@ -51,6 +51,8 @@ export interface Settings {
   ovulationShift: number;
   /** Считать овуляцию от следующей менструации (следующие − 14 + сдвиг) — фича 006. */
   ovulationFromNextPeriod: boolean;
+  /** Напоминать о неотмеченном начале месячных (прогноз + 2 дня) — фича 007. */
+  remindMissedPeriod: boolean;
 }
 
 export const DEFAULT_SETTINGS: Readonly<Settings> = Object.freeze({
@@ -63,6 +65,7 @@ export const DEFAULT_SETTINGS: Readonly<Settings> = Object.freeze({
   ovulationShiftEnabled: false,
   ovulationShift: 0,
   ovulationFromNextPeriod: false,
+  remindMissedPeriod: true,
 });
 
 /** Овуляция — 14-й день цикла: начало месячных + 13 дней (фича 005, заменяет «за 14 дней до следующих»). */

@@ -69,7 +69,7 @@ describe('buildBackup', () => {
     expect(JSON.stringify(b)).not.toContain('secret');
   });
 
-  it('exports schema version 4 with switches, the ovulation shift and the mode (004–006)', async () => {
+  it('exports schema version 5 with switches, the ovulation shift, the mode and the missed-period reminder (004–007)', async () => {
     await saveSettings({
       ...DEFAULT_SETTINGS,
       showWellbeing: true,
@@ -77,18 +77,25 @@ describe('buildBackup', () => {
       ovulationShiftEnabled: true,
       ovulationShift: -3,
       ovulationFromNextPeriod: true,
+      remindMissedPeriod: false,
     });
     const b = await buildBackup(new Date());
-    expect(b.schemaVersion).toBe(4);
+    expect(b.schemaVersion).toBe(5);
     expect(b.data.settings).toMatchObject({
       showWellbeing: true,
       showNotes: false,
       ovulationShiftEnabled: true,
       ovulationShift: -3,
       ovulationFromNextPeriod: true,
+      remindMissedPeriod: false,
     });
     const parsed = parseBackup(JSON.stringify(b));
-    expect(parsed.ok && parsed.value.settings).toMatchObject({ ovulationShiftEnabled: true, ovulationShift: -3, ovulationFromNextPeriod: true });
+    expect(parsed.ok && parsed.value.settings).toMatchObject({
+      ovulationShiftEnabled: true,
+      ovulationShift: -3,
+      ovulationFromNextPeriod: true,
+      remindMissedPeriod: false,
+    });
   });
 
   it('does not export the dev mode flag (FR-003)', async () => {
@@ -157,7 +164,7 @@ describe('parseBackup', () => {
     ['missing data', (f) => void delete (f as Partial<typeof f>).data],
   ];
 
-  it('imports an old schemaVersion 1 file with switches off, no shift and the mode off (004–006)', () => {
+  it('imports an old schemaVersion 1 file with switches off, no shift, the mode off and the reminder on (004–007)', () => {
     const r = parseBackup(JSON.stringify(validFile()));
     expect(r.ok && r.value.settings).toEqual({
       defaultCycleLength: 27,
@@ -169,6 +176,7 @@ describe('parseBackup', () => {
       ovulationShiftEnabled: false,
       ovulationShift: 0,
       ovulationFromNextPeriod: false,
+      remindMissedPeriod: true,
     });
   });
 
@@ -189,7 +197,12 @@ describe('parseBackup', () => {
     const f = { ...validFile(), schemaVersion: 3 };
     Object.assign(f.data.settings, { showWellbeing: false, showNotes: true, ovulationShiftEnabled: true, ovulationShift: 2 });
     const r = parseBackup(JSON.stringify(f));
-    expect(r.ok && r.value.settings).toMatchObject({ ovulationShiftEnabled: true, ovulationShift: 2, ovulationFromNextPeriod: false });
+    expect(r.ok && r.value.settings).toMatchObject({
+      ovulationShiftEnabled: true,
+      ovulationShift: 2,
+      ovulationFromNextPeriod: false,
+      remindMissedPeriod: true,
+    });
   });
 
   const v4Settings = { showWellbeing: false, showNotes: false, ovulationShiftEnabled: false, ovulationShift: 0 };
@@ -199,6 +212,28 @@ describe('parseBackup', () => {
     Object.assign(f.data.settings, { ...v4Settings, ovulationFromNextPeriod: true });
     const r = parseBackup(JSON.stringify(f));
     expect(r.ok && r.value.settings.ovulationFromNextPeriod).toBe(true);
+  });
+
+  it('imports a v4 file with the missed-period reminder on (007 FR-010)', () => {
+    const f = { ...validFile(), schemaVersion: 4 };
+    Object.assign(f.data.settings, { ...v4Settings, ovulationFromNextPeriod: true });
+    const r = parseBackup(JSON.stringify(f));
+    expect(r.ok && r.value.settings).toMatchObject({ ovulationFromNextPeriod: true, remindMissedPeriod: true });
+  });
+
+  const v5Settings = { ...v4Settings, ovulationFromNextPeriod: false };
+
+  it('imports the missed-period reminder off from a v5 file', () => {
+    const f = { ...validFile(), schemaVersion: 5 };
+    Object.assign(f.data.settings, { ...v5Settings, remindMissedPeriod: false });
+    const r = parseBackup(JSON.stringify(f));
+    expect(r.ok && r.value.settings.remindMissedPeriod).toBe(false);
+  });
+
+  it.each([undefined, 'yes', 1])('rejects remindMissedPeriod %s in a v5 file', (value) => {
+    const f = { ...validFile(), schemaVersion: 5 };
+    Object.assign(f.data.settings, { ...v5Settings, remindMissedPeriod: value });
+    expect(err(f)).toBe('Файл резервной копии повреждён: некорректные настройки напоминаний');
   });
 
   it.each([undefined, 'yes', 1])('rejects ovulationFromNextPeriod %s in a v4 file', (mode) => {
@@ -254,6 +289,7 @@ describe('applyBackup', () => {
       ovulationShiftEnabled: false,
       ovulationShift: 0,
       ovulationFromNextPeriod: false,
+      remindMissedPeriod: true,
     });
     expect((await getPushState())?.token).toBe('secret');
 

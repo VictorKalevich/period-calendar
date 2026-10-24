@@ -2,7 +2,7 @@ import Dexie, { type Table } from 'dexie';
 import type { DayEntry, LocalDate, Period } from '../domain/types';
 import { migrations } from './migrations';
 
-export const SCHEMA_VERSION = 4;
+export const SCHEMA_VERSION = 5;
 
 export interface KvRecord<T = unknown> {
   key: string;
@@ -49,6 +49,15 @@ class CycleDb extends Dexie {
         const rec = await kv.get('settings');
         if (!rec) return;
         await kv.put({ key: 'settings', value: migrations[3]!({ settings: rec.value }).settings });
+      });
+    // v5 (фича 007): таблицы те же; в настройки добавляется напоминание о неотмеченном начале (migrations[4]).
+    this.version(5)
+      .stores({ periods: 'id, start', days: 'date', kv: 'key' })
+      .upgrade(async (tx) => {
+        const kv = tx.table<KvRecord, string>('kv');
+        const rec = await kv.get('settings');
+        if (!rec) return;
+        await kv.put({ key: 'settings', value: migrations[4]!({ settings: rec.value }).settings });
       });
   }
 }

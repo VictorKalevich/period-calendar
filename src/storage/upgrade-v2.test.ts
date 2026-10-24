@@ -2,7 +2,7 @@ import 'fake-indexeddb/auto';
 import { describe, expect, it, vi } from 'vitest';
 
 // Конституция III: база старой версии (данные прошлой сборки) открывается новой сборкой, и
-// сохранённые настройки получают новые поля по умолчанию: фича 004 (v2), 005 (v3) и 006 (v4).
+// сохранённые настройки получают новые поля по умолчанию: фича 004 (v2), 005 (v3), 006 (v4) и 007 (v5).
 
 async function createOldDb(nativeVersion: number, settings: Record<string, unknown>) {
   await new Promise<void>((resolve, reject) => {
@@ -46,25 +46,31 @@ async function storedSettingsAfterOpen() {
 const base = { defaultCycleLength: 31, defaultPeriodLength: 4, remindPeriod: false, remindOvulation: true };
 
 describe('IndexedDB upgrade to the current schema', () => {
-  it('v1 → v4: adds switches (004), the ovulation shift (005) and the mode (006)', async () => {
+  it('v1 → v5: adds switches (004), the shift (005), the mode (006) and the missed-period reminder (007)', async () => {
     await createOldDb(10, base);
     expect(await storedSettingsAfterOpen()).toEqual({
-      verno: 4,
-      value: { ...base, showWellbeing: false, showNotes: false, ovulationShiftEnabled: false, ovulationShift: 0, ovulationFromNextPeriod: false },
+      verno: 5,
+      value: { ...base, showWellbeing: false, showNotes: false, ovulationShiftEnabled: false, ovulationShift: 0, ovulationFromNextPeriod: false, remindMissedPeriod: true },
     });
   }, 30_000);
 
-  it('v2 → v4: keeps the switches and adds the shift and the mode', async () => {
+  it('v2 → v5: keeps the switches and adds the shift, the mode and the reminder', async () => {
     await createOldDb(20, { ...base, showWellbeing: true, showNotes: false });
     expect(await storedSettingsAfterOpen()).toEqual({
-      verno: 4,
-      value: { ...base, showWellbeing: true, showNotes: false, ovulationShiftEnabled: false, ovulationShift: 0, ovulationFromNextPeriod: false },
+      verno: 5,
+      value: { ...base, showWellbeing: true, showNotes: false, ovulationShiftEnabled: false, ovulationShift: 0, ovulationFromNextPeriod: false, remindMissedPeriod: true },
     });
   }, 30_000);
 
-  it('v3 → v4: keeps the shift and adds the mode as off', async () => {
+  it('v3 → v5: keeps the shift and adds the mode as off and the reminder as on', async () => {
     const v3 = { ...base, showWellbeing: false, showNotes: true, ovulationShiftEnabled: true, ovulationShift: -2 };
     await createOldDb(30, v3);
-    expect(await storedSettingsAfterOpen()).toEqual({ verno: 4, value: { ...v3, ovulationFromNextPeriod: false } });
+    expect(await storedSettingsAfterOpen()).toEqual({ verno: 5, value: { ...v3, ovulationFromNextPeriod: false, remindMissedPeriod: true } });
+  }, 30_000);
+
+  it('v4 → v5: keeps the mode and remindPeriod off, adds the missed-period reminder as on (007)', async () => {
+    const v4 = { ...base, showWellbeing: false, showNotes: true, ovulationShiftEnabled: true, ovulationShift: -2, ovulationFromNextPeriod: true };
+    await createOldDb(40, v4);
+    expect(await storedSettingsAfterOpen()).toEqual({ verno: 5, value: { ...v4, remindMissedPeriod: true } });
   }, 30_000);
 });
