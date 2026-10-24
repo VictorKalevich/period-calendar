@@ -4,6 +4,7 @@ import { useLiveQuery } from '../../hooks/useLiveQuery';
 import { getDevMode, getSettings, updateSettings } from '../../storage/repository';
 import { BackupSection } from '../components/BackupSection';
 import { DevSection } from '../components/DevSection';
+import { ForecastInfo } from '../components/ForecastInfo';
 import { RemindersSection } from '../components/RemindersSection';
 import { Stepper } from '../components/Stepper';
 import { VersionTapper } from '../components/VersionTapper';
@@ -112,6 +113,8 @@ export function SettingsScreen() {
       <BackupSection />
 
       {devMode && <DevSection />}
+
+      <ForecastInfo settings={settings} />
 
       <VersionTapper devMode={devMode === true} />
     </>

@@ -4,16 +4,15 @@ import { ovulationShiftOf } from '../../domain/forecast';
 import type { Settings } from '../../domain/types';
 import { BottomSheet } from './BottomSheet';
 
-/** Постоянная пометка о неточности прогноза (FR-021, Конституция VII); «Подробнее» — 005 FR-009. */
-export function Disclaimer({ settings }: { settings: Settings }) {
+/** Кнопка «Как считается прогноз» в Настройках и её лист (001 FR-021, 005 FR-009, 006 FR-007). */
+export function ForecastInfo({ settings }: { settings: Settings }) {
   const [open, setOpen] = useState(false);
   const shift = ovulationShiftOf(settings);
   return (
     <>
-      <p className="t-small disclaimer">
-        Прогноз ориентировочный и не заменяет контрацепцию.{' '}
+      <p className="t-small forecast-info">
         <button type="button" className="link-btn" onClick={() => setOpen(true)}>
-          Подробнее
+          Как считается прогноз
         </button>
       </p>
       <BottomSheet open={open} onClose={() => setOpen(false)} title="Как считается прогноз">
@@ -40,9 +39,6 @@ export function Disclaimer({ settings }: { settings: Settings }) {
           <p>
             Если завершённых циклов меньше трёх или их длина различается больше чем на 7 дней, прогноз строится по
             средним значениям и может заметно ошибаться.
-          </p>
-          <p>
-            <strong>Прогноз ориентировочный и не заменяет контрацепцию и консультацию врача.</strong>
           </p>
         </div>
         <button type="button" className="btn" onClick={() => setOpen(false)}>
