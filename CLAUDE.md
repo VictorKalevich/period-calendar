@@ -40,6 +40,11 @@
   на GitHub Pages.
 - Если изменён воркер (`worker/`) — задеплоить его `npx wrangler deploy` (из папки `worker`) до push.
 - Если тесты или сборка падают — ничего не сливать и не отправлять, сообщить пользователю.
+- После слияния ветки фичи в `main` и успешной сборки/деплоя в GitHub Actions («Test and deploy to
+  GitHub Pages» для этого коммита) — удалить ветку фичи локально (`git branch -d`) и на origin, если
+  она там есть (`git push origin --delete <ветка>`), без отдельного вопроса. Если сборка в Actions
+  упала — ветку не удалять и сообщить пользователю. `gh` не установлен — статус смотреть через
+  `https://api.github.com/repos/VictorKalevich/period-calendar/actions/runs?branch=main`.
 - Секреты Worker загружать без BOM: не через конвейер Windows PowerShell 5.1 (`... | npx wrangler
   secret put`), а через Node (stdin) или интерактивный ввод.
 - Файлы проекта править только инструментами редактирования (Edit/Write), не через PowerShell
