@@ -118,18 +118,18 @@ describe('PUT /v1/clients/:id', () => {
 describe('contract with the app', () => {
   it('accepts the reminders the app plans', async () => {
     const { buildForecast } = await import('../../src/domain/forecast');
-    const { planReminders } = await import('../../src/domain/reminders');
+    const { planReminders, toServerReminders } = await import('../../src/domain/reminders');
     const { DEFAULT_SETTINGS } = await import('../../src/domain/types');
     type LD = Parameters<typeof buildForecast>[0]['today'];
     const forecast = buildForecast({
-      // начало 15.10: ни одно напоминание (овуляция 28.10, месячные 12.11 − 2) не приходится на «сейчас»,
-      // поэтому их число не зависит от часового пояса машины
+      // начало 15.10: ни одно напоминание (овуляция 28.10, месячные 12.11 − 2, неотмеченное начало 12.11 + 2)
+      // не приходится на «сейчас», поэтому их число не зависит от часового пояса машины
       periods: [{ id: 'a', start: '2026-10-15' as LD, end: null, endEstimated: false }],
       settings: DEFAULT_SETTINGS,
       today: '2026-10-23' as LD,
     })!;
-    const reminders = planReminders(forecast, DEFAULT_SETTINGS, new Date(NOW)).map(({ kind: _k, ...r }) => r);
-    expect(reminders.length).toBe(12);
+    const reminders = toServerReminders(planReminders(forecast, DEFAULT_SETTINGS, new Date(NOW)));
+    expect(reminders.length).toBe(18); // 6 циклов × 3 вида (007)
     expect((await put({ subscription: { ...subscription, expirationTime: null }, reminders })).status).toBe(204);
   });
 });
