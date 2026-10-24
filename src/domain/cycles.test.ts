@@ -63,6 +63,16 @@ describe('averageCycleLength', () => {
     expect(averageCycleLength(buildCycles(history('2026-01-01', [28, 28, 29])))).toBe(28); // 28.33
   });
 
+  it('averages 28 + 29×5 to 29 (28.83 rounds up), 28×3 + 29×2 to 28 (28.4)', () => {
+    expect(averageCycleLength(buildCycles(history('2026-01-01', [28, 29, 29, 29, 29, 29])))).toBe(29);
+    expect(averageCycleLength(buildCycles(history('2026-01-01', [28, 28, 28, 29, 29])))).toBe(28);
+  });
+
+  it('ignores the current, unfinished cycle', () => {
+    // последние месячные идут сейчас: их цикл не завершён и в среднее не входит
+    expect(averageCycleLength(buildCycles(history('2026-01-01', [28, 28], null)))).toBe(28);
+  });
+
   it('is null without completed cycles', () => {
     expect(averageCycleLength(buildCycles(history('2026-01-01', [])))).toBeNull();
     expect(averageCycleLength(buildCycles(history('2026-01-01', [90])))).toBeNull();
@@ -70,13 +80,40 @@ describe('averageCycleLength', () => {
 });
 
 describe('averagePeriodLength', () => {
-  it('ignores estimated ends (case 20)', () => {
+  it('averages 4 + 5×5 days to 5 (4.83 rounds up)', () => {
+    const periods = [4, 5, 5, 5, 5, 5].map((days, i): Period => {
+      const start = addDaysLD(ld('2026-01-01'), i * 28);
+      return { id: `p${i}`, start, end: addDaysLD(start, days - 1), endEstimated: false };
+    });
+    expect(averagePeriodLength(buildCycles(periods))).toBe(5);
+  });
+
+  it('rounds .5 up and below .5 down', () => {
+    const withDays = (days: number[]) =>
+      days.map((d, i): Period => {
+        const start = addDaysLD(ld('2026-01-01'), i * 28);
+        return { id: `p${i}`, start, end: addDaysLD(start, d - 1), endEstimated: false };
+      });
+    expect(averagePeriodLength(buildCycles(withDays([4, 5])))).toBe(5); // 4.5
+    expect(averagePeriodLength(buildCycles(withDays([4, 4, 4, 5, 5])))).toBe(4); // 4.4
+  });
+
+  it('counts periods auto-closed by the next start (case 20)', () => {
+    // 1 раз 4 дня вручную, 5 раз ≈ 5 дней (закрыты следующим началом), последние идут сейчас
+    const periods = [4, 5, 5, 5, 5, 5, null].map((days, i): Period => {
+      const start = addDaysLD(ld('2026-01-01'), i * 28);
+      const end = days === null ? null : addDaysLD(start, days - 1);
+      return { id: `p${i}`, start, end, endEstimated: i > 0 && days !== null };
+    });
+    expect(averagePeriodLength(buildCycles(periods))).toBe(5); // 4.83
+  });
+
+  it('ignores the estimated end of the current period', () => {
     const periods: Period[] = [
       { id: 'a', start: ld('2026-01-01'), end: ld('2026-01-04'), endEstimated: false },
-      { id: 'b', start: ld('2026-01-29'), end: ld('2026-02-02'), endEstimated: true },
-      { id: 'c', start: ld('2026-02-26'), end: ld('2026-03-03'), endEstimated: false },
+      { id: 'b', start: ld('2026-01-29'), end: ld('2026-02-06'), endEstimated: true },
     ];
-    expect(averagePeriodLength(buildCycles(periods))).toBe(5); // (4 + 6) / 2
+    expect(averagePeriodLength(buildCycles(periods))).toBe(4);
   });
 
   it('uses the last 6 periods with a manual end', () => {

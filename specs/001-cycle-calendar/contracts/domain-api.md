@@ -120,7 +120,7 @@ type PeriodError = 'future-date' | 'inside-existing' | 'end-before-start' | 'too
 | 17 | `monthGrid` для любого месяца | начинается с понедельника, содержит все дни месяца |
 | 18 | `confidence`: 0, 1 или 2 завершённых цикла | `low` |
 | 19 | `confidence`: циклы 26, 28, 35 (разброс 9) | `low`; циклы 27, 28, 30 (разброс 3) — `normal` |
-| 20 | `averagePeriodLength`: периоды 4, 6 (ручные) и 5 (`endEstimated`) | 5 (оценочный не учитывается) |
+| 20 | `averagePeriodLength`: 4 (ручной), 5×5 (`endEstimated`, закрыты следующим началом), текущие без конца | 5 (4,83; закрытые автоматически учитываются, оценочный конец текущих — нет) |
 | 21 | конец позже 15-го дня от начала | ошибка `too-long` |
 | 22 | `planReminders` при `delayDays > 0` | `[]` |
 | 23 | смена часового пояса (`TZ` = Asia/Tokyo vs America/Los_Angeles) | `buildForecast` и `dayInfo` дают одинаковые даты |

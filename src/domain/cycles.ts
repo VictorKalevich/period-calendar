@@ -33,11 +33,14 @@ export function averageCycleLength(cycles: Cycle[]): number | null {
   return roundedMean(usedCycleLengths(cycles));
 }
 
-/** Последние 6 месячных с концом, отмеченным вручную (FR-014). */
+/**
+ * Последние 6 месячных с концом: отмеченным вручную или закрытым следующим началом (FR-014).
+ * Оценочный конец текущих месячных не учитывается.
+ */
 export function averagePeriodLength(cycles: Cycle[]): number | null {
   return roundedMean(
     cycles
-      .filter((c) => c.periodLength !== null && !c.periodEndEstimated)
+      .filter((c) => c.periodLength !== null && (!c.periodEndEstimated || c.length !== null))
       .map((c) => c.periodLength!)
       .slice(-AVERAGE_WINDOW),
   );
