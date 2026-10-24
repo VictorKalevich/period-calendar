@@ -16,8 +16,20 @@ function addEntrySwitches(data: MigrationData): MigrationData {
   };
 }
 
+/** v2 → v3 (фича 005): личный сдвиг овуляции, по умолчанию выключен и равен 0. */
+function addOvulationShift(data: MigrationData): MigrationData {
+  const settings = data.settings;
+  if (typeof settings !== 'object' || settings === null) return data;
+  const s = settings as Record<string, unknown>;
+  return {
+    ...data,
+    settings: { ...s, ovulationShiftEnabled: s.ovulationShiftEnabled ?? false, ovulationShift: s.ovulationShift ?? 0 },
+  };
+}
+
 export const migrations: Record<number, Migration> = {
   1: addEntrySwitches,
+  2: addOvulationShift,
 };
 
 /** Последовательно применяет миграции from → to. Неизвестные поля не трогает. */

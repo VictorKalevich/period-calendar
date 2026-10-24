@@ -45,6 +45,10 @@ export interface Settings {
   showWellbeing: boolean;
   /** Показывать «Заметки» — фича 004; выключение не удаляет записи. */
   showNotes: boolean;
+  /** Учитывать личный сдвиг овуляции — фича 005. */
+  ovulationShiftEnabled: boolean;
+  /** Личный сдвиг овуляции в днях, −5…+5; применяется только при ovulationShiftEnabled. */
+  ovulationShift: number;
 }
 
 export const DEFAULT_SETTINGS: Readonly<Settings> = Object.freeze({
@@ -54,7 +58,13 @@ export const DEFAULT_SETTINGS: Readonly<Settings> = Object.freeze({
   remindOvulation: true,
   showWellbeing: false,
   showNotes: false,
+  ovulationShiftEnabled: false,
+  ovulationShift: 0,
 });
+
+/** Овуляция — 14-й день цикла: начало месячных + 13 дней (фича 005, заменяет «за 14 дней до следующих»). */
+export const OVULATION_DAY_OFFSET = 13;
+export const OVULATION_SHIFT_RANGE = { min: -5, max: 5 } as const;
 
 export const CYCLE_LENGTH_RANGE = { min: 21, max: 45 } as const;
 export const PERIOD_LENGTH_RANGE = { min: 2, max: 10 } as const;
@@ -62,7 +72,6 @@ export const MAX_PERIOD_DAYS = 15;
 export const MAX_NOTE_LENGTH = 1000;
 export const OUTLIER_CYCLE = { min: 15, max: 60 } as const;
 export const AVERAGE_WINDOW = 6;
-export const LUTEAL_PHASE_DAYS = 14;
 
 export type Probability = 'low' | 'medium' | 'high';
 export type Confidence = 'normal' | 'low';

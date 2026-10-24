@@ -18,6 +18,8 @@ describe('app update', () => {
       remindOvulation: true,
       showWellbeing: false,
       showNotes: true,
+      ovulationShiftEnabled: true,
+      ovulationShift: -1,
     });
     db.close();
 

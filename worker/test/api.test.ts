@@ -122,7 +122,9 @@ describe('contract with the app', () => {
     const { DEFAULT_SETTINGS } = await import('../../src/domain/types');
     type LD = Parameters<typeof buildForecast>[0]['today'];
     const forecast = buildForecast({
-      periods: [{ id: 'a', start: '2026-10-10' as LD, end: null, endEstimated: false }],
+      // начало 15.10: ни одно напоминание (овуляция 28.10, месячные 12.11 − 2) не приходится на «сейчас»,
+      // поэтому их число не зависит от часового пояса машины
+      periods: [{ id: 'a', start: '2026-10-15' as LD, end: null, endEstimated: false }],
       settings: DEFAULT_SETTINGS,
       today: '2026-10-23' as LD,
     })!;

@@ -98,19 +98,20 @@ describe('dayInfo with forecast', () => {
   it('assigns conception probability by window (FR-018)', () => {
     const c = withForecast(single, '2026-03-02');
     const p = (d: string) => dayInfo(ld(d), c).probability;
-    expect(p('2026-03-07')).toBe('low');
+    // 005: овуляция 14.03 (начало + 13), окно 09–14.03
+    expect(p('2026-03-06')).toBe('low');
+    expect(p('2026-03-07')).toBe('medium');
     expect(p('2026-03-08')).toBe('medium');
-    expect(p('2026-03-09')).toBe('medium');
-    for (const d of rangeLD(ld('2026-03-10'), ld('2026-03-15'))) expect(p(d)).toBe('high');
-    expect(p('2026-03-16')).toBe('medium');
-    expect(p('2026-03-17')).toBe('low');
+    for (const d of rangeLD(ld('2026-03-09'), ld('2026-03-14'))) expect(p(d)).toBe('high');
+    expect(p('2026-03-15')).toBe('medium');
+    expect(p('2026-03-16')).toBe('low');
     expect(p('2026-02-28')).toBeNull();
   });
 
   it('marks ovulation and predicted periods', () => {
     const c = withForecast(single, '2026-03-02');
-    expect(dayInfo(ld('2026-03-15'), c).ovulation).toBe(true);
-    expect(dayInfo(ld('2026-03-14'), c).ovulation).toBe(false);
+    expect(dayInfo(ld('2026-03-14'), c).ovulation).toBe(true);
+    expect(dayInfo(ld('2026-03-13'), c).ovulation).toBe(false);
     expect(dayInfo(ld('2026-03-29'), c).period).toBe('predicted');
     expect(dayInfo(ld('2026-04-02'), c).period).toBe('predicted');
     expect(dayInfo(ld('2026-04-03'), c).period).toBeNull();
@@ -139,37 +140,47 @@ describe('dayInfo with forecast', () => {
     const c = withForecast(single, '2026-03-12');
     expect(dayInfo(ld('2026-03-11'), c).fertile).toBe('past');
     expect(dayInfo(ld('2026-03-12'), c).fertile).toBe('predicted');
-    expect(dayInfo(ld('2026-03-15'), c)).toMatchObject({ fertile: 'predicted', ovulation: true });
+    expect(dayInfo(ld('2026-03-14'), c)).toMatchObject({ fertile: 'predicted', ovulation: true });
 
     const later = withForecast(
       [...single, { id: 'b', start: ld('2026-03-29'), end: ld('2026-04-02'), endEstimated: false }],
       '2026-04-05',
     );
-    expect(dayInfo(ld('2026-03-15'), later)).toMatchObject({ fertile: 'past', ovulation: true });
+    expect(dayInfo(ld('2026-03-14'), later)).toMatchObject({ fertile: 'past', ovulation: true });
   });
 
   it('determines the cycle phase (FR-019b, case 25)', () => {
     const c = withForecast(single, '2026-03-02');
     const phase = (d: string) => dayInfo(ld(d), c).phase;
     for (const d of rangeLD(ld('2026-03-01'), ld('2026-03-05'))) expect(phase(d)).toBe('menstrual');
-    for (const d of rangeLD(ld('2026-03-06'), ld('2026-03-14'))) expect(phase(d)).toBe('follicular');
-    expect(phase('2026-03-15')).toBe('ovulation');
-    for (const d of rangeLD(ld('2026-03-16'), ld('2026-03-28'))) expect(phase(d)).toBe('luteal');
+    for (const d of rangeLD(ld('2026-03-06'), ld('2026-03-13'))) expect(phase(d)).toBe('follicular');
+    expect(phase('2026-03-14')).toBe('ovulation');
+    for (const d of rangeLD(ld('2026-03-15'), ld('2026-03-28'))) expect(phase(d)).toBe('luteal');
     expect(phase('2026-03-29')).toBe('menstrual');
     expect(phase('2026-02-27')).toBeNull();
   });
 
-  it('prefers menstrual over ovulation in a very short cycle (case 26)', () => {
+  it('marked periods take priority over the window and the crown (005 FR-005)', () => {
+    // циклы по 15 дней и сдвиг +5: овуляция первого цикла (01.01 + 18 = 19.01) попадает на месячные 16–20.01
     const periods: Period[] = [];
     let start = ld('2026-01-01');
     for (let i = 0; i < 4; i++) {
       periods.push({ id: `p${i}`, start, end: addDaysLD(start, 4), endEstimated: false });
       start = addDaysLD(start, 15);
     }
-    const c = withForecast(periods, '2026-02-15');
-    expect(c.forecast!.cycleLength).toBe(15);
-    const ov = c.forecast!.cycles.find((x) => x.start === '2026-02-15')!.ovulation;
-    expect(ov).toBe('2026-02-16');
-    expect(dayInfo(ov, c)).toMatchObject({ phase: 'menstrual', ovulation: true });
+    const settings = { ...DEFAULT_SETTINGS, ovulationShiftEnabled: true, ovulationShift: 5 };
+    const forecast = buildForecast({ periods, settings, today: ld('2026-02-20') });
+    const c: DayContext = { forecast, periods, settings, entries: new Set(), today: ld('2026-02-20') };
+    expect(forecast!.cycles[0]!.ovulation).toBe('2026-01-19');
+    expect(dayInfo(ld('2026-01-19'), c)).toMatchObject({ period: 'actual', phase: 'menstrual', ovulation: false, fertile: null });
+    expect(dayInfo(ld('2026-01-15'), c)).toMatchObject({ period: null, fertile: 'past' }); // окно до месячных видно
+  });
+
+  it('a personal shift moves the crown and the phase (005)', () => {
+    const settings = { ...DEFAULT_SETTINGS, ovulationShiftEnabled: true, ovulationShift: 2 };
+    const forecast = buildForecast({ periods: single, settings, today: ld('2026-03-02') });
+    const c: DayContext = { forecast, periods: single, settings, entries: new Set(), today: ld('2026-03-02') };
+    expect(dayInfo(ld('2026-03-16'), c)).toMatchObject({ ovulation: true, phase: 'ovulation', probability: 'high' });
+    expect(dayInfo(ld('2026-03-14'), c)).toMatchObject({ ovulation: false, phase: 'follicular' });
   });
 });

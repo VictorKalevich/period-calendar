@@ -28,6 +28,38 @@ describe('migrations[1] (v1 → v2)', () => {
   });
 });
 
+// Реальная миграция v2 → v3 (фича 005): личный сдвиг овуляции.
+describe('migrations[2] (v2 → v3)', () => {
+  const v2 = {
+    periods: [],
+    settings: { defaultCycleLength: 28, defaultPeriodLength: 5, remindPeriod: true, remindOvulation: true, showWellbeing: true, showNotes: false },
+  };
+
+  it('adds the shift as off and 0 when missing', () => {
+    expect(migrations[2]!(v2)).toEqual({
+      ...v2,
+      settings: { ...v2.settings, ovulationShiftEnabled: false, ovulationShift: 0 },
+    });
+  });
+
+  it('keeps explicit values and is idempotent', () => {
+    const withValues = { ...v2, settings: { ...v2.settings, ovulationShiftEnabled: true, ovulationShift: -2 } };
+    expect(migrations[2]!(withValues)).toEqual(withValues);
+    const once = migrations[2]!(v2);
+    expect(migrations[2]!(once)).toEqual(once);
+  });
+
+  it('migrates a v1 copy through both steps', () => {
+    const v1 = { settings: { defaultCycleLength: 28, defaultPeriodLength: 5, remindPeriod: true, remindOvulation: true } };
+    expect(migrateData(v1, 1, 3).settings).toMatchObject({
+      showWellbeing: false,
+      showNotes: false,
+      ovulationShiftEnabled: false,
+      ovulationShift: 0,
+    });
+  });
+});
+
 // Механизм миграций для будущих версий схемы: проверяется на вымышленных миграциях v1 → v2 → v3.
 const registry: Record<number, (d: MigrationData) => MigrationData> = {
   1: (d) => ({ ...d, renamed: d.old ?? d.renamed, old: undefined }),

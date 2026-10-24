@@ -5,6 +5,7 @@ import {
   formatDayRu,
   formatMonthRu,
   formatRangeRu,
+  formatShiftRu,
   monthGrid,
   parseLD,
   toLocalDate,
@@ -95,6 +96,23 @@ describe('Russian formatting', () => {
 
   it('formats a month title capitalised', () => {
     expect(formatMonthRu(2026, 10)).toBe('Октябрь 2026');
+  });
+
+  it('formats the ovulation shift with sign and declension (005)', () => {
+    expect([-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5].map(formatShiftRu)).toEqual([
+      '−5 дней',
+      '−4 дня',
+      '−3 дня',
+      '−2 дня',
+      '−1 день',
+      '0 дней',
+      '+1 день',
+      '+2 дня',
+      '+3 дня',
+      '+4 дня',
+      '+5 дней',
+    ]);
+    expect(formatShiftRu(-1).charCodeAt(0)).toBe(0x2212);
   });
 
   it('formats date ranges', () => {

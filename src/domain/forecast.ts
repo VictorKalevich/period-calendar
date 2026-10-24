@@ -3,7 +3,7 @@ import { addDaysLD, diffDays, parseLD, rangeLD, toLocalDate } from './dates';
 import { averageCycleLength, averagePeriodLength, buildCycles, forecastConfidence } from './cycles';
 import { periodEnd } from './periods';
 import {
-  LUTEAL_PHASE_DAYS,
+  OVULATION_DAY_OFFSET,
   type DayContext,
   type DayInfo,
   type Forecast,
@@ -18,8 +18,24 @@ import {
 
 const FERTILE_DAYS_BEFORE_OVULATION = 5;
 
-function cycleFrom(start: LocalDate, nextStart: LocalDate, kind: PredictedCycle['kind'], periodLength: number): PredictedCycle {
-  const ovulation = addDaysLD(nextStart, -LUTEAL_PHASE_DAYS);
+/** Личный сдвиг овуляции — только если включён (005 FR-007). */
+export function ovulationShiftOf(settings: Settings): number {
+  return settings.ovulationShiftEnabled ? settings.ovulationShift : 0;
+}
+
+/** Овуляция — 14-й день цикла: начало + 13 дней + личный сдвиг (005 FR-003; заменяет 001 FR-016). */
+export function ovulationFor(cycleStart: LocalDate, settings: Settings): LocalDate {
+  return addDaysLD(cycleStart, OVULATION_DAY_OFFSET + ovulationShiftOf(settings));
+}
+
+function cycleFrom(
+  start: LocalDate,
+  nextStart: LocalDate,
+  kind: PredictedCycle['kind'],
+  periodLength: number,
+  settings: Settings,
+): PredictedCycle {
+  const ovulation = ovulationFor(start, settings);
   return {
     start,
     nextStart,
@@ -52,12 +68,14 @@ export function buildForecast(input: {
   const nextStart = delayDays > 0 ? today : predictedStart;
 
   const out: PredictedCycle[] = [];
-  for (let i = 0; i < starts.length - 1; i++) out.push(cycleFrom(starts[i]!, starts[i + 1]!, 'completed', periodLength));
-  out.push(cycleFrom(last, nextStart, 'current', periodLength));
+  for (let i = 0; i < starts.length - 1; i++) {
+    out.push(cycleFrom(starts[i]!, starts[i + 1]!, 'completed', periodLength, settings));
+  }
+  out.push(cycleFrom(last, nextStart, 'current', periodLength, settings));
 
   const horizon = toLocalDate(addMonths(parseLD(today), horizonMonths));
   for (let s = nextStart; s <= horizon; s = addDaysLD(s, cycleLength)) {
-    out.push(cycleFrom(s, addDaysLD(s, cycleLength), 'predicted', periodLength));
+    out.push(cycleFrom(s, addDaysLD(s, cycleLength), 'predicted', periodLength, settings));
   }
 
   return { cycleLength, periodLength, confidence: forecastConfidence(cycles), delayDays, cycles: out };
@@ -151,12 +169,15 @@ export function dayInfo(date: LocalDate, ctx: DayContext): DayInfo {
   else if (marks?.ovulation) phase = 'ovulation';
   else if (cycle) phase = date < cycle.ovulation ? 'follicular' : 'luteal';
 
+  // Отмеченные месячные приоритетнее окна и короны (005 FR-005): при коротком цикле и сдвиге
+  // окно может зайти на месячные — тогда на этих днях видны только месячные.
+  const window = period !== 'actual';
   return {
     ...base,
     cycleDay,
     period,
-    fertile: marks?.fertile ? (date < today ? 'past' : 'predicted') : null,
-    ovulation: marks?.ovulation ?? false,
+    fertile: window && marks?.fertile ? (date < today ? 'past' : 'predicted') : null,
+    ovulation: window && (marks?.ovulation ?? false),
     probability,
     phase,
   };
