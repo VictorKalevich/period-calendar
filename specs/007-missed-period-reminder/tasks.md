@@ -65,7 +65,7 @@ description: "Task list for feature 007-missed-period-reminder"
 - [X] T013 [P] `specs/001-cycle-calendar/spec.md`: FR-023 — заголовок «Календарь цикла» (ревизия 007), FR-024 — три напоминания, Clarifications/Edge Cases «Задержка» — при задержке планируется только напоминание о неотмеченном начале (ревизия 007, ссылка на 007 FR-002–FR-006)
 - [X] T014 [P] `specs/001-cycle-calendar/data-model.md` (Settings `remindMissedPeriod`, схема v5), `specs/001-cycle-calendar/contracts/domain-api.md` (`planReminders`: вид `missedPeriod`, правило задержки, кейс 16 и «delayDays > 0»), `specs/001-cycle-calendar/contracts/backup-format.md` (v5, новое поле)
 - [X] T015 `npm test`, `npm run build`, проверка `git diff` (кириллица, BOM); браузер: quickstart 1–6, светлая и тёмная темы
-- [ ] T016 Слить ветку в `main` и `git push origin main` (CLAUDE.md; worker не менялся — без `wrangler deploy`); после успешного «Test and deploy to GitHub Pages» удалить ветку локально и на origin
+- [X] T016 Слить ветку в `main` и `git push origin main` (CLAUDE.md; worker не менялся — без `wrangler deploy`); после успешного «Test and deploy to GitHub Pages» удалить ветку локально и на origin
 
 ## Dependencies
 
