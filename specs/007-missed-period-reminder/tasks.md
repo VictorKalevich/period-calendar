@@ -48,8 +48,8 @@ description: "Task list for feature 007-missed-period-reminder"
 
 **Independent Test**: контракт M8, M10 в `npm test`.
 
-- [ ] T009 [US2] Failing tests в `src/domain/reminders.test.ts` (M8, M10): у `period`, `ovulation`, `missedPeriod` `title === 'Календарь цикла'`; `PERIOD_REMINDER.body` и `OVULATION_REMINDER.body` — прежние побуквенно; `MISSED_PERIOD_REMINDER.body === 'Похоже, месячные уже начались — не забудь отметить их в календаре'` и у записей `missedPeriod` тот же `body`; `NOTIFICATION_TITLE` равен значению `name:` манифеста, прочитанному из `vite.config.ts` как текст (`node:fs`, регулярное выражение `/\bname:\s*'([^']+)'/`); в кейсе «uses the exact texts» заменить ожидание `'Овуляция'`
-- [ ] T010 [US2] Implement в `src/domain/reminders.ts`: `PERIOD_REMINDER.title` и `OVULATION_REMINDER.title` — `NOTIFICATION_TITLE` (введён в T004) — до прохождения T009
+- [X] T009 [US2] Failing tests в `src/domain/reminders.test.ts` (M8, M10): у `period`, `ovulation`, `missedPeriod` `title === 'Календарь цикла'`; `PERIOD_REMINDER.body` и `OVULATION_REMINDER.body` — прежние побуквенно; `MISSED_PERIOD_REMINDER.body === 'Похоже, месячные уже начались — не забудь отметить их в календаре'` и у записей `missedPeriod` тот же `body`; `NOTIFICATION_TITLE` равен значению `name:` манифеста, прочитанному из `vite.config.ts` как текст (`node:fs`, регулярное выражение `/\bname:\s*'([^']+)'/`); в кейсе «uses the exact texts» заменить ожидание `'Овуляция'`
+- [X] T010 [US2] Implement в `src/domain/reminders.ts`: `PERIOD_REMINDER.title` и `OVULATION_REMINDER.title` — `NOTIFICATION_TITLE` (введён в T004) — до прохождения T009
 
 ## Phase 6: User Story 4 — резервная копия (P2)
 

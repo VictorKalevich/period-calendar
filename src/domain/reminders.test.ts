@@ -1,6 +1,14 @@
+import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it } from 'vitest';
 import { buildForecast } from './forecast';
-import { planReminders, toServerReminders, OVULATION_REMINDER, PERIOD_REMINDER } from './reminders';
+import {
+  planReminders,
+  toServerReminders,
+  MISSED_PERIOD_REMINDER,
+  NOTIFICATION_TITLE,
+  OVULATION_REMINDER,
+  PERIOD_REMINDER,
+} from './reminders';
 import { DEFAULT_SETTINGS, type LocalDate, type Period, type Settings } from './types';
 
 const ld = (s: string) => s as LocalDate;
@@ -46,15 +54,26 @@ describe('planReminders', () => {
     expect(r[0]!.sendAt).toBe(localNoon('2026-03-15'));
   });
 
-  it('uses the exact texts (FR-022, FR-023)', () => {
+  it('uses the exact texts and one title for all kinds (FR-022, FR-023, 007 FR-003, FR-007 — M8)', () => {
     const r = planReminders(forecastAt('2026-03-02'), DEFAULT_SETTINGS, new Date(2026, 2, 2));
     expect(r.find((x) => x.kind === 'period')).toMatchObject({
       title: 'Календарь цикла',
       body: 'Ближайшие дни будь аккуратна, скоро начало цикла',
     });
-    expect(r.find((x) => x.kind === 'ovulation')).toMatchObject({ title: 'Овуляция', body: 'Сегодня Ты КОРОЛЕВА' });
-    expect(PERIOD_REMINDER.title).toBe('Календарь цикла');
+    expect(r.find((x) => x.kind === 'ovulation')).toMatchObject({ title: 'Календарь цикла', body: 'Сегодня Ты КОРОЛЕВА' });
+    expect(r.find((x) => x.kind === 'missedPeriod')).toMatchObject({
+      title: 'Календарь цикла',
+      body: 'Похоже, месячные уже начались — не забудь отметить их в календаре',
+    });
+    expect(r.every((x) => x.title === 'Календарь цикла')).toBe(true);
+    expect(PERIOD_REMINDER.body).toBe('Ближайшие дни будь аккуратна, скоро начало цикла');
     expect(OVULATION_REMINDER.body).toBe('Сегодня Ты КОРОЛЕВА');
+    expect(MISSED_PERIOD_REMINDER.body).toBe('Похоже, месячные уже начались — не забудь отметить их в календаре');
+  });
+
+  it('uses the app name from the manifest as the title (007 FR-007 — M10)', () => {
+    const config = readFileSync(new URL('../../vite.config.ts', import.meta.url), 'utf8');
+    expect(NOTIFICATION_TITLE).toBe(/\bname:\s*'([^']+)'/.exec(config)?.[1]);
   });
 
   it('sends at 12:00 local time across a DST change (case 14)', () => {

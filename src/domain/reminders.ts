@@ -18,11 +18,11 @@ export const NOTIFICATION_TITLE = 'Календарь цикла';
 
 export const PERIOD_REMINDER = {
   daysBefore: 2,
-  title: 'Календарь цикла',
+  title: NOTIFICATION_TITLE,
   body: 'Ближайшие дни будь аккуратна, скоро начало цикла',
 } as const;
 
-export const OVULATION_REMINDER = { title: 'Овуляция', body: 'Сегодня Ты КОРОЛЕВА' } as const;
+export const OVULATION_REMINDER = { title: NOTIFICATION_TITLE, body: 'Сегодня Ты КОРОЛЕВА' } as const;
 
 /** Фича 007: начало месячных не отмечено — 3-й день после прогнозного начала (прогноз + 2). */
 export const MISSED_PERIOD_REMINDER = {
