@@ -5,7 +5,7 @@
 ```json
 {
   "format": "cycle-calendar-backup",
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "exportedAt": "2026-10-23T10:15:00.000Z",
   "data": {
     "periods": [{ "id": "6f1c…", "start": "2026-09-28", "end": "2026-10-02", "endEstimated": false }],
@@ -16,7 +16,9 @@
       "remindPeriod": true,
       "remindOvulation": true,
       "showWellbeing": false,
-      "showNotes": false
+      "showNotes": false,
+      "ovulationShiftEnabled": false,
+      "ovulationShift": 0
     }
   }
 }
@@ -24,6 +26,10 @@
 
 `schemaVersion: 2` (фича 004) добавляет `showWellbeing` и `showNotes` (boolean, обязательны в v2).
 Копии `schemaVersion: 1` импортируются через `migrations[1]` — оба переключателя получают `false`.
+
+`schemaVersion: 3` (фича 005) добавляет `ovulationShiftEnabled` (boolean) и `ovulationShift` (целое
+−5…+5), оба обязательны в v3; иначе — ошибка «некорректный личный сдвиг овуляции». Копии v1 и v2
+проходят `migrations[2]` — сдвиг выключен, значение 0.
 
 ## Правила импорта
 

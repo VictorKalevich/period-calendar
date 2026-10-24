@@ -102,7 +102,7 @@ type PeriodError = 'future-date' | 'inside-existing' | 'end-before-start' | 'too
 | # | Случай | Ожидание |
 |---|--------|----------|
 | 1 | нет отметок | `buildForecast` → `null`; `todaySummary` → всё `null` |
-| 2 | одна отметка 2026-03-01, default 28 | месячные 03-29, овуляция 03-15, окно 03-10…03-15, средняя 03-08, 03-09, 03-16 |
+| 2 | одна отметка 2026-03-01, default 28 | месячные 03-29, овуляция 03-14 (начало + 13, фича 005), окно 03-09…03-14, средняя 03-07, 03-08, 03-15 |
 | 3 | циклы 27, 29, 31 | длина 29 |
 | 4 | циклы 28, 28, 90 | 90 — выброс, длина 28 |
 | 5 | 8 циклов | учитываются только последние 6 |
@@ -125,7 +125,8 @@ type PeriodError = 'future-date' | 'inside-existing' | 'end-before-start' | 'too
 | 22 | `planReminders` при `delayDays > 0` | `[]` |
 | 23 | смена часового пояса (`TZ` = Asia/Tokyo vs America/Los_Angeles) | `buildForecast` и `dayInfo` дают одинаковые даты |
 | 24 | `cycleStats` | средние совпадают с `Forecast.cycleLength`/`periodLength` при наличии истории |
-| 25 | фазы: начало 2026-03-01, месячные 5 дн., цикл 28 | 03-01…03-05 `menstrual`, 03-06…03-14 `follicular`, 03-15 `ovulation`, 03-16…03-28 `luteal`, 03-29 `menstrual` |
-| 26 | фаза при пересечении (цикл 15 дн., месячные 5 дн. → овуляция на 2-й день) | 2-й день — `menstrual` |
+| 25 | фазы: начало 2026-03-01, месячные 5 дн., цикл 28 | 03-01…03-05 `menstrual`, 03-06…03-13 `follicular`, 03-14 `ovulation`, 03-15…03-28 `luteal`, 03-29 `menstrual` |
+| 26 | фаза при пересечении (отмеченные месячные 10 дн., сдвиг −5 → овуляция на 9-й день) | 9-й день — `menstrual`, `fertile = null`, `ovulation = false` (005) |
+| 29 | овуляция = начало + 13 (+ сдвиг при `ovulationShiftEnabled`) для прошлых и прогнозных циклов, циклы 21 и 45, через месяц и год; выключенный сдвиг не применяется | см. specs/005-ovulation-shift-theme/contracts/ovulation.md |
 | 27 | `todaySummary.phase` при задержке и без отметок | `null` |
 | 28 | `dayInfo.fertile` | дни окна раньше `today` (в прошлом и в текущем цикле) → `'past'`; сегодня и позже → `'predicted'`; `ovulation = true` в обоих случаях |

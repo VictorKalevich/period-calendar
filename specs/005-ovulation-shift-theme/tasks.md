@@ -34,9 +34,9 @@ description: "Task list for feature 005-ovulation-shift-theme"
 
 ## Phase 5: Документы и релиз
 
-- [ ] T012 [P] Replace the ovulation rule everywhere: `docs/design/design.md` (tokens, card, settings, «Подробнее»), `specs/001-cycle-calendar/spec.md` (FR-016, US2-2, assumptions), `data-model.md`, `contracts/domain-api.md` (cases), `contracts/backup-format.md` (v3), `quickstart.md`
-- [ ] T013 Run tests, build, staged-diff check; browser: quickstart 1–8 (incl. scroll lock)
-- [ ] T014 Merge into `main` and push (CLAUDE.md; worker not changed)
+- [X] T012 [P] Replace the ovulation rule everywhere: `docs/design/design.md` (tokens, card, settings, «Подробнее»), `specs/001-cycle-calendar/spec.md` (FR-016, US2-2, assumptions), `data-model.md`, `contracts/domain-api.md` (cases), `contracts/backup-format.md` (v3), `quickstart.md`
+- [X] T013 Run tests, build, staged-diff check; browser: quickstart 1–8 (incl. scroll lock)
+- [X] T014 Merge into `main` and push (CLAUDE.md; worker not changed)
 
 ## Dependencies
 
