@@ -66,6 +66,7 @@
 | `ovulationShiftEnabled` | boolean | false | учитывать личный сдвиг овуляции (005); схема v3 |
 | `ovulationShift` | number | 0 | целое −5…+5; применяется только при `ovulationShiftEnabled`, при выключении сохраняется (005); схема v3 |
 | `ovulationFromNextPeriod` | boolean | false | считать овуляцию от следующей менструации (006); схема v4 |
+| `remindMissedPeriod` | boolean | true | напоминание о неотмеченном начале месячных (007 FR-001); схема v5 |
 
 ### PushState — состояние подписки (одна запись, ключ `push`)
 
@@ -148,8 +149,9 @@ Settings; **не** включает PushState (токен — секрет ус�
 
 ## Версионирование схемы
 
-- `SCHEMA_VERSION = 4`: v2 — фича 004 (`showWellbeing`, `showNotes` = `false`, `migrations[1]`);
+- `SCHEMA_VERSION = 5`: v2 — фича 004 (`showWellbeing`, `showNotes` = `false`, `migrations[1]`);
   v3 — фича 005 (`ovulationShiftEnabled` = `false`, `ovulationShift` = 0, `migrations[2]`); v4 — фича
-  006 (`ovulationFromNextPeriod` = `false`, `migrations[3]`). Каждая следующая версия добавляет `db.version(n)` и функцию
+  006 (`ovulationFromNextPeriod` = `false`, `migrations[3]`); v5 — фича 007 (`remindMissedPeriod` =
+  `true`, `migrations[4]`). Каждая следующая версия добавляет `db.version(n)` и функцию
   `migrate_{n-1}_to_{n}`, используемую и для IndexedDB, и для импорта старых резервных копий.
 - Миграции не удаляют неизвестные поля и идемпотентны (Конституция III).
