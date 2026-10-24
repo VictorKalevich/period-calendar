@@ -38,6 +38,14 @@ describe('planReminders', () => {
     expect(r.map((x) => x.sendAt)).toEqual([...r.map((x) => x.sendAt)].sort());
   });
 
+  it('в режиме «от следующей менструации» напоминание об овуляции — на новую дату (006)', () => {
+    const settings = { ...DEFAULT_SETTINGS, ovulationFromNextPeriod: true };
+    const f = buildForecast({ periods, settings, today: ld('2026-03-02') })!;
+    const r = planReminders(f, settings, new Date(2026, 2, 2, 9)).filter((x) => x.kind === 'ovulation');
+    expect(r.map((x) => x.id).slice(0, 2)).toEqual(['ovulation:2026-03-15', 'ovulation:2026-04-12']);
+    expect(r[0]!.sendAt).toBe(localNoon('2026-03-15'));
+  });
+
   it('uses the exact texts (FR-022, FR-023)', () => {
     const r = planReminders(forecastAt('2026-03-02'), DEFAULT_SETTINGS, new Date(2026, 2, 2));
     expect(r.find((x) => x.kind === 'period')).toMatchObject({

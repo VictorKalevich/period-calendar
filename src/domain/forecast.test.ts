@@ -188,6 +188,107 @@ describe('овуляция не позже дня перед следующим�
   });
 });
 
+describe('режим «от следующей менструации» (006)', () => {
+  const mode = (shift = 0, enabled = shift !== 0): Settings => ({
+    ...DEFAULT_SETTINGS,
+    ovulationFromNextPeriod: true,
+    ovulationShiftEnabled: enabled,
+    ovulationShift: shift,
+  });
+  const cyclesOf = (periods: Period[], today: string, settings: Settings = mode()) =>
+    buildForecast({ periods, settings, today: ld(today) })!.cycles;
+
+  it('прошлый цикл 35 дней: овуляция за 14 дней до следующих, окно и средние — от неё', () => {
+    const c = cyclesOf([period('a', '2026-03-01', '2026-03-05'), period('b', '2026-04-05', '2026-04-09')], '2026-04-10')[0]!;
+    expect(c).toMatchObject({ kind: 'completed', ovulation: '2026-03-22' });
+    expect(c.fertile).toEqual(['2026-03-17', '2026-03-18', '2026-03-19', '2026-03-20', '2026-03-21', '2026-03-22']);
+    expect(c.mediumDays).toEqual(['2026-03-15', '2026-03-16', '2026-03-23']);
+  });
+
+  it('текущий цикл — от прогнозного начала; одна отметка без истории — длина по умолчанию 28', () => {
+    const periods = [period('a', '2026-10-01', '2026-10-05')];
+    expect(cyclesOf(periods, '2026-10-05')[0]).toMatchObject({ kind: 'current', nextStart: '2026-10-29', ovulation: '2026-10-15' });
+  });
+
+  it('задержка не сдвигает овуляцию текущего цикла', () => {
+    const f = buildForecast({ periods: [period('a', '2026-10-01', '2026-10-05')], settings: mode(), today: ld('2026-11-01') })!;
+    expect(f.delayDays).toBe(3);
+    expect(f.cycles[0]!.ovulation).toBe('2026-10-15');
+  });
+
+  it('прогнозный цикл — от прогнозного начала следующего', () => {
+    const settings = { ...mode(), defaultCycleLength: 30 };
+    const cycles = cyclesOf([period('a', '2026-10-27', '2026-10-31')], '2026-10-28', settings);
+    expect(cycles.find((c) => c.start === '2026-11-26')).toMatchObject({ kind: 'predicted', ovulation: '2026-12-12' });
+  });
+
+  it('включённый сдвиг применяется, выключенный — нет', () => {
+    const periods = [period('a', '2026-03-01', '2026-03-05'), period('b', '2026-03-29', '2026-04-02')];
+    expect(cyclesOf(periods, '2026-03-30', mode(2))[0]!.ovulation).toBe('2026-03-17');
+    expect(cyclesOf(periods, '2026-03-30', mode(2, false))[0]!.ovulation).toBe('2026-03-15');
+  });
+
+  it.each([21, 45])('цикл %i дней: следующие − 14 в каждом цикле, прошлом и прогнозном', (len) => {
+    const second = addDaysLD(ld('2026-01-01'), len);
+    const third = addDaysLD(second, len);
+    const periods = [period('a', '2026-01-01', '2026-01-05'), period('b', second, addDaysLD(second, 4)), period('c', third, addDaysLD(third, 4))];
+    const cycles = cyclesOf(periods, addDaysLD(third, 1));
+    for (const c of cycles.slice(0, 6)) expect(c.ovulation).toBe(addDaysLD(c.nextStart, -14));
+    expect(cycles.map((c) => c.kind).slice(0, 4)).toEqual(['completed', 'completed', 'current', 'predicted']);
+  });
+
+  it('переход через год', () => {
+    const periods = [period('a', '2026-12-08', '2026-12-12'), period('b', '2027-01-05', '2027-01-09')];
+    expect(cyclesOf(periods, '2027-01-06')[0]!.ovulation).toBe('2026-12-22');
+  });
+
+  it('цикл-выброс 70 дней — от фактического начала следующих', () => {
+    const periods = [period('a', '2026-03-01', '2026-03-05'), period('b', '2026-05-10', '2026-05-14')];
+    expect(cyclesOf(periods, '2026-05-11')[0]!.ovulation).toBe('2026-04-26');
+  });
+
+  it.each([
+    ['отмеченный конец', '2026-03-05'],
+    ['неотмеченный конец (прогнозируемая длина 5)', null],
+  ])('цикл 15 дней, сдвиг −5: не раньше дня после месячных — %s', (_name, end) => {
+    const periods = [period('a', '2026-03-01', end), period('b', '2026-03-16', null)];
+    const c = cyclesOf(periods, '2026-03-16', mode(-5))[0]!;
+    expect(c.ovulation).toBe('2026-03-06');
+    expect(c.fertile.at(-1)).toBe('2026-03-06');
+  });
+});
+
+describe('режим расчёта овуляции не влияет на прогноз месячных (006 FR-009)', () => {
+  const periods = [
+    period('a', '2026-01-01', '2026-01-05'),
+    period('b', '2026-01-27', '2026-01-30'),
+    period('c', '2026-02-28', '2026-03-04'),
+    period('d', '2026-03-27', '2026-03-31'),
+  ];
+  const at = (settings: Settings, today: string) => buildForecast({ periods, settings, today: ld(today) })!;
+  const withoutOvulation = (f: ReturnType<typeof at>) => ({
+    cycleLength: f.cycleLength,
+    periodLength: f.periodLength,
+    delayDays: f.delayDays,
+    confidence: f.confidence,
+    cycles: f.cycles.map(({ start, nextStart, periodDays, kind }) => ({ start, nextStart, periodDays, kind })),
+  });
+
+  it.each([
+    [0, '2026-04-10'],
+    [3, '2026-04-10'],
+    [0, '2026-04-30'], // задержка
+    [3, '2026-04-30'],
+  ])('сдвиг %i, сегодня %s', (shift, today) => {
+    const base = { ...DEFAULT_SETTINGS, ovulationShiftEnabled: shift !== 0, ovulationShift: shift };
+    const off = at({ ...base, ovulationFromNextPeriod: false }, today);
+    const on = at({ ...base, ovulationFromNextPeriod: true }, today);
+    expect(withoutOvulation(on)).toEqual(withoutOvulation(off));
+    // режим действительно применён: даты овуляции различаются
+    expect(on.cycles.map((c) => c.ovulation)).not.toEqual(off.cycles.map((c) => c.ovulation));
+  });
+});
+
 describe('todaySummary', () => {
   const ctx = (periods: Period[], today: string): DayContext => {
     const forecast = buildForecast({ periods, settings: DEFAULT_SETTINGS, today: ld(today) });
@@ -228,6 +329,14 @@ describe('todaySummary', () => {
   it('points to the next cycle after this ovulation has passed', () => {
     const s = todaySummary(ctx([period('a', '2026-03-01', '2026-03-05')], '2026-03-20'));
     expect(s).toMatchObject({ phase: 'luteal', daysToOvulation: 22, nextOvulation: '2026-04-11', daysToPeriod: 9 });
+  });
+
+  it('в режиме «от следующей менструации» плашка показывает новую овуляцию и окно (006)', () => {
+    const settings: Settings = { ...DEFAULT_SETTINGS, ovulationFromNextPeriod: true };
+    const periods = [period('a', '2026-10-01', '2026-10-05')];
+    const forecast = buildForecast({ periods, settings, today: ld('2026-10-05') });
+    const s = todaySummary({ forecast, periods, settings, entries: new Set(), today: ld('2026-10-05') });
+    expect(s).toMatchObject({ nextOvulation: '2026-10-15', nextFertile: { from: '2026-10-10', to: '2026-10-15' } });
   });
 
   it('hides the phase and counts days from the last start during a delay (case 27)', () => {

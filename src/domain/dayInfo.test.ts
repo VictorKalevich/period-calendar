@@ -193,4 +193,14 @@ describe('dayInfo with forecast', () => {
     expect(dayInfo(ld('2026-03-16'), c)).toMatchObject({ ovulation: true, phase: 'ovulation', probability: 'high' });
     expect(dayInfo(ld('2026-03-14'), c)).toMatchObject({ ovulation: false, phase: 'follicular' });
   });
+
+  it('в режиме «от следующей менструации» фазы следуют за новой овуляцией (006)', () => {
+    // месячные 01.03, прогноз следующих 29.03 → овуляция 15.03
+    const settings = { ...DEFAULT_SETTINGS, ovulationFromNextPeriod: true };
+    const forecast = buildForecast({ periods: single, settings, today: ld('2026-03-02') });
+    const c: DayContext = { forecast, periods: single, settings, entries: new Set(), today: ld('2026-03-02') };
+    expect(dayInfo(ld('2026-03-15'), c)).toMatchObject({ ovulation: true, phase: 'ovulation', probability: 'high' });
+    expect(dayInfo(ld('2026-03-14'), c)).toMatchObject({ ovulation: false, phase: 'follicular' });
+    expect(dayInfo(ld('2026-03-16'), c)).toMatchObject({ ovulation: false, phase: 'luteal', probability: 'medium' });
+  });
 });

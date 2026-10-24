@@ -1,8 +1,9 @@
 import { addMonths } from 'date-fns';
-import { addDaysLD, diffDays, minLD, parseLD, rangeLD, toLocalDate } from './dates';
+import { addDaysLD, diffDays, maxLD, minLD, parseLD, rangeLD, toLocalDate } from './dates';
 import { averageCycleLength, averagePeriodLength, buildCycles, forecastConfidence } from './cycles';
 import { periodEnd } from './periods';
 import {
+  LUTEAL_PHASE_DAYS,
   OVULATION_DAY_OFFSET,
   type DayContext,
   type DayInfo,
@@ -24,23 +25,33 @@ export function ovulationShiftOf(settings: Settings): number {
 }
 
 /**
- * Овуляция — 14-й день цикла: начало + 13 дней + личный сдвиг (005 FR-003; заменяет 001 FR-016),
- * но не позже дня перед следующими месячными (FR-003a).
+ * Овуляция цикла (+ личный сдвиг), не позже дня перед следующими месячными (005 FR-003a):
+ * - по умолчанию — 14-й день цикла: начало + 13 (005 FR-003; заменяет 001 FR-016);
+ * - «от следующей менструации» — следующие − 14, но не раньше дня после месячных цикла (006 FR-004, FR-005).
+ * `periodLast` — последний день месячных цикла, `nextStart` — начало следующих.
  */
-export function ovulationFor(cycleStart: LocalDate, nextStart: LocalDate, settings: Settings): LocalDate {
-  return minLD(addDaysLD(cycleStart, OVULATION_DAY_OFFSET + ovulationShiftOf(settings)), addDaysLD(nextStart, -1));
+export function ovulationFor(
+  cycle: { start: LocalDate; periodLast: LocalDate; nextStart: LocalDate },
+  settings: Settings,
+): LocalDate {
+  const shift = ovulationShiftOf(settings);
+  const raw = settings.ovulationFromNextPeriod
+    ? maxLD(addDaysLD(cycle.nextStart, shift - LUTEAL_PHASE_DAYS), addDaysLD(cycle.periodLast, 1))
+    : addDaysLD(cycle.start, OVULATION_DAY_OFFSET + shift);
+  return minLD(raw, addDaysLD(cycle.nextStart, -1));
 }
 
-/** `ovulationBound` — начало следующих месячных для ограничения овуляции; у текущего цикла — прогнозное, без задержки. */
+/** `ovulationBound` — начало следующих месячных для расчёта овуляции; у текущего цикла — прогнозное, без задержки. */
 function cycleFrom(
   start: LocalDate,
   nextStart: LocalDate,
   kind: PredictedCycle['kind'],
   periodLength: number,
   settings: Settings,
+  periodLast: LocalDate = addDaysLD(start, periodLength - 1),
   ovulationBound: LocalDate = nextStart,
 ): PredictedCycle {
-  const ovulation = ovulationFor(start, ovulationBound, settings);
+  const ovulation = ovulationFor({ start, periodLast, nextStart: ovulationBound }, settings);
   return {
     start,
     nextStart,
@@ -72,11 +83,15 @@ export function buildForecast(input: {
   const delayDays = Math.max(0, diffDays(today, predictedStart));
   const nextStart = delayDays > 0 ? today : predictedStart;
 
+  // Месячные в порядке начала — как циклы в buildCycles.
+  const sorted = [...periods].sort((a, b) => (a.start < b.start ? -1 : a.start > b.start ? 1 : 0));
+  const lastDayOf = (i: number) => periodEnd(sorted[i]!, periodLength);
+
   const out: PredictedCycle[] = [];
   for (let i = 0; i < starts.length - 1; i++) {
-    out.push(cycleFrom(starts[i]!, starts[i + 1]!, 'completed', periodLength, settings));
+    out.push(cycleFrom(starts[i]!, starts[i + 1]!, 'completed', periodLength, settings, lastDayOf(i)));
   }
-  out.push(cycleFrom(last, nextStart, 'current', periodLength, settings, predictedStart));
+  out.push(cycleFrom(last, nextStart, 'current', periodLength, settings, lastDayOf(starts.length - 1), predictedStart));
 
   const horizon = toLocalDate(addMonths(parseLD(today), horizonMonths));
   for (let s = nextStart; s <= horizon; s = addDaysLD(s, cycleLength)) {
