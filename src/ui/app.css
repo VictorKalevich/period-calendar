@@ -282,16 +282,8 @@
   gap: 10px;
 }
 
-.day-card__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
 .day-card__title,
-.day-card__phase,
-.day-card__text {
+.day-card__phase {
   margin: 0;
 }
 
@@ -536,6 +528,25 @@
   min-width: 56px;
   text-align: center;
   font-weight: 800;
+}
+
+/* Ширина ячейки задаётся невидимым образцом самой длинной подписи (фича 005). */
+.stepper__value--fixed {
+  display: inline-grid;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.stepper__value--fixed > * {
+  grid-area: 1 / 1;
+}
+
+.stepper__sizer {
+  visibility: hidden;
+}
+
+.settings-card__hint {
+  margin: 0;
 }
 
 .toggle {

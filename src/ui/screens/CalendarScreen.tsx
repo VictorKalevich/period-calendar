@@ -52,7 +52,7 @@ export function CalendarScreen() {
       <DayCard info={info} phase={cardPhase(info, ctx.forecast)}>
         <EntrySummary entry={entry} settings={ctx.settings} />
       </DayCard>
-      <Disclaimer />
+      <Disclaimer settings={ctx.settings} />
       <DaySheets which={sheet} onChange={setSheet} date={day} ctx={ctx} entry={entry} />
     </>
   );

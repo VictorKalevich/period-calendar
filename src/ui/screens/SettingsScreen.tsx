@@ -1,4 +1,5 @@
-import { CYCLE_LENGTH_RANGE, PERIOD_LENGTH_RANGE, type Settings } from '../../domain/types';
+import { formatShiftRu } from '../../domain/dates';
+import { CYCLE_LENGTH_RANGE, OVULATION_SHIFT_RANGE, PERIOD_LENGTH_RANGE, type Settings } from '../../domain/types';
 import { useLiveQuery } from '../../hooks/useLiveQuery';
 import { getDevMode, getSettings, updateSettings } from '../../storage/repository';
 import { BackupSection } from '../components/BackupSection';
@@ -66,6 +67,31 @@ export function SettingsScreen() {
             onChange={(e) => update({ showNotes: e.target.checked })}
           />
         </label>
+        <label className="toggle">
+          <span>Учитывать личный сдвиг овуляции</span>
+          <input
+            type="checkbox"
+            role="switch"
+            checked={settings.ovulationShiftEnabled}
+            onChange={(e) => update({ ovulationShiftEnabled: e.target.checked })}
+          />
+        </label>
+        {settings.ovulationShiftEnabled && (
+          <>
+            <p className="t-caption settings-card__hint">
+              Настройте, на сколько дней ваша овуляция обычно раньше или позже расчётной даты.
+            </p>
+            <Stepper
+              label="Сдвиг овуляции"
+              value={settings.ovulationShift}
+              min={OVULATION_SHIFT_RANGE.min}
+              max={OVULATION_SHIFT_RANGE.max}
+              format={formatShiftRu}
+              widest={formatShiftRu(OVULATION_SHIFT_RANGE.min)}
+              onChange={(v) => update({ ovulationShift: v })}
+            />
+          </>
+        )}
       </section>
 
       <RemindersSection settings={settings} />

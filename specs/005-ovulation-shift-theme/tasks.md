@@ -27,10 +27,10 @@ description: "Task list for feature 005-ovulation-shift-theme"
 
 ## Phase 4: UI (US2–US5)
 
-- [ ] T008 [US2] `Stepper.tsx`: `format` and `widest` props (fixed-width value cell, `tabular-nums`); `SettingsScreen.tsx`: switch «Учитывать личный сдвиг овуляции» under «Самочувствие»/«Заметки», hint and stepper −5…+5 when on
-- [ ] T009 [US3] `Disclaimer.tsx`: new text (14-й день, окно 5 дней до овуляции) + line about the personal shift when enabled and ≠ 0; pass settings from `CalendarScreen.tsx`
-- [ ] T010 [US4] `DayCard.tsx`: remove level pill and explanation line (keep date, cycle day, phase, entry summary)
-- [ ] T011 [US5] `theme.css` light tokens rose/roseText/roseSoft/btnBg; contrast test passes
+- [X] T008 [US2] `Stepper.tsx`: `format` and `widest` props (fixed-width value cell, `tabular-nums`); `SettingsScreen.tsx`: switch «Учитывать личный сдвиг овуляции» under «Самочувствие»/«Заметки», hint and stepper −5…+5 when on
+- [X] T009 [US3] `Disclaimer.tsx`: new text (14-й день, окно 5 дней до овуляции) + line about the personal shift when enabled and ≠ 0; pass settings from `CalendarScreen.tsx`
+- [X] T010 [US4] `DayCard.tsx`: remove level pill and explanation line (keep date, cycle day, phase, entry summary)
+- [X] T011 [US5] `theme.css` light tokens rose/roseText/roseSoft/btnBg; contrast test passes
 
 ## Phase 5: Документы и релиз
 
