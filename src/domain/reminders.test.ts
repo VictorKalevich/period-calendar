@@ -77,6 +77,20 @@ describe('planReminders', () => {
     expect(r.find((x) => x.kind === 'period')!.id).toBe('period:2026-03-27'); // начало месячных не сдвигается
   });
 
+  it('puts the ovulation reminder on the corrected day before the next period (005 FR-003a)', () => {
+    const settings = { ...DEFAULT_SETTINGS, ovulationShiftEnabled: true, ovulationShift: 5 };
+    const ps: Period[] = [
+      { id: 'a', start: ld('2026-02-12'), end: ld('2026-02-14'), endEstimated: false },
+      { id: 'b', start: ld('2026-03-01'), end: ld('2026-03-03'), endEstimated: false },
+    ];
+    const f = buildForecast({ periods: ps, settings, today: ld('2026-03-02') })!;
+    const r = planReminders(f, settings, new Date(2026, 2, 2));
+    expect(r.filter((x) => x.kind === 'ovulation').map((x) => x.id).slice(0, 2)).toEqual([
+      'ovulation:2026-03-17',
+      'ovulation:2026-04-03',
+    ]);
+  });
+
   it('respects the switches (case 16)', () => {
     const now = new Date(2026, 2, 2);
     const noOv: Settings = { ...DEFAULT_SETTINGS, remindOvulation: false };

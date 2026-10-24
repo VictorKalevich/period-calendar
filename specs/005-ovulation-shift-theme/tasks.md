@@ -38,6 +38,13 @@ description: "Task list for feature 005-ovulation-shift-theme"
 - [X] T013 Run tests, build, staged-diff check; browser: quickstart 1–8 (incl. scroll lock)
 - [X] T014 Merge into `main` and push (CLAUDE.md; worker not changed)
 
+## Ревизия 2026-10-24: овуляция не позже дня перед следующими месячными (FR-003a)
+
+- [X] T015 [US1] Failing tests (contract 13–16) in `forecast.test.ts` and `reminders.test.ts`: cycle 17 + shift +5, cycle 15 without shift, boundary exactly the day before, predicted cycles and delay
+- [X] T016 [US1] Implement `ovulationFor(start, nextStart, settings)` = `min(start + 13 + shift, nextStart − 1)` in `forecast.ts`; current cycle bounded by the predicted start (not the delayed one)
+- [X] T017 Update «Подробнее» (`Disclaimer.tsx`), `docs/design/design.md`, `specs/001-cycle-calendar/spec.md` FR-016 and `data-model.md` with the limit
+- [X] T018 Tests, build, staged-diff check; merge into `main` and push (worker not changed)
+
 ## Dependencies
 
 T001 → T002 → T003–T004 → T005 → T006 → T007 → T008–T011 → T012–T013 → T014

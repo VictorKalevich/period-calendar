@@ -14,7 +14,7 @@
 
 | Величина | Было | Стало |
 |----------|------|-------|
-| `ovulation` | `nextStart − 14` | `start + 13 + (enabled ? shift : 0)` |
+| `ovulation` | `nextStart − 14` | `min(start + 13 + (enabled ? shift : 0), nextStart − 1)` (FR-003a) |
 | `fertile` | `ovulation − 5 … ovulation` | без изменений формулы |
 | `mediumDays` | `ovulation − 7, −6, +1` | без изменений формулы |
 | `phase` | follicular до овуляции, luteal после | без изменений формулы |

@@ -1,5 +1,5 @@
 import { addMonths } from 'date-fns';
-import { addDaysLD, diffDays, parseLD, rangeLD, toLocalDate } from './dates';
+import { addDaysLD, diffDays, minLD, parseLD, rangeLD, toLocalDate } from './dates';
 import { averageCycleLength, averagePeriodLength, buildCycles, forecastConfidence } from './cycles';
 import { periodEnd } from './periods';
 import {
@@ -23,19 +23,24 @@ export function ovulationShiftOf(settings: Settings): number {
   return settings.ovulationShiftEnabled ? settings.ovulationShift : 0;
 }
 
-/** Овуляция — 14-й день цикла: начало + 13 дней + личный сдвиг (005 FR-003; заменяет 001 FR-016). */
-export function ovulationFor(cycleStart: LocalDate, settings: Settings): LocalDate {
-  return addDaysLD(cycleStart, OVULATION_DAY_OFFSET + ovulationShiftOf(settings));
+/**
+ * Овуляция — 14-й день цикла: начало + 13 дней + личный сдвиг (005 FR-003; заменяет 001 FR-016),
+ * но не позже дня перед следующими месячными (FR-003a).
+ */
+export function ovulationFor(cycleStart: LocalDate, nextStart: LocalDate, settings: Settings): LocalDate {
+  return minLD(addDaysLD(cycleStart, OVULATION_DAY_OFFSET + ovulationShiftOf(settings)), addDaysLD(nextStart, -1));
 }
 
+/** `ovulationBound` — начало следующих месячных для ограничения овуляции; у текущего цикла — прогнозное, без задержки. */
 function cycleFrom(
   start: LocalDate,
   nextStart: LocalDate,
   kind: PredictedCycle['kind'],
   periodLength: number,
   settings: Settings,
+  ovulationBound: LocalDate = nextStart,
 ): PredictedCycle {
-  const ovulation = ovulationFor(start, settings);
+  const ovulation = ovulationFor(start, ovulationBound, settings);
   return {
     start,
     nextStart,
@@ -71,7 +76,7 @@ export function buildForecast(input: {
   for (let i = 0; i < starts.length - 1; i++) {
     out.push(cycleFrom(starts[i]!, starts[i + 1]!, 'completed', periodLength, settings));
   }
-  out.push(cycleFrom(last, nextStart, 'current', periodLength, settings));
+  out.push(cycleFrom(last, nextStart, 'current', periodLength, settings, predictedStart));
 
   const horizon = toLocalDate(addMonths(parseLD(today), horizonMonths));
   for (let s = nextStart; s <= horizon; s = addDaysLD(s, cycleLength)) {

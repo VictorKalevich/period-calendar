@@ -101,8 +101,9 @@
 | `cycles` | PredictedCycle[] | текущий + прогнозируемые циклы на 12 месяцев вперёд |
 
 `PredictedCycle`: `start`, `periodDays` (`start…start+periodLength−1`), `ovulation`
-(`start + 13 + сдвиг` — 14-й день цикла; сдвиг = `ovulationShift` при `ovulationShiftEnabled`, иначе 0;
-фича 005), `fertile` (`ovulation − 5 … ovulation`), `mediumDays`
+(`min(start + 13 + сдвиг, nextStart − 1)` — 14-й день цикла, но не позже дня перед следующими
+месячными; сдвиг = `ovulationShift` при `ovulationShiftEnabled`, иначе 0; у текущего цикла граница —
+прогнозное начало без учёта задержки; фича 005, FR-003a), `fertile` (`ovulation − 5 … ovulation`), `mediumDays`
 (`ovulation − 7`, `ovulation − 6`, `ovulation + 1`). Для завершённых циклов те же поля вычисляются
 от их фактического начала.
 

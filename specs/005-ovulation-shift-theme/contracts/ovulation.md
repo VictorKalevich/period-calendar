@@ -7,7 +7,9 @@ const OVULATION_SHIFT_RANGE = { min: -5, max: 5 };
 
 // src/domain/forecast.ts — buildForecast учитывает settings.ovulationShiftEnabled / ovulationShift
 function ovulationShiftOf(settings: Settings): number;  // enabled ? shift : 0
-function ovulationFor(cycleStart: LocalDate, settings: Settings): LocalDate;
+// min(cycleStart + 13 + shift, nextStart − 1) — ревизия FR-003a; для текущего цикла nextStart —
+// прогнозное начало (без учёта задержки)
+function ovulationFor(cycleStart: LocalDate, nextStart: LocalDate, settings: Settings): LocalDate;
 
 // src/domain/dates.ts
 function formatShiftRu(n: number): string;  // «−5 дней», «−1 день», «0 дней», «+2 дня», «+5 дней»
@@ -32,3 +34,7 @@ function createScrollLock(win: ScrollWindow): { lock(): void; unlock(): void };
 | 10 | `migrations[2]`, Dexie v2→v3, импорт копии v2 | `false`, `0`; v3 — проверка целого −5…+5 |
 | 11 | `createScrollLock` | первая блокировка фиксирует body, вложенные не трогают, последняя снимает и восстанавливает `scrollY` |
 | 12 | контраст светлой темы с новыми цветами | ≥ 4.5:1 |
+| 13 | цикл 17 дней (01.03 → 18.03), сдвиг +5 | овуляция 17.03, окно 12–17.03, средние 10, 11, 18.03; `planReminders` — 17.03 |
+| 14 | цикл 15 дней (01.03 → 16.03), без сдвига | овуляция 14.03 (без коррекции) |
+| 15 | граница: цикл 15 дней, сдвиг +1 (расчёт 15.03 = день перед 16.03) / сдвиг +2 (16.03) | 15.03 в обоих случаях |
+| 16 | прогнозные циклы при средней длине 17 и сдвиге +5; задержка | каждый прогнозный — день перед следующими; при задержке овуляция текущего цикла — день перед прогнозным началом |

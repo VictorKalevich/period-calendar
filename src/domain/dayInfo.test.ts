@@ -161,7 +161,17 @@ describe('dayInfo with forecast', () => {
   });
 
   it('marked periods take priority over the window and the crown (005 FR-005)', () => {
-    // циклы по 15 дней и сдвиг +5: овуляция первого цикла (01.01 + 18 = 19.01) попадает на месячные 16–20.01
+    // сдвиг −5 и месячные 10 дней: овуляция (01.01 + 8 = 09.01) попадает на отмеченные месячные 01–10.01
+    const periods: Period[] = [{ id: 'p', start: ld('2026-01-01'), end: ld('2026-01-10'), endEstimated: false }];
+    const settings = { ...DEFAULT_SETTINGS, ovulationShiftEnabled: true, ovulationShift: -5 };
+    const forecast = buildForecast({ periods, settings, today: ld('2026-01-20') });
+    const c: DayContext = { forecast, periods, settings, entries: new Set(), today: ld('2026-01-20') };
+    expect(forecast!.cycles[0]!.ovulation).toBe('2026-01-09');
+    expect(dayInfo(ld('2026-01-09'), c)).toMatchObject({ period: 'actual', phase: 'menstrual', ovulation: false, fertile: null });
+    expect(dayInfo(ld('2026-01-04'), c)).toMatchObject({ period: 'actual', fertile: null });
+  });
+
+  it('short cycle with +5: the crown stays in its own cycle, on the day before the next period (005 FR-003a)', () => {
     const periods: Period[] = [];
     let start = ld('2026-01-01');
     for (let i = 0; i < 4; i++) {
@@ -171,9 +181,9 @@ describe('dayInfo with forecast', () => {
     const settings = { ...DEFAULT_SETTINGS, ovulationShiftEnabled: true, ovulationShift: 5 };
     const forecast = buildForecast({ periods, settings, today: ld('2026-02-20') });
     const c: DayContext = { forecast, periods, settings, entries: new Set(), today: ld('2026-02-20') };
-    expect(forecast!.cycles[0]!.ovulation).toBe('2026-01-19');
-    expect(dayInfo(ld('2026-01-19'), c)).toMatchObject({ period: 'actual', phase: 'menstrual', ovulation: false, fertile: null });
-    expect(dayInfo(ld('2026-01-15'), c)).toMatchObject({ period: null, fertile: 'past' }); // окно до месячных видно
+    expect(forecast!.cycles[0]!.ovulation).toBe('2026-01-15');
+    expect(dayInfo(ld('2026-01-15'), c)).toMatchObject({ period: null, phase: 'ovulation', ovulation: true, fertile: 'past' });
+    expect(dayInfo(ld('2026-01-19'), c)).toMatchObject({ period: 'actual', ovulation: false, fertile: null });
   });
 
   it('a personal shift moves the crown and the phase (005)', () => {

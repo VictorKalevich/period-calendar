@@ -145,6 +145,49 @@ describe('овуляция — 14-й день цикла и личный сдв�
   });
 });
 
+describe('овуляция не позже дня перед следующими месячными (005 FR-003a)', () => {
+  const shift = (value: number): Settings => ({ ...DEFAULT_SETTINGS, ovulationShiftEnabled: value !== 0, ovulationShift: value });
+  const pastCycle = (nextStart: string, s: number) =>
+    buildForecast({
+      periods: [period('a', '2026-03-01', '2026-03-05'), period('b', nextStart, null)],
+      settings: shift(s),
+      today: ld(nextStart),
+    })!.cycles[0]!;
+
+  it('цикл 17 дней со сдвигом +5: овуляция — день перед месячными, окно сдвигается с ней', () => {
+    const c = pastCycle('2026-03-18', 5);
+    expect(c).toMatchObject({ kind: 'completed', ovulation: '2026-03-17' });
+    expect(c.fertile).toEqual(['2026-03-12', '2026-03-13', '2026-03-14', '2026-03-15', '2026-03-16', '2026-03-17']);
+    expect(c.mediumDays).toEqual(['2026-03-10', '2026-03-11', '2026-03-18']);
+  });
+
+  it('цикл 15 дней без сдвига: обычный 14-й день, ограничение не срабатывает', () => {
+    expect(pastCycle('2026-03-16', 0).ovulation).toBe('2026-03-14');
+  });
+
+  it.each([
+    [1, '2026-03-15'], // расчёт ровно в день перед месячными — не меняется
+    [2, '2026-03-15'], // расчёт в день месячных — переносится на день раньше
+  ])('граница, цикл 15 дней, сдвиг +%i → %s', (s, ov) => {
+    expect(pastCycle('2026-03-16', s).ovulation).toBe(ov);
+  });
+
+  const shortHistory = [period('a', '2026-01-01', '2026-01-03'), period('b', '2026-01-18', '2026-01-20'), period('c', '2026-02-04', '2026-02-06')];
+
+  it('прогнозные циклы при средней длине 17 и сдвиге +5', () => {
+    const f = buildForecast({ periods: shortHistory, settings: shift(5), today: ld('2026-02-05') })!;
+    expect(f.cycleLength).toBe(17);
+    for (const c of f.cycles) expect(c.ovulation).toBe(addDaysLD(c.nextStart, -1));
+    expect(f.cycles.find((c) => c.kind === 'current')).toMatchObject({ nextStart: '2026-02-21', ovulation: '2026-02-20' });
+  });
+
+  it('при задержке граница — прогнозное начало, а не «сегодня»', () => {
+    const f = buildForecast({ periods: shortHistory, settings: shift(5), today: ld('2026-02-25') })!;
+    expect(f.delayDays).toBe(4);
+    expect(f.cycles.find((c) => c.kind === 'current')!.ovulation).toBe('2026-02-20');
+  });
+});
+
 describe('todaySummary', () => {
   const ctx = (periods: Period[], today: string): DayContext => {
     const forecast = buildForecast({ periods, settings: DEFAULT_SETTINGS, today: ld(today) });
