@@ -60,6 +60,49 @@ describe('migrations[2] (v2 → v3)', () => {
   });
 });
 
+// Реальная миграция v3 → v4 (фича 006): расчёт овуляции «от следующей менструации».
+describe('migrations[3] (v3 → v4)', () => {
+  const v3 = {
+    periods: [],
+    settings: {
+      defaultCycleLength: 28,
+      defaultPeriodLength: 5,
+      remindPeriod: true,
+      remindOvulation: true,
+      showWellbeing: false,
+      showNotes: true,
+      ovulationShiftEnabled: true,
+      ovulationShift: 2,
+    },
+  };
+
+  it('adds the mode as off when missing and keeps other fields', () => {
+    expect(migrations[3]!(v3)).toEqual({ ...v3, settings: { ...v3.settings, ovulationFromNextPeriod: false } });
+  });
+
+  it('keeps an explicit value and is idempotent', () => {
+    const withValue = { ...v3, settings: { ...v3.settings, ovulationFromNextPeriod: true } };
+    expect(migrations[3]!(withValue)).toEqual(withValue);
+    const once = migrations[3]!(v3);
+    expect(migrations[3]!(once)).toEqual(once);
+  });
+
+  it('leaves data without settings untouched', () => {
+    expect(migrations[3]!({ periods: [] })).toEqual({ periods: [] });
+  });
+
+  it('migrates a v1 copy through all steps', () => {
+    const v1 = { settings: { defaultCycleLength: 28, defaultPeriodLength: 5, remindPeriod: true, remindOvulation: true } };
+    expect(migrateData(v1, 1, 4).settings).toMatchObject({
+      showWellbeing: false,
+      showNotes: false,
+      ovulationShiftEnabled: false,
+      ovulationShift: 0,
+      ovulationFromNextPeriod: false,
+    });
+  });
+});
+
 // Механизм миграций для будущих версий схемы: проверяется на вымышленных миграциях v1 → v2 → v3.
 const registry: Record<number, (d: MigrationData) => MigrationData> = {
   1: (d) => ({ ...d, renamed: d.old ?? d.renamed, old: undefined }),

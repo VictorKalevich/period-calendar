@@ -69,13 +69,26 @@ describe('buildBackup', () => {
     expect(JSON.stringify(b)).not.toContain('secret');
   });
 
-  it('exports schema version 3 with switches and the ovulation shift (004, 005)', async () => {
-    await saveSettings({ ...DEFAULT_SETTINGS, showWellbeing: true, showNotes: false, ovulationShiftEnabled: true, ovulationShift: -3 });
+  it('exports schema version 4 with switches, the ovulation shift and the mode (004–006)', async () => {
+    await saveSettings({
+      ...DEFAULT_SETTINGS,
+      showWellbeing: true,
+      showNotes: false,
+      ovulationShiftEnabled: true,
+      ovulationShift: -3,
+      ovulationFromNextPeriod: true,
+    });
     const b = await buildBackup(new Date());
-    expect(b.schemaVersion).toBe(3);
-    expect(b.data.settings).toMatchObject({ showWellbeing: true, showNotes: false, ovulationShiftEnabled: true, ovulationShift: -3 });
+    expect(b.schemaVersion).toBe(4);
+    expect(b.data.settings).toMatchObject({
+      showWellbeing: true,
+      showNotes: false,
+      ovulationShiftEnabled: true,
+      ovulationShift: -3,
+      ovulationFromNextPeriod: true,
+    });
     const parsed = parseBackup(JSON.stringify(b));
-    expect(parsed.ok && parsed.value.settings).toMatchObject({ ovulationShiftEnabled: true, ovulationShift: -3 });
+    expect(parsed.ok && parsed.value.settings).toMatchObject({ ovulationShiftEnabled: true, ovulationShift: -3, ovulationFromNextPeriod: true });
   });
 
   it('does not export the dev mode flag (FR-003)', async () => {
@@ -144,7 +157,7 @@ describe('parseBackup', () => {
     ['missing data', (f) => void delete (f as Partial<typeof f>).data],
   ];
 
-  it('imports an old schemaVersion 1 file with switches off and no shift (004, 005)', () => {
+  it('imports an old schemaVersion 1 file with switches off, no shift and the mode off (004–006)', () => {
     const r = parseBackup(JSON.stringify(validFile()));
     expect(r.ok && r.value.settings).toEqual({
       defaultCycleLength: 27,
@@ -155,6 +168,7 @@ describe('parseBackup', () => {
       showNotes: false,
       ovulationShiftEnabled: false,
       ovulationShift: 0,
+      ovulationFromNextPeriod: false,
     });
   });
 
@@ -162,7 +176,35 @@ describe('parseBackup', () => {
     const f = { ...validFile(), schemaVersion: 2 };
     Object.assign(f.data.settings, { showWellbeing: true, showNotes: true });
     const r = parseBackup(JSON.stringify(f));
-    expect(r.ok && r.value.settings).toMatchObject({ showWellbeing: true, showNotes: true, ovulationShiftEnabled: false, ovulationShift: 0 });
+    expect(r.ok && r.value.settings).toMatchObject({
+      showWellbeing: true,
+      showNotes: true,
+      ovulationShiftEnabled: false,
+      ovulationShift: 0,
+      ovulationFromNextPeriod: false,
+    });
+  });
+
+  it('imports a schemaVersion 3 file with the mode off and keeps the shift (006 FR-008)', () => {
+    const f = { ...validFile(), schemaVersion: 3 };
+    Object.assign(f.data.settings, { showWellbeing: false, showNotes: true, ovulationShiftEnabled: true, ovulationShift: 2 });
+    const r = parseBackup(JSON.stringify(f));
+    expect(r.ok && r.value.settings).toMatchObject({ ovulationShiftEnabled: true, ovulationShift: 2, ovulationFromNextPeriod: false });
+  });
+
+  const v4Settings = { showWellbeing: false, showNotes: false, ovulationShiftEnabled: false, ovulationShift: 0 };
+
+  it('imports the mode from a v4 file', () => {
+    const f = { ...validFile(), schemaVersion: 4 };
+    Object.assign(f.data.settings, { ...v4Settings, ovulationFromNextPeriod: true });
+    const r = parseBackup(JSON.stringify(f));
+    expect(r.ok && r.value.settings.ovulationFromNextPeriod).toBe(true);
+  });
+
+  it.each([undefined, 'yes', 1])('rejects ovulationFromNextPeriod %s in a v4 file', (mode) => {
+    const f = { ...validFile(), schemaVersion: 4 };
+    Object.assign(f.data.settings, { ...v4Settings, ovulationFromNextPeriod: mode });
+    expect(parseBackup(JSON.stringify(f)).ok).toBe(false);
   });
 
   it('rejects non-boolean switches in a v2 file', () => {
@@ -211,6 +253,7 @@ describe('applyBackup', () => {
       showNotes: false,
       ovulationShiftEnabled: false,
       ovulationShift: 0,
+      ovulationFromNextPeriod: false,
     });
     expect((await getPushState())?.token).toBe('secret');
 

@@ -27,9 +27,18 @@ function addOvulationShift(data: MigrationData): MigrationData {
   };
 }
 
+/** v3 → v4 (фича 006): расчёт овуляции «от следующей менструации», по умолчанию выключен. */
+function addOvulationMode(data: MigrationData): MigrationData {
+  const settings = data.settings;
+  if (typeof settings !== 'object' || settings === null) return data;
+  const s = settings as Record<string, unknown>;
+  return { ...data, settings: { ...s, ovulationFromNextPeriod: s.ovulationFromNextPeriod ?? false } };
+}
+
 export const migrations: Record<number, Migration> = {
   1: addEntrySwitches,
   2: addOvulationShift,
+  3: addOvulationMode,
 };
 
 /** Последовательно применяет миграции from → to. Неизвестные поля не трогает. */

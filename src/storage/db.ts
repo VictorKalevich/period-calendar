@@ -2,7 +2,7 @@ import Dexie, { type Table } from 'dexie';
 import type { DayEntry, LocalDate, Period } from '../domain/types';
 import { migrations } from './migrations';
 
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 
 export interface KvRecord<T = unknown> {
   key: string;
@@ -40,6 +40,15 @@ class CycleDb extends Dexie {
         const rec = await kv.get('settings');
         if (!rec) return;
         await kv.put({ key: 'settings', value: migrations[2]!({ settings: rec.value }).settings });
+      });
+    // v4 (фича 006): таблицы те же; в настройки добавляется режим расчёта овуляции (migrations[3]).
+    this.version(4)
+      .stores({ periods: 'id, start', days: 'date', kv: 'key' })
+      .upgrade(async (tx) => {
+        const kv = tx.table<KvRecord, string>('kv');
+        const rec = await kv.get('settings');
+        if (!rec) return;
+        await kv.put({ key: 'settings', value: migrations[3]!({ settings: rec.value }).settings });
       });
   }
 }

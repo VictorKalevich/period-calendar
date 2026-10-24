@@ -106,6 +106,7 @@ function parseSettings(input: unknown): Settings | string {
     showNotes,
     ovulationShiftEnabled,
     ovulationShift,
+    ovulationFromNextPeriod,
   } = input;
   if (!isIntIn(defaultCycleLength, CYCLE_LENGTH_RANGE)) return 'длина цикла вне 21…45';
   if (!isIntIn(defaultPeriodLength, PERIOD_LENGTH_RANGE)) return 'длина месячных вне 2…10';
@@ -116,6 +117,8 @@ function parseSettings(input: unknown): Settings | string {
   if (typeof ovulationShiftEnabled !== 'boolean' || !isIntIn(ovulationShift, OVULATION_SHIFT_RANGE)) {
     return 'некорректный личный сдвиг овуляции';
   }
+  // Старые копии получают режим миграцией v3 → v4 (migrations[3]).
+  if (typeof ovulationFromNextPeriod !== 'boolean') return 'некорректный способ расчёта овуляции';
   return {
     defaultCycleLength: defaultCycleLength as number,
     defaultPeriodLength: defaultPeriodLength as number,
@@ -125,6 +128,7 @@ function parseSettings(input: unknown): Settings | string {
     showNotes,
     ovulationShiftEnabled,
     ovulationShift: ovulationShift as number,
+    ovulationFromNextPeriod,
   };
 }
 

@@ -49,6 +49,8 @@ export interface Settings {
   ovulationShiftEnabled: boolean;
   /** Личный сдвиг овуляции в днях, −5…+5; применяется только при ovulationShiftEnabled. */
   ovulationShift: number;
+  /** Считать овуляцию от следующей менструации (следующие − 14 + сдвиг) — фича 006. */
+  ovulationFromNextPeriod: boolean;
 }
 
 export const DEFAULT_SETTINGS: Readonly<Settings> = Object.freeze({
@@ -60,10 +62,13 @@ export const DEFAULT_SETTINGS: Readonly<Settings> = Object.freeze({
   showNotes: false,
   ovulationShiftEnabled: false,
   ovulationShift: 0,
+  ovulationFromNextPeriod: false,
 });
 
 /** Овуляция — 14-й день цикла: начало месячных + 13 дней (фича 005, заменяет «за 14 дней до следующих»). */
 export const OVULATION_DAY_OFFSET = 13;
+/** Режим «от следующей менструации»: овуляция за 14 дней до следующих месячных (фича 006). */
+export const LUTEAL_PHASE_DAYS = 14;
 export const OVULATION_SHIFT_RANGE = { min: -5, max: 5 } as const;
 
 export const CYCLE_LENGTH_RANGE = { min: 21, max: 45 } as const;

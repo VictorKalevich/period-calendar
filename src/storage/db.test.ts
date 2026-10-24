@@ -9,10 +9,10 @@ beforeEach(async () => {
   await db.open();
 });
 
-describe('db schema v3', () => {
-  it('has schema version 3', () => {
-    expect(SCHEMA_VERSION).toBe(3);
-    expect(db.verno).toBe(3);
+describe('db schema v4', () => {
+  it('has schema version 4', () => {
+    expect(SCHEMA_VERSION).toBe(4);
+    expect(db.verno).toBe(4);
   });
 
   it('creates periods, days and kv tables with the expected keys', () => {
@@ -35,6 +35,7 @@ describe('settings', () => {
       showNotes: false,
       ovulationShiftEnabled: false,
       ovulationShift: 0,
+      ovulationFromNextPeriod: false,
     });
     expect(DEFAULT_SETTINGS.defaultCycleLength).toBe(28);
   });
