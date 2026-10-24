@@ -1,4 +1,5 @@
 import { useEffect, useRef, type ReactNode } from 'react';
+import { pageScrollLock } from '../scrollLock';
 
 interface Props {
   open: boolean;
@@ -19,6 +20,25 @@ export function BottomSheet({ open, onClose, title, children }: Props) {
     if (!open && dialog.open) dialog.close();
   }, [open]);
 
+  // Пока шит открыт, страница под ним не прокручивается (фича 005, US6).
+  useEffect(() => {
+    if (!open) return;
+    pageScrollLock.lock();
+    return () => pageScrollLock.unlock();
+  }, [open]);
+
+  // Свайп по подложке или по шиту без своей прокрутки не должен двигать страницу;
+  // React вешает touchmove пассивно, поэтому слушатель — нативный с passive: false.
+  useEffect(() => {
+    const dialog = ref.current;
+    if (!dialog) return;
+    const onMove = (e: TouchEvent) => {
+      if (e.target === dialog || dialog.scrollHeight <= dialog.clientHeight) e.preventDefault();
+    };
+    dialog.addEventListener('touchmove', onMove, { passive: false });
+    return () => dialog.removeEventListener('touchmove', onMove);
+  }, []);
+
   return (
     <dialog
       ref={ref}
@@ -29,7 +49,8 @@ export function BottomSheet({ open, onClose, title, children }: Props) {
         if (e.target === ref.current) onClose();
       }}
       onTouchStart={(e) => {
-        dragStart.current = e.touches[0]?.clientY ?? null;
+        // Свайп вниз закрывает шит, только если его содержимое не прокручено.
+        dragStart.current = (ref.current?.scrollTop ?? 0) > 0 ? null : (e.touches[0]?.clientY ?? null);
       }}
       onTouchEnd={(e) => {
         const start = dragStart.current;

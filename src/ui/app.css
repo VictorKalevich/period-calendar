@@ -718,6 +718,10 @@
   background: var(--surface);
   color: var(--ink);
   max-height: 85dvh;
+  /* Длинный шит прокручивается сам и не передаёт прокрутку странице (фича 005). */
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .sheet::backdrop {

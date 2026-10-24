@@ -22,8 +22,8 @@ description: "Task list for feature 005-ovulation-shift-theme"
 
 ## Phase 3: Шиты (US6)
 
-- [ ] T006 [US6] Failing test `src/ui/scrollLock.test.ts` for `createScrollLock(fakeWindow)`: first lock fixes body at −scrollY, nested lock is a no-op, last unlock restores styles and `scrollTo(0, y)`
-- [ ] T007 [US6] Implement `src/ui/scrollLock.ts`; use in `BottomSheet.tsx` while open; `touchmove` on the backdrop prevented (`passive: false`); `.sheet` `overscroll-behavior: contain; overflow-y: auto`
+- [X] T006 [US6] Failing test `src/ui/scrollLock.test.ts` for `createScrollLock(fakeWindow)`: first lock fixes body at −scrollY, nested lock is a no-op, last unlock restores styles and `scrollTo(0, y)`
+- [X] T007 [US6] Implement `src/ui/scrollLock.ts`; use in `BottomSheet.tsx` while open; `touchmove` on the backdrop prevented (`passive: false`); `.sheet` `overscroll-behavior: contain; overflow-y: auto`
 
 ## Phase 4: UI (US2–US5)
 
