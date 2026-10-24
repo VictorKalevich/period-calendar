@@ -7,7 +7,6 @@ import { useLiveQuery } from '../../hooks/useLiveQuery';
 import { getDayEntry } from '../../storage/repository';
 import { DayCard } from '../components/DayCard';
 import { DaySheets, type DaySheet } from '../components/DaySheets';
-import { Disclaimer } from '../components/Disclaimer';
 import { EntrySummary } from '../components/EntrySummary';
 import { Legend } from '../components/Legend';
 import { MonthPager } from '../components/MonthPager';
@@ -52,7 +51,6 @@ export function CalendarScreen() {
       <DayCard info={info} phase={cardPhase(info, ctx.forecast)}>
         <EntrySummary entry={entry} settings={ctx.settings} />
       </DayCard>
-      <Disclaimer settings={ctx.settings} />
       <DaySheets which={sheet} onChange={setSheet} date={day} ctx={ctx} entry={entry} />
     </>
   );

@@ -1,13 +1,15 @@
 <!--
 Sync Impact Report
-- Version change: 1.0.0 → 1.0.1 (PATCH: clarifications, no principle added or removed)
+- Version change: 1.0.1 → 2.0.0 (MAJOR: rule removed from a principle)
 - Modified principles:
-  - I. Приватность — explicitly allows technical auth identifiers on the server (random clientId
-    and token hash, no personal data)
-  - VI. Дизайн и доступность — tap target unit written as «44 CSS px (= 44 pt)»
+  - VII. Честность — removed the requirement of a permanent notice «прогноз ориентировочный и
+    не заменяет контрацепцию и консультацию врача»; the reduced-confidence rule for insufficient
+    data or irregular cycles is kept unchanged
 - Added sections: none
 - Removed sections: none
 - Templates requiring updates: none (templates read the constitution at runtime)
+- Dependent docs updated with the same change: docs/design/design.md, README.md,
+  specs/001 FR-021, specs/005 FR-009, specs/006 FR-007
 - Follow-up TODOs: none
 -->
 
@@ -97,9 +99,6 @@ Sync Impact Report
 
 ### VII. Честность
 
-- Приложение MUST явно сообщать, что прогноз ориентировочный и не заменяет контрацепцию
-  и консультацию врача; пометка MUST быть доступна в интерфейсе постоянно (не только при
-  первом запуске).
 - Прогнозы при недостатке данных или нерегулярном цикле MUST отображаться с пониженной
   уверенностью или явной оговоркой, а не как точные даты.
 
@@ -137,4 +136,4 @@ Sync Impact Report
 - Каждый план фичи MUST содержать проверку соответствия конституции; любое отступление MUST
   быть явно обосновано в разделе Complexity Tracking.
 
-**Version**: 1.0.1 | **Ratified**: 2026-10-23 | **Last Amended**: 2026-10-23
+**Version**: 2.0.0 | **Ratified**: 2026-10-23 | **Last Amended**: 2026-10-24
