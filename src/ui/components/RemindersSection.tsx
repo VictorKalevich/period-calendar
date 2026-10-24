@@ -33,7 +33,7 @@ export function RemindersSection({ settings }: { settings: Settings }) {
   const toggle = async (patch: Partial<Settings>) => {
     const next = { ...settings, ...patch };
     await updateSettings(patch);
-    if (!next.remindPeriod && !next.remindOvulation) await disableReminders();
+    if (!next.remindPeriod && !next.remindOvulation && !next.remindMissedPeriod) await disableReminders();
     else if (!subscribed && permission !== 'denied') await enable();
   };
 
@@ -89,6 +89,19 @@ export function RemindersSection({ settings }: { settings: Settings }) {
             checked={settings.remindOvulation}
             disabled={busy}
             onChange={(e) => toggle({ remindOvulation: e.target.checked })}
+          />
+        </label>
+        <label className="toggle">
+          <span>
+            Напоминать, если забыла отметить начало месячных
+            <span className="t-small toggle__hint">Придёт на 3-й день после ожидаемого начала месячных, если оно не отмечено</span>
+          </span>
+          <input
+            type="checkbox"
+            role="switch"
+            checked={settings.remindMissedPeriod}
+            disabled={busy}
+            onChange={(e) => toggle({ remindMissedPeriod: e.target.checked })}
           />
         </label>
       </>
