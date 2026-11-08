@@ -1,5 +1,8 @@
 import { useRef, useState } from 'react';
+import { toLocalDate } from '../../domain/dates';
+import type { LocalDate } from '../../domain/types';
 import { applyBackup, exportBackup, parseBackup, type ParsedBackup } from '../../storage/backup';
+import { applyTextImport, looksLikeCycleText, planTextImport, type TextImportPlan } from '../../storage/textImport';
 import { BottomSheet } from './BottomSheet';
 
 /** «1 запись», «2 записи», «5 записей». */
@@ -9,6 +12,11 @@ export function pluralRu(n: number, [one, few, many]: [string, string, string]):
   const word = mod10 === 1 && mod100 !== 11 ? one : mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14) ? few : many;
   return `${n} ${word}`;
 }
+
+/** «23.12.2017» */
+const numericDate = (d: LocalDate) => `${d.slice(8, 10)}.${d.slice(5, 7)}.${d.slice(0, 4)}`;
+
+const PERIOD_WORDS: [string, string, string] = ['период', 'периода', 'периодов'];
 
 async function shareOrDownload(file: File) {
   if (navigator.canShare?.({ files: [file] })) {
@@ -27,16 +35,31 @@ async function shareOrDownload(file: File) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-/** Экспорт и импорт резервной копии (FR-029, FR-030). */
+/** Экспорт и импорт резервной копии (FR-029, FR-030) и импорт месячных из текстового файла (008). */
 export function BackupSection() {
   const input = useRef<HTMLInputElement>(null);
   const [pending, setPending] = useState<ParsedBackup | null>(null);
+  const [textPlan, setTextPlan] = useState<TextImportPlan | null>(null);
   const [message, setMessage] = useState<{ text: string; error: boolean } | null>(null);
 
   const onFile = async (file: File | undefined) => {
     if (!file) return;
-    const res = parseBackup(await file.text());
+    const text = await file.text();
     if (input.current) input.current.value = '';
+    if (!text.trimStart().startsWith('{') && looksLikeCycleText(text)) {
+      const plan = await planTextImport(text, toLocalDate(new Date()));
+      if (!plan.ok) setMessage({ text: plan.error, error: true });
+      else {
+        setMessage(null);
+        setTextPlan(plan.value);
+      }
+      return;
+    }
+    if (!text.trimStart().startsWith('{')) {
+      setMessage({ text: 'Файл не распознан', error: true });
+      return;
+    }
+    const res = parseBackup(text);
     if (!res.ok) setMessage({ text: res.error, error: true });
     else {
       setMessage(null);
@@ -49,6 +72,17 @@ export function BackupSection() {
     await applyBackup(pending);
     setPending(null);
     setMessage({ text: 'Данные восстановлены', error: false });
+  };
+
+  const confirmText = async () => {
+    if (!textPlan) return;
+    await applyTextImport(textPlan);
+    const changed = textPlan.added;
+    setTextPlan(null);
+    setMessage({
+      text: changed > 0 ? `Добавлено: ${pluralRu(changed, PERIOD_WORDS)} месячных` : 'Все месячные из файла уже были отмечены',
+      error: false,
+    });
   };
 
   return (
@@ -68,7 +102,7 @@ export function BackupSection() {
       <input
         ref={input}
         type="file"
-        accept="application/json,.json"
+        accept="application/json,.json,text/plain,.txt"
         hidden
         onChange={(e) => onFile(e.target.files?.[0])}
       />
@@ -89,6 +123,33 @@ export function BackupSection() {
           Восстановить
         </button>
         <button type="button" className="btn btn--ghost" onClick={() => setPending(null)}>
+          Отмена
+        </button>
+      </BottomSheet>
+      <BottomSheet open={textPlan !== null} onClose={() => setTextPlan(null)} title="Добавить месячные?">
+        {textPlan && (
+          <>
+            <p className="t-body sheet__note">
+              Найдено: {pluralRu(textPlan.found, PERIOD_WORDS)} месячных ({numericDate(textPlan.first)} –{' '}
+              {numericDate(textPlan.last)}). Добавить в календарь?
+            </p>
+            {textPlan.replaced > 0 && (
+              <p className="t-body sheet__note">
+                Будут заменены уже отмеченные месячные: {pluralRu(textPlan.replaced, PERIOD_WORDS)}.
+              </p>
+            )}
+            {textPlan.skipped > 0 && (
+              <p className="t-caption sheet__note">
+                Пропущено из-за ошибок в файле: {pluralRu(textPlan.skipped, PERIOD_WORDS)}.
+              </p>
+            )}
+            <p className="t-caption sheet__note">Заметки, самочувствие и настройки не изменятся.</p>
+          </>
+        )}
+        <button type="button" className="btn btn--primary" onClick={confirmText}>
+          Добавить
+        </button>
+        <button type="button" className="btn btn--ghost" onClick={() => setTextPlan(null)}>
           Отмена
         </button>
       </BottomSheet>
