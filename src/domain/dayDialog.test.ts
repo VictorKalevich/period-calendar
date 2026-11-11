@@ -28,6 +28,8 @@ const COMBOS: Array<[string, Settings]> = [
   ['оба включены', { ...DEFAULT_SETTINGS, showWellbeing: true, showNotes: true }],
 ];
 const extrasFor = (s: Settings) => [...(s.showWellbeing ? ['wellbeing'] : []), ...(s.showNotes ? ['notes'] : [])];
+// 012: в будущем дне — только «Заметки».
+const futureExtrasFor = (s: Settings) => (s.showNotes ? ['notes'] : []);
 
 describe('dayDialogFor — все комбинации дней и переключателей', () => {
   const DAYS: Array<[string, string, string[]]> = [
@@ -42,9 +44,10 @@ describe('dayDialogFor — все комбинации дней и перекл�
     describe(dayName, () => {
       it.each(COMBOS)('%s', (_combo, settings) => {
         const d = dayDialogFor(ld(date), TODAY, periods, L, settings);
+        const extras = date > TODAY ? futureExtrasFor(settings) : extrasFor(settings);
         expect(d.periodActions.map((a) => a.kind)).toEqual(periodKinds);
-        expect(d.extras).toEqual(extrasFor(settings));
-        expect(d.opens).toBe(periodKinds.length > 0 || extrasFor(settings).length > 0);
+        expect(d.extras).toEqual(extras);
+        expect(d.opens).toBe(periodKinds.length > 0 || extras.length > 0);
       });
     });
   }
@@ -61,7 +64,7 @@ describe('dayDialogFor — все комбинации дней и перекл�
     const open: Period[] = [{ id: 'b', start: ld('2026-10-19'), end: null, endEstimated: false }];
     const d = dayDialogFor(ld('2026-10-21'), TODAY, open, L, COMBOS[3]![1]);
     expect(d.periodActions).toEqual([]);
-    expect(d.extras).toEqual(['wellbeing', 'notes']);
+    expect(d.extras).toEqual(['notes']); // 012: самочувствие — только сегодня и прошлые дни
   });
 });
 
@@ -139,9 +142,9 @@ describe('dayDialogFor — «Настроение» (009)', () => {
     expect(dayDialogFor(ld('2026-10-15'), TODAY, periods, L, { ...all, showMood: false }).extras).toEqual(['wellbeing', 'notes']);
   });
 
-  it('будущий день только с «Настроением» — диалог открывается', () => {
+  it('будущий день только с «Настроением» — диалог не открывается (012)', () => {
     const d = dayDialogFor(ld('2026-10-25'), TODAY, periods, L, { ...DEFAULT_SETTINGS, showMood: true });
-    expect(d).toMatchObject({ periodActions: [], extras: ['mood'], opens: true });
+    expect(d).toMatchObject({ periodActions: [], extras: [], opens: false });
   });
 });
 
@@ -198,5 +201,38 @@ describe('интенсивность (009)', () => {
   it('wellbeingTags: «Боль внизу живота · сильно», без степени — просто подпись', () => {
     expect(wellbeingTags(visibleEntryParts(e, both))).toEqual(['Боль внизу живота · сильно', 'Акне']);
     expect(wellbeingTags(visibleEntryParts(e, { ...both, showIntensity: false }))).toEqual(['Боль внизу живота', 'Акне']);
+  });
+});
+
+// Фича 012: самочувствие и настроение — только сегодня и прошлые дни; выделение кнопок с записями.
+describe('будущий день и кнопки с записями (012)', () => {
+  const all: Settings = { ...DEFAULT_SETTINGS, showWellbeing: true, showMood: true, showNotes: true };
+  const day = ld('2026-10-15');
+
+  it('будущий день: только «Заметки»; без «Заметок» диалог не открывается', () => {
+    expect(dayDialogFor(ld('2026-10-25'), TODAY, periods, L, all)).toMatchObject({ extras: ['notes'], opens: true });
+    expect(dayDialogFor(ld('2026-10-25'), TODAY, periods, L, { ...all, showNotes: false })).toMatchObject({ extras: [], opens: false });
+  });
+
+  it('сегодня — все три', () => {
+    expect(dayDialogFor(TODAY, TODAY, periods, L, all).extras).toEqual(['wellbeing', 'mood', 'notes']);
+  });
+
+  it('filled — включённые типы, по которым у дня есть записи', () => {
+    const e = { ...emptyDayEntry(day), symptoms: ['acne' as const], note: 'x' };
+    expect(dayDialogFor(day, TODAY, periods, L, all, e).filled).toEqual(['wellbeing', 'notes']);
+    expect(dayDialogFor(day, TODAY, periods, L, all, { ...emptyDayEntry(day), moods: ['calm'] }).filled).toEqual(['mood']);
+    expect(dayDialogFor(day, TODAY, periods, L, { ...all, showNotes: false }, e).filled).toEqual(['wellbeing']);
+  });
+
+  it('filled без записи и для пустой записи — пусто', () => {
+    expect(dayDialogFor(day, TODAY, periods, L, all).filled).toEqual([]);
+    expect(dayDialogFor(day, TODAY, periods, L, all, { ...emptyDayEntry(day), sex: true }).filled).toEqual([]);
+  });
+
+  it('будущий день: filled — только заметки', () => {
+    const future = ld('2026-10-25');
+    const e = { ...emptyDayEntry(future), symptoms: ['acne' as const], moods: ['calm' as const], note: 'план' };
+    expect(dayDialogFor(future, TODAY, periods, L, all, e).filled).toEqual(['notes']);
   });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { coerceDayEntry, emptyDayEntry, isEmptyDayEntry } from './dayEntry';
+import { coerceDayEntry, DEFAULT_INTENSITY, emptyDayEntry, isEmptyDayEntry, withDefaultIntensity } from './dayEntry';
 import type { DayEntry, LocalDate } from './types';
 
 // Фича 009: мягкий разбор записи дня — specs/009-day-marks/contracts/day-entry.md.
@@ -109,5 +109,24 @@ describe('isEmptyDayEntry', () => {
 
   it('степень без пункта не делает запись непустой', () => {
     expect(isEmptyDayEntry(full({ intensity: { acne: 'mild' } }))).toBe(true);
+  });
+});
+
+// Фича 012: степень по умолчанию — «средне».
+describe('withDefaultIntensity', () => {
+  it('«средне» по умолчанию', () => {
+    expect(DEFAULT_INTENSITY).toBe('moderate');
+  });
+
+  it('пунктам без степени — «средне», сохранённые не меняются, степени неотмеченных отбрасываются', () => {
+    expect(withDefaultIntensity(['cramps', 'acne', 'fatigue'], { acne: 'severe', headache: 'mild' })).toEqual({
+      cramps: 'moderate',
+      acne: 'severe',
+      fatigue: 'moderate',
+    });
+  });
+
+  it('нет пунктов — пусто', () => {
+    expect(withDefaultIntensity([], { acne: 'mild' })).toEqual({});
   });
 });

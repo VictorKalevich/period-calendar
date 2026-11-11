@@ -80,6 +80,22 @@ export function coerceDayEntry(raw: unknown): DayEntry | null {
   }
 }
 
+/** Степень самочувствия по умолчанию (012 FR-006). */
+export const DEFAULT_INTENSITY: Intensity = 'moderate';
+
+/**
+ * Степени для листа «Самочувствие» при включённой интенсивности: у каждого отмеченного пункта ровно одна,
+ * недостающие — «средне», степени неотмеченных пунктов отбрасываются (012 FR-006).
+ */
+export function withDefaultIntensity(
+  symptoms: SymptomId[],
+  intensity: Partial<Record<SymptomId, Intensity>>,
+): Partial<Record<SymptomId, Intensity>> {
+  const out: Partial<Record<SymptomId, Intensity>> = {};
+  for (const id of symptoms) out[id] = intensity[id] ?? DEFAULT_INTENSITY;
+  return out;
+}
+
 /** Пустая запись не хранится: нет самочувствия, настроений, отметки секса и заметки. */
 export const isEmptyDayEntry = (e: DayEntry) =>
   e.symptoms.length === 0 && e.moods.length === 0 && !e.sex && e.note === '';

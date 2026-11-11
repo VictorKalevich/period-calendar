@@ -14,8 +14,13 @@ export interface DayDialog {
   title: string;
   /** Кнопки месячных по таблице А/Б/В фичи 003; для будущего дня — пусто. */
   periodActions: PeriodAction[];
-  /** «Самочувствие», «Настроение» и «Заметки» — только включённые, в этом порядке. */
+  /**
+   * «Самочувствие», «Настроение» и «Заметки» — только включённые, в этом порядке.
+   * Будущий день — только «Заметки» (012 FR-001).
+   */
   extras: DayExtra[];
+  /** Кнопки из `extras`, по которым у дня уже есть записи, — выделяются в диалоге (012 FR-003). */
+  filled: DayExtra[];
   /** Кнопка отметки секса (009): null — выключено или будущий день. */
   sex: 'mark' | 'unmark' | null;
   /** Есть хотя бы одна кнопка, кроме «Отмена». */
@@ -31,15 +36,19 @@ export function dayDialogFor(
   entry?: DayEntry,
 ): DayDialog {
   const periodActions = periodActionsFor(date, today, periods, periodLength);
-  const sex = !settings.showSex || date > today ? null : entry?.sex ? 'unmark' : 'mark';
+  const future = date > today;
+  const sex = !settings.showSex || future ? null : entry?.sex ? 'unmark' : 'mark';
   const extras: DayExtra[] = [];
-  if (settings.showWellbeing) extras.push('wellbeing');
-  if (settings.showMood) extras.push('mood');
+  if (settings.showWellbeing && !future) extras.push('wellbeing');
+  if (settings.showMood && !future) extras.push('mood');
   if (settings.showNotes) extras.push('notes');
+  const has: Record<DayExtra, (e: DayEntry) => boolean> = { wellbeing: hasWellbeing, mood: hasMood, notes: hasNote };
+  const filled = entry ? extras.filter((x) => has[x](entry)) : [];
   return {
     title: formatDayMonthRu(date),
     periodActions,
     extras,
+    filled,
     sex,
     opens: periodActions.length > 0 || extras.length > 0 || sex !== null,
   };
