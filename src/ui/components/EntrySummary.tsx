@@ -1,12 +1,12 @@
-import { moodLabel, symptomLabel } from '../../domain/catalog';
-import { visibleEntryParts } from '../../domain/dayDialog';
+import { moodLabel } from '../../domain/catalog';
+import { visibleEntryParts, wellbeingTags } from '../../domain/dayDialog';
 import type { DayEntry, Settings } from '../../domain/types';
 import { Heart } from './Icons';
 
 /** Краткий показ записанного за день в карточке дня — только включённые типы (004 FR-009). */
 export function EntrySummary({ entry, settings }: { entry: DayEntry | undefined; settings: Settings }) {
   const parts = visibleEntryParts(entry, settings);
-  const tags = [...parts.symptoms.map(symptomLabel), ...parts.moods.map(moodLabel)];
+  const tags = [...wellbeingTags(parts), ...parts.moods.map(moodLabel)];
   if (tags.length === 0 && !parts.note && !parts.sex) return null;
   return (
     <div className="entry">

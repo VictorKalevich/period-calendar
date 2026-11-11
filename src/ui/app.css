@@ -479,6 +479,55 @@
   font-weight: 800;
 }
 
+/* Интенсивность самочувствия (009): строка на каждый отмеченный пункт, три сегмента */
+.intensity {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.intensity .chips__legend {
+  margin: 0;
+}
+
+.intensity__row {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.intensity__label {
+  padding: 0;
+  margin-bottom: 6px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.intensity__segments {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.segment {
+  min-height: 44px;
+  border-radius: 22px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.segment[aria-pressed='true'] {
+  background: var(--violetSoft);
+  border-color: var(--violetSoft);
+  color: var(--violetText);
+  font-weight: 800;
+}
+
 /* Заметка */
 .note {
   display: flex;

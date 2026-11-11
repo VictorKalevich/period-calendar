@@ -9,6 +9,7 @@ import {
   visibleEntryDates,
   visibleEntryParts,
   visibleSexDates,
+  wellbeingTags,
 } from './dayDialog';
 import { buildForecast, dayInfo } from './forecast';
 import { DEFAULT_SETTINGS, type DayEntry, type LocalDate, type Period, type Settings } from './types';
@@ -89,17 +90,17 @@ describe('видимость записей — 4 комбинации', () => {
   });
 
   it.each([
-    ['оба выключены', COMBOS[0]![1], { symptoms: [], moods: [], sex: false, note: '' }],
-    ['только самочувствие', COMBOS[1]![1], { symptoms: ['acne'], moods: [], sex: false, note: '' }],
-    ['только заметки', COMBOS[2]![1], { symptoms: [], moods: [], sex: false, note: 'и то и другое' }],
-    ['оба включены', COMBOS[3]![1], { symptoms: ['acne'], moods: [], sex: false, note: 'и то и другое' }],
-    ['только настроение (009)', { ...DEFAULT_SETTINGS, showMood: true }, { symptoms: [], moods: ['sad'], sex: false, note: '' }],
+    ['оба выключены', COMBOS[0]![1], { symptoms: [], intensity: {}, moods: [], sex: false, note: '' }],
+    ['только самочувствие', COMBOS[1]![1], { symptoms: ['acne'], intensity: {}, moods: [], sex: false, note: '' }],
+    ['только заметки', COMBOS[2]![1], { symptoms: [], intensity: {}, moods: [], sex: false, note: 'и то и другое' }],
+    ['оба включены', COMBOS[3]![1], { symptoms: ['acne'], intensity: {}, moods: [], sex: false, note: 'и то и другое' }],
+    ['только настроение (009)', { ...DEFAULT_SETTINGS, showMood: true }, { symptoms: [], intensity: {}, moods: ['sad'], sex: false, note: '' }],
   ] as const)('сводка в карточке: %s', (_name, settings, parts) => {
     expect(visibleEntryParts(entries[3], settings)).toEqual(parts);
   });
 
   it('сводка без записи — пустая', () => {
-    expect(visibleEntryParts(undefined, COMBOS[3]![1])).toEqual({ symptoms: [], moods: [], sex: false, note: '' });
+    expect(visibleEntryParts(undefined, COMBOS[3]![1])).toEqual({ symptoms: [], intensity: {}, moods: [], sex: false, note: '' });
   });
 });
 
@@ -179,5 +180,23 @@ describe('отметка секса (009)', () => {
   it('сводка в карточке: sex только при включённом переключателе', () => {
     expect(visibleEntryParts(marked, on).sex).toBe(true);
     expect(visibleEntryParts(marked, DEFAULT_SETTINGS).sex).toBe(false);
+  });
+});
+
+// Фича 009: интенсивность самочувствия — видна только при включённых «Самочувствии» и «Интенсивности».
+describe('интенсивность (009)', () => {
+  const e = { ...emptyDayEntry(ld('2026-10-15')), symptoms: ['cramps' as const, 'acne' as const], intensity: { cramps: 'severe' as const } };
+  const both: Settings = { ...DEFAULT_SETTINGS, showWellbeing: true, showIntensity: true };
+
+  it('visibleEntryParts.intensity — только при обоих переключателях', () => {
+    expect(visibleEntryParts(e, both).intensity).toEqual({ cramps: 'severe' });
+    expect(visibleEntryParts(e, { ...both, showIntensity: false }).intensity).toEqual({});
+    expect(visibleEntryParts(e, { ...both, showWellbeing: false }).intensity).toEqual({});
+    expect(visibleEntryParts(undefined, both).intensity).toEqual({});
+  });
+
+  it('wellbeingTags: «Боль внизу живота · сильно», без степени — просто подпись', () => {
+    expect(wellbeingTags(visibleEntryParts(e, both))).toEqual(['Боль внизу живота · сильно', 'Акне']);
+    expect(wellbeingTags(visibleEntryParts(e, { ...both, showIntensity: false }))).toEqual(['Боль внизу живота', 'Акне']);
   });
 });

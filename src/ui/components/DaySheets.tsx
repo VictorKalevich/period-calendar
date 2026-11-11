@@ -39,7 +39,13 @@ export function DaySheets({ which, onChange, date, ctx, entry }: Props) {
         onExtra={(extra) => onChange(SHEET_FOR_EXTRA[extra])}
         onToggleSex={toggleSex}
       />
-      <SymptomPicker open={which === 'symptoms'} onClose={close} date={date} entry={entry} />
+      <SymptomPicker
+        open={which === 'symptoms'}
+        onClose={close}
+        date={date}
+        entry={entry}
+        showIntensity={ctx.settings.showIntensity}
+      />
       <MoodPicker open={which === 'mood'} onClose={close} date={date} entry={entry} />
       <NoteEditor open={which === 'note'} onClose={close} date={date} entry={entry} />
     </>

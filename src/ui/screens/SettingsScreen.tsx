@@ -96,6 +96,20 @@ export function SettingsScreen() {
             onChange={(e) => update({ showWellbeing: e.target.checked })}
           />
         </label>
+        {settings.showWellbeing && (
+          <label className="toggle">
+            <span>
+              Интенсивность самочувствия
+              <span className="t-small toggle__hint">Слабо, средне или сильно — для каждой отметки самочувствия</span>
+            </span>
+            <input
+              type="checkbox"
+              role="switch"
+              checked={settings.showIntensity}
+              onChange={(e) => update({ showIntensity: e.target.checked })}
+            />
+          </label>
+        )}
         <label className="toggle">
           <span>
             Настроение

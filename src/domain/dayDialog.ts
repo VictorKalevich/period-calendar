@@ -1,6 +1,7 @@
+import { intensityLabel, symptomLabel } from './catalog';
 import { formatDayMonthRu } from './dates';
 import { periodActionsFor, type PeriodAction } from './periods';
-import type { DayEntry, DayInfo, Forecast, LocalDate, MoodId, Period, Phase, Settings, SymptomId } from './types';
+import type { DayEntry, DayInfo, Forecast, Intensity, LocalDate, MoodId, Period, Phase, Settings, SymptomId } from './types';
 
 // Фича 004: состав диалога по нажатию на дату, видимость записей по переключателям
 // «Самочувствие» и «Заметки», фаза в карточке дня (specs/004-day-dialog-wellbeing/data-model.md).
@@ -71,17 +72,32 @@ export function visibleSexDates(entries: DayEntry[], settings: Settings): Set<Lo
   return new Set(entries.filter((e) => e.sex).map((e) => e.date));
 }
 
+export interface VisibleEntryParts {
+  symptoms: SymptomId[];
+  /** Пусто, если выключено «Самочувствие» или «Интенсивность самочувствия» (009 FR-017). */
+  intensity: Partial<Record<SymptomId, Intensity>>;
+  moods: MoodId[];
+  sex: boolean;
+  note: string;
+}
+
 /** Сводка записи для карточки дня: выключенные типы скрыты, но не удалены (FR-009). */
-export function visibleEntryParts(
-  e: DayEntry | undefined,
-  settings: Settings,
-): { symptoms: SymptomId[]; moods: MoodId[]; sex: boolean; note: string } {
+export function visibleEntryParts(e: DayEntry | undefined, settings: Settings): VisibleEntryParts {
   return {
     symptoms: e && settings.showWellbeing ? e.symptoms : [],
+    intensity: e && settings.showWellbeing && settings.showIntensity ? e.intensity : {},
     moods: e && settings.showMood ? e.moods : [],
     sex: !!e && settings.showSex && e.sex,
     note: e && settings.showNotes ? e.note : '',
   };
+}
+
+/** Подписи самочувствия для карточки дня: «Головная боль · сильно» (009 FR-017). */
+export function wellbeingTags(parts: VisibleEntryParts): string[] {
+  return parts.symptoms.map((id) => {
+    const level = parts.intensity[id];
+    return level ? `${symptomLabel(id)} · ${intensityLabel(level)}` : symptomLabel(id);
+  });
 }
 
 /** Фаза для карточки дня: не показывается без прогноза и при задержке (FR-001). */
