@@ -7,6 +7,7 @@ import { DEFAULT_SETTINGS, type DayEntry, type LocalDate, type Period, type Sett
 const SETTINGS_KEY = 'settings';
 const PUSH_KEY = 'push';
 const DEV_MODE_KEY = 'devMode';
+const FIRST_PERIOD_HINT_KEY = 'firstPeriodHintDismissed';
 
 export interface PushState {
   clientId: string;
@@ -97,6 +98,15 @@ export async function getDevMode(): Promise<boolean> {
 
 export async function setDevMode(on: boolean): Promise<void> {
   await db.kv.put({ key: DEV_MODE_KEY, value: on });
+}
+
+/** Подсказка «отметьте последние месячные» закрыта — только на устройстве, не в резервной копии (010 FR-005). */
+export async function getFirstPeriodHintDismissed(): Promise<boolean> {
+  return (await db.kv.get(FIRST_PERIOD_HINT_KEY))?.value === true;
+}
+
+export async function dismissFirstPeriodHint(): Promise<void> {
+  await db.kv.put({ key: FIRST_PERIOD_HINT_KEY, value: true });
 }
 
 export async function getPushState(): Promise<PushState | undefined> {

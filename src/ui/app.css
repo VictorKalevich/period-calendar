@@ -118,6 +118,45 @@
   color: var(--roseText);
 }
 
+/* Подсказка «Как получить прогноз» (фича 010, design.md «Экран „Календарь“», п. 0) */
+.hint {
+  position: relative;
+  padding: 16px 18px;
+  border-radius: 24px;
+  background: var(--roseSoft);
+  color: var(--roseText);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.hint__title {
+  margin: 0;
+  padding-right: 36px;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.hint__text {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.hint__close {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: var(--roseText);
+  background: none;
+}
+
 /* Экран «Календарь»: шапка */
 .month-header {
   display: flex;

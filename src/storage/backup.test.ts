@@ -12,6 +12,7 @@ import {
   savePushState,
   saveSettings,
   setDevMode,
+  dismissFirstPeriodHint,
 } from './repository';
 import { emptyDayEntry } from '../domain/dayEntry';
 import { DEFAULT_SETTINGS, type LocalDate, type Period } from '../domain/types';
@@ -93,6 +94,12 @@ describe('buildBackup', () => {
     const parsed = parseBackup(JSON.stringify(b));
     expect(parsed.ok && parsed.value.settings).toEqual(settings);
     expect(parsed.ok && parsed.value.days).toEqual([day]);
+  });
+
+  it('does not export the first period hint flag (010 FR-005)', async () => {
+    await seed();
+    await dismissFirstPeriodHint();
+    expect(JSON.stringify(await buildBackup(new Date()))).not.toMatch(/firstPeriodHint/i);
   });
 
   it('does not export the dev mode flag (FR-003)', async () => {

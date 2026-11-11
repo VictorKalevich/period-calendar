@@ -2,7 +2,9 @@ import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from './db';
 import {
+  dismissFirstPeriodHint,
   getDayEntries,
+  getFirstPeriodHintDismissed,
   getDayEntry,
   getDevMode,
   getPeriods,
@@ -95,5 +97,16 @@ describe('dev mode flag', () => {
     expect(await getDevMode()).toBe(true);
     await setDevMode(false);
     expect(await getDevMode()).toBe(false);
+  });
+});
+
+// Фича 010: подсказка «отметьте последние месячные» закрывается навсегда на устройстве.
+describe('first period hint flag', () => {
+  it('is not dismissed by default and stays dismissed', async () => {
+    expect(await getFirstPeriodHintDismissed()).toBe(false);
+    await dismissFirstPeriodHint();
+    expect(await getFirstPeriodHintDismissed()).toBe(true);
+    await savePeriods([]);
+    expect(await getFirstPeriodHintDismissed()).toBe(true);
   });
 });
