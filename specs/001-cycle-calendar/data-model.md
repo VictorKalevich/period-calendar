@@ -44,14 +44,19 @@
 |------|-----|---------|
 | `date` | LocalDate | первичный ключ |
 | `symptoms` | SymptomId[] | уникальные значения из справочника (FR-010) |
-| `mood` | MoodId \| null | одно значение из справочника (FR-011) |
+| `intensity` | `Partial<Record<SymptomId, Intensity>>` | степень у отмеченных симптомов (009); схема v6 |
+| `moods` | MoodId[] | несколько настроений (009; до v6 — одно `mood`); схема v6 |
+| `sex` | boolean | отметка секса (009); схема v6 |
 | `note` | string | 0…1000 символов, обрезка пробелов по краям |
 
-- Запись без симптомов, настроения и заметки удаляется.
+- Запись без симптомов, настроений, отметки секса и заметки удаляется.
+- С фичи 009 записи читаются, переносятся и импортируются мягко: непонятные части становятся пустыми
+  ([009 contracts/day-entry.md](../009-day-marks/contracts/day-entry.md)).
 - Справочники — константы в коде (`src/domain/catalog.ts`), хранятся только идентификаторы:
   - `SymptomId`: `cramps`, `headache`, `backache`, `bloating`, `breast_tenderness`, `acne`, `fatigue`,
     `nausea`, `cravings`, `insomnia`.
-  - `MoodId`: `great`, `calm`, `sensitive`, `irritable`, `sad`, `anxious`.
+  - `MoodId` (009, 20 кодов): см. [009 data-model](../009-day-marks/data-model.md); старое `great` → `joyful`.
+  - `Intensity` (009): `mild`, `moderate`, `severe`.
 
 ### Settings — настройки (одна запись, ключ `settings`)
 
@@ -67,6 +72,9 @@
 | `ovulationShift` | number | 0 | целое −5…+5; применяется только при `ovulationShiftEnabled`, при выключении сохраняется (005); схема v3 |
 | `ovulationFromNextPeriod` | boolean | false | считать овуляцию от следующей менструации (006); схема v4 |
 | `remindMissedPeriod` | boolean | true | напоминание о неотмеченном начале месячных (007 FR-001); схема v5 |
+| `showMood` | boolean | false | «Настроение» видно (009); при переносе = `showWellbeing`; схема v6 |
+| `showIntensity` | boolean | false | «Интенсивность самочувствия» видна (009); схема v6 |
+| `showSex` | boolean | false | «Отметка секса» видна (009); схема v6 |
 
 ### PushState — состояние подписки (одна запись, ключ `push`)
 
@@ -149,9 +157,11 @@ Settings; **не** включает PushState (токен — секрет ус�
 
 ## Версионирование схемы
 
-- `SCHEMA_VERSION = 5`: v2 — фича 004 (`showWellbeing`, `showNotes` = `false`, `migrations[1]`);
+- `SCHEMA_VERSION = 6`: v2 — фича 004 (`showWellbeing`, `showNotes` = `false`, `migrations[1]`);
   v3 — фича 005 (`ovulationShiftEnabled` = `false`, `ovulationShift` = 0, `migrations[2]`); v4 — фича
   006 (`ovulationFromNextPeriod` = `false`, `migrations[3]`); v5 — фича 007 (`remindMissedPeriod` =
-  `true`, `migrations[4]`). Каждая следующая версия добавляет `db.version(n)` и функцию
+  `true`, `migrations[4]`); v6 — фича 009 (`showMood` = `showWellbeing`, `showIntensity`/`showSex` =
+  `false`, записи дней — форма v6, `migrations[5]`; ошибки переноса записей перехватываются, база
+  открывается всегда). Каждая следующая версия добавляет `db.version(n)` и функцию
   `migrate_{n-1}_to_{n}`, используемую и для IndexedDB, и для импорта старых резервных копий.
 - Миграции не удаляют неизвестные поля и идемпотентны (Конституция III).
