@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { INTENSITIES, SYMPTOMS } from '../../domain/catalog';
 import { formatDayMonthRu } from '../../domain/dates';
-import { emptyDayEntry } from '../../domain/dayEntry';
+import { DEFAULT_INTENSITY, emptyDayEntry, withDefaultIntensity } from '../../domain/dayEntry';
 import type { DayEntry, Intensity, LocalDate, SymptomId } from '../../domain/types';
 import { saveDayEntry } from '../../storage/repository';
 import { BottomSheet } from './BottomSheet';
@@ -19,7 +19,7 @@ type Levels = Partial<Record<SymptomId, Intensity>>;
 
 /**
  * «Самочувствие»: несколько пунктов (FR-010; 004 FR-003). С 009 настроение — в отдельном листе;
- * при включённой интенсивности у каждого отмеченного пункта — «слабо / средне / сильно».
+ * при включённой интенсивности у каждого отмеченного пункта ровно одна степень, по умолчанию «средне» (012).
  */
 export function SymptomPicker({ open, onClose, date, entry, showIntensity }: Props) {
   const [symptoms, setSymptoms] = useState<SymptomId[]>([]);
@@ -27,9 +27,11 @@ export function SymptomPicker({ open, onClose, date, entry, showIntensity }: Pro
 
   useEffect(() => {
     if (!open) return;
-    setSymptoms(entry?.symptoms ?? []);
-    setLevels(entry?.intensity ?? {});
-  }, [open, entry]);
+    const saved = entry?.symptoms ?? [];
+    setSymptoms(saved);
+    // У старых пунктов без степени при включённой интенсивности выбрано «средне» (012 FR-006).
+    setLevels(showIntensity ? withDefaultIntensity(saved, entry?.intensity ?? {}) : (entry?.intensity ?? {}));
+  }, [open, entry, showIntensity]);
 
   const toggle = (id: SymptomId) => {
     if (symptoms.includes(id)) {
@@ -39,15 +41,13 @@ export function SymptomPicker({ open, onClose, date, entry, showIntensity }: Pro
       setLevels(rest);
     } else {
       setSymptoms([...symptoms, id]);
+      // Новый пункт сразу получает «средне»; при выключенной интенсивности степень не ставится (012).
+      if (showIntensity) setLevels({ ...levels, [id]: DEFAULT_INTENSITY });
     }
   };
 
-  // Повторное нажатие на выбранную степень снимает её (009 FR-016).
-  const setLevel = (id: SymptomId, level: Intensity) =>
-    setLevels((cur) => {
-      const { [id]: current, ...rest } = cur;
-      return current === level ? rest : { ...rest, [id]: level };
-    });
+  // Степень — как переключатель-радио: всегда одна, повторное нажатие её не снимает (012 FR-006).
+  const setLevel = (id: SymptomId, level: Intensity) => setLevels((cur) => ({ ...cur, [id]: level }));
 
   const save = async () => {
     // Остальные поля записи сохраняются как есть. При выключенной интенсивности степени не меняются.

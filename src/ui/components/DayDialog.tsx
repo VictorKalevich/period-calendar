@@ -97,19 +97,23 @@ export function DayDialog({ open, onClose, dialog, onExtra, onToggleSex }: Props
               {SEX_LABELS[dialog.sex]}
             </button>
           )}
-          {dialog.extras.map((extra) => (
-            <button
-              key={extra}
-              type="button"
-              className="btn"
-              onClick={() => {
-                setError(null);
-                onExtra(extra);
-              }}
-            >
-              {EXTRA_LABELS[extra]}
-            </button>
-          ))}
+          {dialog.extras.map((extra) => {
+            const filled = dialog.filled.includes(extra);
+            return (
+              <button
+                key={extra}
+                type="button"
+                className={filled ? 'btn btn--filled' : 'btn'}
+                onClick={() => {
+                  setError(null);
+                  onExtra(extra);
+                }}
+              >
+                {EXTRA_LABELS[extra]}
+                {filled && <span className="visually-hidden">, есть записи</span>}
+              </button>
+            );
+          })}
           <button type="button" className="btn btn--ghost" onClick={close}>
             Отмена
           </button>

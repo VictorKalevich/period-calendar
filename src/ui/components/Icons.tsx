@@ -44,6 +44,13 @@ export const SettingsIcon = (p: IconProps) => (
   </Svg>
 );
 
+/** Корзина «удалить» (фича 012). */
+export const TrashIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M4 7h16M10 3.5h4M6.5 7l.9 12.2a1.8 1.8 0 0 0 1.8 1.6h5.6a1.8 1.8 0 0 0 1.8-1.6L17.5 7M10 11v6M14 11v6" />
+  </Svg>
+);
+
 /** Крестик «закрыть» (фича 010). */
 export const CloseIcon = (p: IconProps) => (
   <Svg {...p} strokeWidth={2}>

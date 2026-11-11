@@ -874,8 +874,41 @@
   margin: 0 auto 4px;
 }
 
+.sheet:focus {
+  outline: none;
+}
+
+.sheet__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 44px;
+}
+
 .sheet__title {
   margin: 0;
+}
+
+/* Кнопка-значок в шапке листа: корзина заметки (012) */
+.sheet__action {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  margin-right: -10px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: var(--roseText);
+  background: none;
+}
+
+/* Кнопка записи, по которой у дня уже есть данные (012 FR-003) — как нажатый чип */
+.btn--filled {
+  background: var(--violetSoft);
+  border-color: var(--violetSoft);
+  color: var(--violetText);
+  font-weight: 800;
 }
 
 .sheet__note {

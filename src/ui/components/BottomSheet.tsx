@@ -5,18 +5,24 @@ interface Props {
   open: boolean;
   onClose: () => void;
   title: string;
+  /** Кнопка-значок справа от заголовка (например, корзина заметки — фича 012). */
+  action?: ReactNode;
   children: ReactNode;
 }
 
 /** Нижний лист на нативном <dialog>: фокус-ловушка через showModal, закрытие свайпом вниз или по фону. */
-export function BottomSheet({ open, onClose, title, children }: Props) {
+export function BottomSheet({ open, onClose, title, action, children }: Props) {
   const ref = useRef<HTMLDialogElement>(null);
   const dragStart = useRef<number | null>(null);
 
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
-    if (open && !dialog.open) dialog.showModal();
+    if (open && !dialog.open) {
+      dialog.showModal();
+      // showModal() фокусирует первый элемент листа, и он выглядит выделенным; фокус — на сам лист (012 FR-005).
+      dialog.focus({ preventScroll: true });
+    }
     if (!open && dialog.open) dialog.close();
   }, [open]);
 
@@ -43,6 +49,7 @@ export function BottomSheet({ open, onClose, title, children }: Props) {
     <dialog
       ref={ref}
       className="sheet"
+      tabIndex={-1}
       aria-label={title}
       onClose={onClose}
       onClick={(e) => {
@@ -61,7 +68,10 @@ export function BottomSheet({ open, onClose, title, children }: Props) {
     >
       <div className="sheet__body">
         <div className="sheet__grip" aria-hidden="true" />
-        <h2 className="t-card-title sheet__title">{title}</h2>
+        <div className="sheet__head">
+          <h2 className="t-card-title sheet__title">{title}</h2>
+          {action}
+        </div>
         {children}
       </div>
     </dialog>
