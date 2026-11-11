@@ -35,7 +35,7 @@ description: "Task list for feature 011-doctor-report"
 
 **Independent Test**: quickstart шаг 5; `npm test`.
 
-- [ ] T010 [US2] Failing tests `report.test.ts`: одна отметка — средние `null`, `chart` пуст → `view.chart === null`; `lowConfidence` → плитка «≈ ДД.ММ.ГГГГ» с пояснением «ориентировочно» и `confidenceNote`; задержка → «Задержка N дн.», `nextPeriod === null`; выброс — «не учитывается в средних», `outlier: true` на графике
+- [ ] T010 [US2] Failing tests `report.test.ts`: одна отметка — средние `null`, `chart` пуст → `view.chart === null`; `lowConfidence` → плитка «≈ ДД.ММ.ГГГГ» с пояснением «ориентировочно» и `confidenceNote`; задержка → «Задержка N дн.» и «ожидались ДД.ММ.ГГГГ»; выброс — «не учитывается в средних», `outlier: true` на графике
 - [ ] T011 [US2] Дополнить `buildDoctorReport`/`reportView` до прохождения T010; рисование: «Пока нет завершённых циклов» вместо графика, бледные столбцы выбросов
 
 ## Phase 5: Polish
