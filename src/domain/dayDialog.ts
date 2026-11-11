@@ -4,15 +4,16 @@ import type { DayEntry, DayInfo, Forecast, LocalDate, MoodId, Period, Phase, Set
 
 // Фича 004: состав диалога по нажатию на дату, видимость записей по переключателям
 // «Самочувствие» и «Заметки», фаза в карточке дня (specs/004-day-dialog-wellbeing/data-model.md).
+// Фича 009: «Настроение» — отдельный переключатель (specs/009-day-marks/contracts/day-entry.md).
 
-export type DayExtra = 'wellbeing' | 'notes';
+export type DayExtra = 'wellbeing' | 'mood' | 'notes';
 
 export interface DayDialog {
   /** «24 октября» — без слова «Месячные». */
   title: string;
   /** Кнопки месячных по таблице А/Б/В фичи 003; для будущего дня — пусто. */
   periodActions: PeriodAction[];
-  /** «Самочувствие» и «Заметки» — только включённые, в этом порядке. */
+  /** «Самочувствие», «Настроение» и «Заметки» — только включённые, в этом порядке. */
   extras: DayExtra[];
   /** Есть хотя бы одна кнопка, кроме «Отмена». */
   opens: boolean;
@@ -28,6 +29,7 @@ export function dayDialogFor(
   const periodActions = periodActionsFor(date, today, periods, periodLength);
   const extras: DayExtra[] = [];
   if (settings.showWellbeing) extras.push('wellbeing');
+  if (settings.showMood) extras.push('mood');
   if (settings.showNotes) extras.push('notes');
   return {
     title: formatDayMonthRu(date),
@@ -37,8 +39,10 @@ export function dayDialogFor(
   };
 }
 
-/** Самочувствие — отмечены симптомы или настроения. */
-export const hasWellbeing = (e: DayEntry) => e.symptoms.length > 0 || e.moods.length > 0;
+/** Самочувствие — отмечены симптомы (с 009 настроение — отдельно). */
+export const hasWellbeing = (e: DayEntry) => e.symptoms.length > 0;
+
+export const hasMood = (e: DayEntry) => e.moods.length > 0;
 
 export const hasNote = (e: DayEntry) => e.note !== '';
 
@@ -46,7 +50,12 @@ export const hasNote = (e: DayEntry) => e.note !== '';
 export function visibleEntryDates(entries: DayEntry[], settings: Settings): Set<LocalDate> {
   return new Set(
     entries
-      .filter((e) => (settings.showWellbeing && hasWellbeing(e)) || (settings.showNotes && hasNote(e)))
+      .filter(
+        (e) =>
+          (settings.showWellbeing && hasWellbeing(e)) ||
+          (settings.showMood && hasMood(e)) ||
+          (settings.showNotes && hasNote(e)),
+      )
       .map((e) => e.date),
   );
 }
@@ -58,7 +67,7 @@ export function visibleEntryParts(
 ): { symptoms: SymptomId[]; moods: MoodId[]; note: string } {
   return {
     symptoms: e && settings.showWellbeing ? e.symptoms : [],
-    moods: e && settings.showWellbeing ? e.moods : [],
+    moods: e && settings.showMood ? e.moods : [],
     note: e && settings.showNotes ? e.note : '',
   };
 }

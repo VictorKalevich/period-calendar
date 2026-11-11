@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { emptyDayEntry } from './dayEntry';
-import { cardPhase, dayDialogFor, hasNote, hasWellbeing, visibleEntryDates, visibleEntryParts } from './dayDialog';
+import { cardPhase, dayDialogFor, hasMood, hasNote, hasWellbeing, visibleEntryDates, visibleEntryParts } from './dayDialog';
 import { buildForecast, dayInfo } from './forecast';
 import { DEFAULT_SETTINGS, type DayEntry, type LocalDate, type Period, type Settings } from './types';
 
@@ -63,25 +63,28 @@ describe('видимость записей — 4 комбинации', () => {
     { ...emptyDayEntry(ld('2026-10-13')), symptoms: ['acne'], moods: ['sad'], note: 'и то и другое' },
   ];
 
-  it('hasWellbeing / hasNote', () => {
-    expect(entries.map(hasWellbeing)).toEqual([false, true, true, true]);
+  it('hasWellbeing / hasMood / hasNote (009: настроение — отдельно от самочувствия)', () => {
+    expect(entries.map(hasWellbeing)).toEqual([false, true, false, true]);
+    expect(entries.map(hasMood)).toEqual([false, false, true, true]);
     expect(entries.map(hasNote)).toEqual([true, false, false, true]);
   });
 
   it.each([
     ['оба выключены', COMBOS[0]![1], []],
-    ['только самочувствие', COMBOS[1]![1], ['2026-10-11', '2026-10-12', '2026-10-13']],
+    ['только самочувствие', COMBOS[1]![1], ['2026-10-11', '2026-10-13']],
     ['только заметки', COMBOS[2]![1], ['2026-10-10', '2026-10-13']],
-    ['оба включены', COMBOS[3]![1], ['2026-10-10', '2026-10-11', '2026-10-12', '2026-10-13']],
+    ['оба включены', COMBOS[3]![1], ['2026-10-10', '2026-10-11', '2026-10-13']],
+    ['только настроение (009)', { ...DEFAULT_SETTINGS, showMood: true }, ['2026-10-12', '2026-10-13']],
   ] as const)('индикатор: %s', (_name, settings, dates) => {
     expect([...visibleEntryDates(entries, settings)].sort()).toEqual([...dates]);
   });
 
   it.each([
     ['оба выключены', COMBOS[0]![1], { symptoms: [], moods: [], note: '' }],
-    ['только самочувствие', COMBOS[1]![1], { symptoms: ['acne'], moods: ['sad'], note: '' }],
+    ['только самочувствие', COMBOS[1]![1], { symptoms: ['acne'], moods: [], note: '' }],
     ['только заметки', COMBOS[2]![1], { symptoms: [], moods: [], note: 'и то и другое' }],
-    ['оба включены', COMBOS[3]![1], { symptoms: ['acne'], moods: ['sad'], note: 'и то и другое' }],
+    ['оба включены', COMBOS[3]![1], { symptoms: ['acne'], moods: [], note: 'и то и другое' }],
+    ['только настроение (009)', { ...DEFAULT_SETTINGS, showMood: true }, { symptoms: [], moods: ['sad'], note: '' }],
   ] as const)('сводка в карточке: %s', (_name, settings, parts) => {
     expect(visibleEntryParts(entries[3], settings)).toEqual(parts);
   });
@@ -113,5 +116,21 @@ describe('cardPhase — фаза в карточке дня', () => {
   it('без данных — нет', () => {
     const c = ctxAt('2026-03-09', []);
     expect(cardPhase(dayInfo(ld('2026-03-09'), c), c.forecast)).toBeNull();
+  });
+});
+
+// Фича 009: «Настроение» — отдельный переключатель и отдельная кнопка диалога.
+describe('dayDialogFor — «Настроение» (009)', () => {
+  const all: Settings = { ...DEFAULT_SETTINGS, showWellbeing: true, showMood: true, showNotes: true };
+
+  it('порядок: самочувствие, настроение, заметки — только включённые', () => {
+    expect(dayDialogFor(ld('2026-10-15'), TODAY, periods, L, all).extras).toEqual(['wellbeing', 'mood', 'notes']);
+    expect(dayDialogFor(ld('2026-10-15'), TODAY, periods, L, { ...DEFAULT_SETTINGS, showMood: true }).extras).toEqual(['mood']);
+    expect(dayDialogFor(ld('2026-10-15'), TODAY, periods, L, { ...all, showMood: false }).extras).toEqual(['wellbeing', 'notes']);
+  });
+
+  it('будущий день только с «Настроением» — диалог открывается', () => {
+    const d = dayDialogFor(ld('2026-10-25'), TODAY, periods, L, { ...DEFAULT_SETTINGS, showMood: true });
+    expect(d).toMatchObject({ periodActions: [], extras: ['mood'], opens: true });
   });
 });

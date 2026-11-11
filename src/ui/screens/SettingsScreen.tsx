@@ -85,8 +85,7 @@ export function SettingsScreen() {
           Записи дня
         </h2>
         <p className="t-caption settings-card__text">
-          Включите, чтобы отмечать самочувствие и писать заметки в диалоге дня. Выключение ничего не удаляет —
-          записи просто скрываются.
+          Включите то, что хотите отмечать в диалоге дня. Выключение ничего не удаляет — записи просто скрываются.
         </p>
         <label className="toggle">
           <span>Самочувствие</span>
@@ -95,6 +94,18 @@ export function SettingsScreen() {
             role="switch"
             checked={settings.showWellbeing}
             onChange={(e) => update({ showWellbeing: e.target.checked })}
+          />
+        </label>
+        <label className="toggle">
+          <span>
+            Настроение
+            <span className="t-small toggle__hint">Можно выбрать несколько</span>
+          </span>
+          <input
+            type="checkbox"
+            role="switch"
+            checked={settings.showMood}
+            onChange={(e) => update({ showMood: e.target.checked })}
           />
         </label>
         <label className="toggle">

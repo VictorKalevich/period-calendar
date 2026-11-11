@@ -11,7 +11,7 @@ const ITEMS = [
   { key: 'entry', label: 'Есть записи' },
 ] as const;
 
-/** `showEntries` — пункт «Есть записи», только если включено «Самочувствие» или «Заметки» (004 FR-011). */
+/** `showEntries` — пункт «Есть записи», только если включено «Самочувствие», «Настроение» или «Заметки» (004 FR-011, 009). */
 export function Legend({ showEntries }: { showEntries: boolean }) {
   const items = showEntries ? ITEMS : ITEMS.filter((i) => i.key !== 'entry');
   return (

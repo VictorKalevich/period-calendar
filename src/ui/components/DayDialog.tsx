@@ -13,7 +13,7 @@ const ERRORS: Record<PeriodError, string> = {
   'no-open-period': 'Сначала отметьте начало месячных',
 };
 
-const EXTRA_LABELS: Record<DayExtra, string> = { wellbeing: 'Самочувствие', notes: 'Заметки' };
+const EXTRA_LABELS: Record<DayExtra, string> = { wellbeing: 'Самочувствие', mood: 'Настроение', notes: 'Заметки' };
 
 interface Props {
   open: boolean;

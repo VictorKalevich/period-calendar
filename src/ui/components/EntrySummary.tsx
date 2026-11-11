@@ -10,7 +10,7 @@ export function EntrySummary({ entry, settings }: { entry: DayEntry | undefined;
   return (
     <div className="entry">
       {tags.length > 0 && (
-        <ul className="entry__tags" aria-label="Самочувствие">
+        <ul className="entry__tags" aria-label="Записи дня">
           {tags.map((t) => (
             <li key={t} className="pill pill--violet">
               {t}
