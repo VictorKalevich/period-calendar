@@ -11,23 +11,28 @@ description: "Task list for feature 013-report-button-design-system"
 
 ## Phase 1: Setup
 
-- [ ] T001 Снимки основных экранов текущей сборки (Chrome 390×844, обе темы) для сравнения
+- [X] T001 Снимки основных экранов текущей сборки (Chrome 390×844, обе темы) для сравнения
 
 ## Phase 2: User Story 2 — дизайн-система (P1)
 
-- [ ] T002 [US2] Failing test `src/ui/design-system.test.ts`: в `app.css` и `theme.css` (кроме объявлений `--*`) свойства padding/margin/gap/row-gap/column-gap не содержат чисел с `px`; `border-radius` — только `var(--radius-*)`/`0`; `font-size` — только `var(--text-*)`; цвета — только `var(--*)` (кроме `rgba` в тенях и подложке листа); токены шкалы определены
-- [ ] T003 [US2] Failing test `src/report/palette.test.ts`: `REPORT_PALETTE` совпадает с токенами светлой темы
-- [ ] T004 [US2] Токены в `theme.css`; перевод `theme.css`/`app.css` на токены; объединение дублей (`.notice`, `.icon-btn`, `.btn--compact`, `.btn--raised`, общее «выбрано», кнопки 52/16, подписи 14, промежуток чипов 8); замена классов в компонентах; экспорт `REPORT_PALETTE` — до прохождения T002, T003
-- [ ] T005 [US2] `docs/design/design.md` — раздел «Дизайн-система» (токены, компоненты, правила), обновить размеры кнопок/подписей; `CLAUDE.md` — правило
+- [X] T002 [US2] Failing test `src/ui/design-system.test.ts`: в `app.css` и `theme.css` (кроме объявлений `--*`) свойства padding/margin/gap/row-gap/column-gap не содержат чисел с `px`; `border-radius` — только `var(--radius-*)`/`0`; `font-size` — только `var(--text-*)`; цвета — только `var(--*)` (кроме `rgba` в тенях и подложке листа); токены шкалы определены
+- [X] T003 [US2] Failing test `src/report/palette.test.ts`: `REPORT_PALETTE` совпадает с токенами светлой темы
+- [X] T004 [US2] Токены в `theme.css`; перевод `theme.css`/`app.css` на токены; объединение дублей (`.notice`, `.icon-btn`, `.btn--compact`, `.btn--raised`, общее «выбрано», кнопки 52/16, подписи 14, промежуток чипов 8); замена классов в компонентах; экспорт `REPORT_PALETTE` — до прохождения T002, T003
+- [X] T005 [US2] `docs/design/design.md` — раздел «Дизайн-система» (токены, компоненты, правила), обновить размеры кнопок/подписей; `CLAUDE.md` — правило
 
 ## Phase 3: User Story 1 — кнопка «Отчёт» (P1)
 
-- [ ] T006 [US1] `DoctorReportButton` (из `DoctorReportSection`): кнопка `btn btn--compact btn--raised` «Отчёт»/«Создаю…», лист «Отчёт готов» с пояснением, лист «Отчёт не создан»; `StatsScreen` — шапка `.screen__header`, карточка убрана; `design.md` — «Экран „Статистика“»
+- [X] T006 [US1] `DoctorReportButton` (из `DoctorReportSection`): кнопка `btn btn--compact btn--raised` «Отчёт»/«Создаю…», лист «Отчёт готов» с пояснением, лист «Отчёт не создан»; `StatsScreen` — шапка `.screen__header`, карточка убрана; `design.md` — «Экран „Статистика“»
 
 ## Phase 4: Polish
 
-- [ ] T007 Снимки после, сравнение с T001 (SC-002); PDF создаётся; diff без испорченной кириллицы и BOM; задачи выполнены
+- [X] T007 Снимки после, сравнение с T001 (SC-002); PDF создаётся; diff без испорченной кириллицы и BOM; задачи выполнены
 
 ## Implementation Strategy
 
 Коммиты: (1) документы; (2) дизайн-система (токены, стили, тесты, design.md, CLAUDE.md); (3) кнопка «Отчёт»; (4) задачи выполнены.
+
+**Проверка (T007)**: снимки 13 экранов × 2 темы до и после (Chrome 390×844): отличия — только сдвиги на
+2 px от шкалы отступов, высота главной кнопки 54 → 52 и текст 17 → 16, подписи легенды 13 → 14.
+«Статистика»: «Отчёт» в шапке, без отметок — кнопки нет, лист «Отчёт готов» с пояснением, PDF скачивается;
+компактная кнопка «Обновить» в плашке обновления; ошибок в консоли нет.
