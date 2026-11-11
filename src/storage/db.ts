@@ -1,8 +1,8 @@
 import Dexie, { type Table } from 'dexie';
 import type { DayEntry, LocalDate, Period } from '../domain/types';
-import { migrations } from './migrations';
+import { migrations, toDayEntryV6 } from './migrations';
 
-export const SCHEMA_VERSION = 5;
+export const SCHEMA_VERSION = 6;
 
 export interface KvRecord<T = unknown> {
   key: string;
@@ -58,6 +58,34 @@ class CycleDb extends Dexie {
         const rec = await kv.get('settings');
         if (!rec) return;
         await kv.put({ key: 'settings', value: migrations[4]!({ settings: rec.value }).settings });
+      });
+    // v6 (фича 009): таблицы те же; настройки — migrations[5], записи дней — форма v6 (moods, intensity,
+    // sex). Месячные не трогаются. Ошибки переноса перехватываются: база обязана открыться, а
+    // неперенесённые записи всё равно читаются мягко (repository → coerceDayEntry).
+    this.version(6)
+      .stores({ periods: 'id, start', days: 'date', kv: 'key' })
+      .upgrade(async (tx) => {
+        try {
+          const kv = tx.table<KvRecord, string>('kv');
+          const rec = await kv.get('settings');
+          if (rec) await kv.put({ key: 'settings', value: migrations[5]!({ settings: rec.value }).settings });
+        } catch (e) {
+          console.error('v6: settings migration failed', e);
+        }
+        try {
+          await tx
+            .table('days')
+            .toCollection()
+            .modify((value, ref) => {
+              try {
+                ref.value = toDayEntryV6(value);
+              } catch {
+                // запись остаётся как есть
+              }
+            });
+        } catch (e) {
+          console.error('v6: day entries migration failed', e);
+        }
       });
   }
 }

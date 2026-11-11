@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { toLocalDate } from '../../domain/dates';
 import type { LocalDate } from '../../domain/types';
 import { applyBackup, exportBackup, parseBackup, type ParsedBackup } from '../../storage/backup';
+import { getSettings } from '../../storage/repository';
 import { applyTextImport, looksLikeCycleText, planTextImport, type TextImportPlan } from '../../storage/textImport';
 import { BottomSheet } from './BottomSheet';
 
@@ -42,10 +43,20 @@ export function BackupSection() {
   const [textPlan, setTextPlan] = useState<TextImportPlan | null>(null);
   const [message, setMessage] = useState<{ text: string; error: boolean } | null>(null);
 
+  // Любая ошибка чтения или разбора файла показывается сообщением, данные не меняются (009 FR-006).
   const onFile = async (file: File | undefined) => {
+    try {
+      await readFile(file);
+    } catch (e) {
+      console.error('import failed', e);
+      setMessage({ text: 'Не удалось прочитать файл', error: true });
+    }
+  };
+
+  const readFile = async (file: File | undefined) => {
     if (!file) return;
-    const text = await file.text();
     if (input.current) input.current.value = '';
+    const text = await file.text();
     if (!text.trimStart().startsWith('{') && looksLikeCycleText(text)) {
       const plan = await planTextImport(text, toLocalDate(new Date()));
       if (!plan.ok) setMessage({ text: plan.error, error: true });
@@ -59,7 +70,8 @@ export function BackupSection() {
       setMessage({ text: 'Файл не распознан', error: true });
       return;
     }
-    const res = parseBackup(text);
+    // Испорченные настройки в файле заменяются текущими настройками устройства (009 FR-005).
+    const res = parseBackup(text, await getSettings());
     if (!res.ok) setMessage({ text: res.error, error: true });
     else {
       setMessage(null);
@@ -67,16 +79,33 @@ export function BackupSection() {
     }
   };
 
+  // Замена — одна транзакция: при ошибке данные устройства остаются прежними (009 FR-006).
+  const NOT_APPLIED = 'Не удалось сохранить данные — текущие данные не изменены';
+
   const confirm = async () => {
     if (!pending) return;
-    await applyBackup(pending);
+    try {
+      await applyBackup(pending);
+    } catch (e) {
+      console.error('applyBackup failed', e);
+      setPending(null);
+      setMessage({ text: NOT_APPLIED, error: true });
+      return;
+    }
     setPending(null);
     setMessage({ text: 'Данные восстановлены', error: false });
   };
 
   const confirmText = async () => {
     if (!textPlan) return;
-    await applyTextImport(textPlan);
+    try {
+      await applyTextImport(textPlan);
+    } catch (e) {
+      console.error('applyTextImport failed', e);
+      setTextPlan(null);
+      setMessage({ text: NOT_APPLIED, error: true });
+      return;
+    }
     const changed = textPlan.added;
     setTextPlan(null);
     setMessage({

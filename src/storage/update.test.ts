@@ -10,7 +10,8 @@ describe('app update', () => {
     await db.delete();
     await db.open();
     await v1.savePeriods([{ id: 'a', start: '2026-09-27' as LocalDate, end: '2026-10-01' as LocalDate, endEstimated: false }]);
-    await v1.saveDayEntry({ date: '2026-10-12' as LocalDate, symptoms: ['headache'], intensity: {}, moods: ['calm'], sex: false, note: 'заметка' });
+    const day = { date: '2026-10-12' as LocalDate, symptoms: ['headache' as const], intensity: { headache: 'moderate' as const }, moods: ['calm' as const, 'tender' as const], sex: true, note: 'заметка' };
+    await v1.saveDayEntry(day);
     await v1.saveSettings({
       defaultCycleLength: 30,
       defaultPeriodLength: 4,
@@ -22,6 +23,9 @@ describe('app update', () => {
       ovulationShift: -1,
       ovulationFromNextPeriod: true,
       remindMissedPeriod: false,
+      showMood: true,
+      showIntensity: true,
+      showSex: true,
     });
     db.close();
 
@@ -32,8 +36,15 @@ describe('app update', () => {
     await reopened.open();
     expect(reopened.verno).toBe(SCHEMA_VERSION);
     expect(await next.getPeriods()).toHaveLength(1);
-    expect((await next.getDayEntries())[0]!.note).toBe('заметка');
-    expect(await next.getSettings()).toMatchObject({ defaultCycleLength: 30, ovulationFromNextPeriod: true, remindMissedPeriod: false });
+    expect(await next.getDayEntries()).toEqual([day]);
+    expect(await next.getSettings()).toMatchObject({
+      defaultCycleLength: 30,
+      ovulationFromNextPeriod: true,
+      remindMissedPeriod: false,
+      showMood: true,
+      showIntensity: true,
+      showSex: true,
+    });
     // Повторный импорт модулей после resetModules медленный при параллельном прогоне.
   }, 30_000);
 });

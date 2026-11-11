@@ -83,6 +83,12 @@ export interface Settings {
   ovulationFromNextPeriod: boolean;
   /** Напоминать о неотмеченном начале месячных (прогноз + 2 дня) — фича 007. */
   remindMissedPeriod: boolean;
+  /** Показывать «Настроение» (несколько настроений за день) — фича 009; выключение не удаляет записи. */
+  showMood: boolean;
+  /** Показывать «Интенсивность самочувствия» (слабо/средне/сильно) — фича 009. */
+  showIntensity: boolean;
+  /** Показывать «Отметку секса» (сердечко в календаре) — фича 009. */
+  showSex: boolean;
 }
 
 export const DEFAULT_SETTINGS: Readonly<Settings> = Object.freeze({
@@ -96,6 +102,9 @@ export const DEFAULT_SETTINGS: Readonly<Settings> = Object.freeze({
   ovulationShift: 0,
   ovulationFromNextPeriod: false,
   remindMissedPeriod: true,
+  showMood: false,
+  showIntensity: false,
+  showSex: false,
 });
 
 /** Овуляция — 14-й день цикла: начало месячных + 13 дней (фича 005, заменяет «за 14 дней до следующих»). */

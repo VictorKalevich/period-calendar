@@ -9,10 +9,10 @@ beforeEach(async () => {
   await db.open();
 });
 
-describe('db schema v5', () => {
-  it('has schema version 5', () => {
-    expect(SCHEMA_VERSION).toBe(5);
-    expect(db.verno).toBe(5);
+describe('db schema v6', () => {
+  it('has schema version 6', () => {
+    expect(SCHEMA_VERSION).toBe(6);
+    expect(db.verno).toBe(6);
   });
 
   it('creates periods, days and kv tables with the expected keys', () => {
@@ -37,6 +37,9 @@ describe('settings', () => {
       ovulationShift: 0,
       ovulationFromNextPeriod: false,
       remindMissedPeriod: true,
+      showMood: false,
+      showIntensity: false,
+      showSex: false,
     });
     expect(DEFAULT_SETTINGS.defaultCycleLength).toBe(28);
     expect(DEFAULT_SETTINGS.remindMissedPeriod).toBe(true);

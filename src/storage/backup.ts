@@ -3,6 +3,7 @@ import { normalizePeriods, periodEnd } from '../domain/periods';
 import { diffDays, isLocalDate, toLocalDate } from '../domain/dates';
 import {
   CYCLE_LENGTH_RANGE,
+  DEFAULT_SETTINGS,
   MAX_PERIOD_DAYS,
   OVULATION_SHIFT_RANGE,
   PERIOD_LENGTH_RANGE,
@@ -81,63 +82,69 @@ function mergeImported(periods: Period[], periodLength: number): Period[] | stri
   return out;
 }
 
-function parseDays(input: unknown): DayEntry[] | string {
-  if (!Array.isArray(input)) return 'нет списка записей дней';
+/**
+ * Записи дней импортируются мягко (009 FR-005): каждая — через coerceDayEntry, запись без корректной
+ * даты пропускается, при повторе даты берётся первая. Нет списка — записей нет.
+ */
+function parseDays(input: unknown): DayEntry[] {
+  if (!Array.isArray(input)) return [];
   const out: DayEntry[] = [];
   const dates = new Set<string>();
   for (const raw of input) {
     const entry = coerceDayEntry(raw);
-    if (!entry) return `некорректная запись дня: ${String((raw as { date?: unknown } | null)?.date)}`;
-    if (dates.has(entry.date)) return `повторная запись дня: ${entry.date}`;
+    if (!entry || dates.has(entry.date)) continue;
     dates.add(entry.date);
     out.push(entry);
   }
   return out;
 }
 
-function parseSettings(input: unknown): Settings | string {
-  if (!isObject(input)) return 'нет настроек';
-  const {
-    defaultCycleLength,
-    defaultPeriodLength,
-    remindPeriod,
-    remindOvulation,
-    showWellbeing,
-    showNotes,
-    ovulationShiftEnabled,
-    ovulationShift,
-    ovulationFromNextPeriod,
-    remindMissedPeriod,
-  } = input;
-  if (!isIntIn(defaultCycleLength, CYCLE_LENGTH_RANGE)) return 'длина цикла вне 21…45';
-  if (!isIntIn(defaultPeriodLength, PERIOD_LENGTH_RANGE)) return 'длина месячных вне 2…10';
-  if (typeof remindPeriod !== 'boolean' || typeof remindOvulation !== 'boolean') return 'некорректные настройки напоминаний';
-  // Старые копии получают эти поля миграцией v1 → v2 (migrations[1]).
-  if (typeof showWellbeing !== 'boolean' || typeof showNotes !== 'boolean') return 'некорректные переключатели записей';
-  // Старые копии получают сдвиг миграцией v2 → v3 (migrations[2]).
-  if (typeof ovulationShiftEnabled !== 'boolean' || !isIntIn(ovulationShift, OVULATION_SHIFT_RANGE)) {
-    return 'некорректный личный сдвиг овуляции';
+const isBool = (v: unknown): v is boolean => typeof v === 'boolean';
+
+/** Правила полей настроек; старые копии получают недостающие поля миграциями (migrations[1…5]). */
+const SETTING_RULES: { readonly [K in keyof Settings]: (v: unknown) => boolean } = {
+  defaultCycleLength: (v) => isIntIn(v, CYCLE_LENGTH_RANGE),
+  defaultPeriodLength: (v) => isIntIn(v, PERIOD_LENGTH_RANGE),
+  remindPeriod: isBool,
+  remindOvulation: isBool,
+  showWellbeing: isBool,
+  showNotes: isBool,
+  ovulationShiftEnabled: isBool,
+  ovulationShift: (v) => isIntIn(v, OVULATION_SHIFT_RANGE),
+  ovulationFromNextPeriod: isBool,
+  remindMissedPeriod: isBool,
+  showMood: isBool,
+  showIntensity: isBool,
+  showSex: isBool,
+};
+
+/** Каждое поле проверяется отдельно; некорректное или отсутствующее — значение устройства (009 FR-005). */
+function parseSettings(input: unknown, current: Settings): Settings {
+  const out: Record<string, unknown> = { ...current };
+  if (!isObject(input)) return current;
+  for (const key of Object.keys(SETTING_RULES) as Array<keyof Settings>) {
+    if (SETTING_RULES[key](input[key])) out[key] = input[key];
   }
-  // Старые копии получают режим миграцией v3 → v4 (migrations[3]).
-  if (typeof ovulationFromNextPeriod !== 'boolean') return 'некорректный способ расчёта овуляции';
-  // Старые копии получают поле миграцией v4 → v5 (migrations[4]).
-  if (typeof remindMissedPeriod !== 'boolean') return 'некорректные настройки напоминаний';
-  return {
-    defaultCycleLength: defaultCycleLength as number,
-    defaultPeriodLength: defaultPeriodLength as number,
-    remindPeriod,
-    remindOvulation,
-    showWellbeing,
-    showNotes,
-    ovulationShiftEnabled,
-    ovulationShift: ovulationShift as number,
-    ovulationFromNextPeriod,
-    remindMissedPeriod,
-  };
+  return out as unknown as Settings;
 }
 
-/** Проверяет файл целиком; при любой ошибке данные не меняются (FR-030). */
-export function parseBackup(text: string): { ok: true; value: ParsedBackup } | { ok: false; error: string } {
+/**
+ * Проверяет файл; данные устройства не меняются до applyBackup (FR-030). Месячные — строго: при ошибке
+ * импорт отклоняется. Записи дней — мягко, настройки — с запасом из `current` (009 FR-005). Любая
+ * непредвиденная ошибка перехватывается (009 FR-006).
+ */
+export function parseBackup(
+  text: string,
+  current: Settings = DEFAULT_SETTINGS,
+): { ok: true; value: ParsedBackup } | { ok: false; error: string } {
+  try {
+    return parseBackupUnsafe(text, current);
+  } catch (e) {
+    return { ok: false, error: corrupted(e instanceof Error ? e.message : String(e)) };
+  }
+}
+
+function parseBackupUnsafe(text: string, current: Settings): { ok: true; value: ParsedBackup } | { ok: false; error: string } {
   let json: unknown;
   try {
     json = JSON.parse(text);
@@ -157,14 +164,12 @@ export function parseBackup(text: string): { ok: true; value: ParsedBackup } | {
     return { ok: false, error: corrupted((e as Error).message) };
   }
 
-  const settings = parseSettings(data.settings);
-  if (typeof settings === 'string') return { ok: false, error: corrupted(settings) };
+  const settings = parseSettings(data.settings, current);
   const parsed = parsePeriods(data.periods);
   if (typeof parsed === 'string') return { ok: false, error: corrupted(parsed) };
   const periods = mergeImported(parsed, settings.defaultPeriodLength);
   if (typeof periods === 'string') return { ok: false, error: corrupted(periods) };
   const days = parseDays(data.days);
-  if (typeof days === 'string') return { ok: false, error: corrupted(days) };
 
   return { ok: true, value: { periods, days, settings, summary: { periods: periods.length, days: days.length } } };
 }

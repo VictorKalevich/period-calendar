@@ -2,6 +2,8 @@
 // и для импорта старых резервных копий. Ключ — версия, С которой выполняется переход на ключ + 1.
 // Чек-лист новой версии схемы — README.md в этой папке.
 
+import { coerceDayEntry } from '../../domain/dayEntry';
+
 export type MigrationData = Record<string, unknown>;
 export type Migration = (data: MigrationData) => MigrationData;
 
@@ -43,11 +45,40 @@ function addMissedPeriodReminder(data: MigrationData): MigrationData {
   return { ...data, settings: { ...s, remindMissedPeriod: s.remindMissedPeriod ?? true } };
 }
 
+/**
+ * v5 → v6 (фича 009): «Настроение» = прежнее «Самочувствие» (настроение было его частью),
+ * «Интенсивность самочувствия» и «Отметка секса» выключены; записи дней — в форму v6.
+ */
+function addDayMarks(data: MigrationData): MigrationData {
+  let out = data;
+  const settings = data.settings;
+  if (typeof settings === 'object' && settings !== null) {
+    const s = settings as Record<string, unknown>;
+    out = {
+      ...out,
+      settings: {
+        ...s,
+        showMood: s.showMood ?? s.showWellbeing ?? false,
+        showIntensity: s.showIntensity ?? false,
+        showSex: s.showSex ?? false,
+      },
+    };
+  }
+  if (Array.isArray(data.days)) out = { ...out, days: data.days.map(toDayEntryV6) };
+  return out;
+}
+
+/** Запись дня в форму v6; запись без корректной даты остаётся как есть (009 data-model). */
+export function toDayEntryV6(raw: unknown): unknown {
+  return coerceDayEntry(raw) ?? raw;
+}
+
 export const migrations: Record<number, Migration> = {
   1: addEntrySwitches,
   2: addOvulationShift,
   3: addOvulationMode,
   4: addMissedPeriodReminder,
+  5: addDayMarks,
 };
 
 /** Последовательно применяет миграции from → to. Неизвестные поля не трогает. */

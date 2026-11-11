@@ -148,6 +148,75 @@ describe('migrations[4] (v4 → v5)', () => {
   });
 });
 
+// Реальная миграция v5 → v6 (фича 009): «Настроение», «Интенсивность», «Отметка секса»; записи дней v6.
+describe('migrations[5] (v5 → v6)', () => {
+  const v5settings = {
+    defaultCycleLength: 28,
+    defaultPeriodLength: 5,
+    remindPeriod: true,
+    remindOvulation: true,
+    showWellbeing: true,
+    showNotes: false,
+    ovulationShiftEnabled: false,
+    ovulationShift: 0,
+    ovulationFromNextPeriod: false,
+    remindMissedPeriod: true,
+  };
+
+  it('«Настроение» повторяет прежнее «Самочувствие», интенсивность и секс выключены', () => {
+    expect(migrations[5]!({ settings: v5settings }).settings).toEqual({
+      ...v5settings,
+      showMood: true,
+      showIntensity: false,
+      showSex: false,
+    });
+    expect(migrations[5]!({ settings: { ...v5settings, showWellbeing: false } }).settings).toMatchObject({ showMood: false });
+  });
+
+  it('keeps explicit values and is idempotent', () => {
+    const withValues = { settings: { ...v5settings, showMood: false, showIntensity: true, showSex: true } };
+    expect(migrations[5]!(withValues)).toEqual(withValues);
+    const once = migrations[5]!({ settings: v5settings, days: [] });
+    expect(migrations[5]!(once)).toEqual(once);
+  });
+
+  it('переводит записи дней в v6: mood → moods, неизвестное — пусто', () => {
+    const out = migrations[5]!({
+      days: [
+        { date: '2026-10-01', symptoms: ['cramps'], mood: 'great', note: 'ok' },
+        { date: '2026-10-02', symptoms: ['x'], mood: 'nope', note: 7 },
+      ],
+    });
+    expect(out.days).toEqual([
+      { date: '2026-10-01', symptoms: ['cramps'], intensity: {}, moods: ['joyful'], sex: false, note: 'ok' },
+      { date: '2026-10-02', symptoms: [], intensity: {}, moods: [], sex: false, note: '' },
+    ]);
+  });
+
+  it('запись без корректной даты остаётся как есть (её отбросит разбор импорта)', () => {
+    const bad = { date: 'вчера', mood: 'calm' };
+    expect(migrations[5]!({ days: [bad] }).days).toEqual([bad]);
+  });
+
+  it('не трогает не-массив days, данные без settings и месячные', () => {
+    const periods = [{ id: 'a', start: '2026-10-01', end: null, endEstimated: false }];
+    expect(migrations[5]!({ periods, days: 'x' })).toEqual({ periods, days: 'x' });
+    expect(migrations[5]!({ periods })).toEqual({ periods });
+  });
+
+  it('migrates a v1 copy through all steps', () => {
+    const v1 = { settings: { defaultCycleLength: 28, defaultPeriodLength: 5, remindPeriod: true, remindOvulation: true } };
+    expect(migrateData(v1, 1, 6).settings).toMatchObject({
+      showWellbeing: false,
+      showNotes: false,
+      remindMissedPeriod: true,
+      showMood: false,
+      showIntensity: false,
+      showSex: false,
+    });
+  });
+});
+
 // Механизм миграций для будущих версий схемы: проверяется на вымышленных миграциях v1 → v2 → v3.
 const registry: Record<number, (d: MigrationData) => MigrationData> = {
   1: (d) => ({ ...d, renamed: d.old ?? d.renamed, old: undefined }),
