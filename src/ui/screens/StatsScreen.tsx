@@ -5,14 +5,19 @@ import { parseLD } from '../../domain/dates';
 import { cycleStats } from '../../domain/stats';
 import type { LocalDate } from '../../domain/types';
 import { useLiveQuery } from '../../hooks/useLiveQuery';
-import { getPeriods } from '../../storage/repository';
+import { useToday } from '../../hooks/useToday';
+import { getDayEntries, getPeriods, getSettings } from '../../storage/repository';
+import { DoctorReportSection } from '../components/DoctorReportSection';
 
 const fullDate = (d: LocalDate) => format(parseLD(d), 'd MMMM yyyy', { locale: ru });
 
 /** Статистика (US5, FR-027). Макета пока нет — собрано из карточек и типографики design.md. */
 export function StatsScreen() {
   const periods = useLiveQuery(getPeriods, []);
-  if (!periods) return null;
+  const entries = useLiveQuery(getDayEntries, []);
+  const settings = useLiveQuery(getSettings, []);
+  const today = useToday();
+  if (!periods || !entries || !settings) return null;
   const stats = cycleStats(buildCycles(periods));
   const hasCompleted = stats.history.some((c) => c.length !== null);
 
@@ -58,6 +63,8 @@ export function StatsScreen() {
           </ul>
         </section>
       )}
+
+      <DoctorReportSection periods={periods} entries={entries} settings={settings} today={today} />
     </>
   );
 }

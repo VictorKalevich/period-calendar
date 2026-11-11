@@ -20,7 +20,7 @@ function utf16Hex(s: string): string {
   return `<${hex}>`;
 }
 
-export function jpegPagesToPdf(pages: PdfPage[], meta: { title: string }): Uint8Array {
+export function jpegPagesToPdf(pages: PdfPage[], meta: { title: string }): Uint8Array<ArrayBuffer> {
   if (pages.length === 0) throw new Error('PDF needs at least one page');
 
   const chunks: Uint8Array[] = [];

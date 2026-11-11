@@ -5,6 +5,7 @@ import { applyBackup, exportBackup, parseBackup, type ParsedBackup } from '../..
 import { getSettings } from '../../storage/repository';
 import { applyTextImport, looksLikeCycleText, planTextImport, type TextImportPlan } from '../../storage/textImport';
 import { BottomSheet } from './BottomSheet';
+import { shareOrDownload } from './share';
 
 /** «1 запись», «2 записи», «5 записей». */
 export function pluralRu(n: number, [one, few, many]: [string, string, string]): string {
@@ -18,23 +19,6 @@ export function pluralRu(n: number, [one, few, many]: [string, string, string]):
 const numericDate = (d: LocalDate) => `${d.slice(8, 10)}.${d.slice(5, 7)}.${d.slice(0, 4)}`;
 
 const PERIOD_WORDS: [string, string, string] = ['период', 'периода', 'периодов'];
-
-async function shareOrDownload(file: File) {
-  if (navigator.canShare?.({ files: [file] })) {
-    try {
-      await navigator.share({ files: [file], title: file.name });
-      return;
-    } catch (e) {
-      if ((e as DOMException).name === 'AbortError') return;
-    }
-  }
-  const url = URL.createObjectURL(file);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = file.name;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
 
 /** Экспорт и импорт резервной копии (FR-029, FR-030) и импорт месячных из текстового файла (008). */
 export function BackupSection() {
