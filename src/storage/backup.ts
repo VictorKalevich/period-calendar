@@ -1,4 +1,4 @@
-import { normalizeDayEntry } from '../domain/dayEntry';
+import { coerceDayEntry } from '../domain/dayEntry';
 import { normalizePeriods, periodEnd } from '../domain/periods';
 import { diffDays, isLocalDate, toLocalDate } from '../domain/dates';
 import {
@@ -86,11 +86,11 @@ function parseDays(input: unknown): DayEntry[] | string {
   const out: DayEntry[] = [];
   const dates = new Set<string>();
   for (const raw of input) {
-    const r = normalizeDayEntry(raw);
-    if (!r.ok) return r.error;
-    if (dates.has(r.value.date)) return `повторная запись дня: ${r.value.date}`;
-    dates.add(r.value.date);
-    out.push(r.value);
+    const entry = coerceDayEntry(raw);
+    if (!entry) return `некорректная запись дня: ${String((raw as { date?: unknown } | null)?.date)}`;
+    if (dates.has(entry.date)) return `повторная запись дня: ${entry.date}`;
+    dates.add(entry.date);
+    out.push(entry);
   }
   return out;
 }

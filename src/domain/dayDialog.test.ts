@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { emptyDayEntry } from './dayEntry';
 import { cardPhase, dayDialogFor, hasNote, hasWellbeing, visibleEntryDates, visibleEntryParts } from './dayDialog';
 import { buildForecast, dayInfo } from './forecast';
 import { DEFAULT_SETTINGS, type DayEntry, type LocalDate, type Period, type Settings } from './types';
@@ -56,10 +57,10 @@ describe('dayDialogFor — все комбинации дней и перекл�
 
 describe('видимость записей — 4 комбинации', () => {
   const entries: DayEntry[] = [
-    { date: ld('2026-10-10'), symptoms: [], mood: null, note: 'только заметка' },
-    { date: ld('2026-10-11'), symptoms: ['cramps'], mood: null, note: '' },
-    { date: ld('2026-10-12'), symptoms: [], mood: 'calm', note: '' },
-    { date: ld('2026-10-13'), symptoms: ['acne'], mood: 'sad', note: 'и то и другое' },
+    { ...emptyDayEntry(ld('2026-10-10')), note: 'только заметка' },
+    { ...emptyDayEntry(ld('2026-10-11')), symptoms: ['cramps'] },
+    { ...emptyDayEntry(ld('2026-10-12')), moods: ['calm'] },
+    { ...emptyDayEntry(ld('2026-10-13')), symptoms: ['acne'], moods: ['sad'], note: 'и то и другое' },
   ];
 
   it('hasWellbeing / hasNote', () => {
@@ -77,16 +78,16 @@ describe('видимость записей — 4 комбинации', () => {
   });
 
   it.each([
-    ['оба выключены', COMBOS[0]![1], { symptoms: [], mood: null, note: '' }],
-    ['только самочувствие', COMBOS[1]![1], { symptoms: ['acne'], mood: 'sad', note: '' }],
-    ['только заметки', COMBOS[2]![1], { symptoms: [], mood: null, note: 'и то и другое' }],
-    ['оба включены', COMBOS[3]![1], { symptoms: ['acne'], mood: 'sad', note: 'и то и другое' }],
+    ['оба выключены', COMBOS[0]![1], { symptoms: [], moods: [], note: '' }],
+    ['только самочувствие', COMBOS[1]![1], { symptoms: ['acne'], moods: ['sad'], note: '' }],
+    ['только заметки', COMBOS[2]![1], { symptoms: [], moods: [], note: 'и то и другое' }],
+    ['оба включены', COMBOS[3]![1], { symptoms: ['acne'], moods: ['sad'], note: 'и то и другое' }],
   ] as const)('сводка в карточке: %s', (_name, settings, parts) => {
     expect(visibleEntryParts(entries[3], settings)).toEqual(parts);
   });
 
   it('сводка без записи — пустая', () => {
-    expect(visibleEntryParts(undefined, COMBOS[3]![1])).toEqual({ symptoms: [], mood: null, note: '' });
+    expect(visibleEntryParts(undefined, COMBOS[3]![1])).toEqual({ symptoms: [], moods: [], note: '' });
   });
 });
 

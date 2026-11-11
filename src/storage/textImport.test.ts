@@ -42,7 +42,7 @@ describe('text import', () => {
       { id: 'old', start: ld('2025-01-03'), end: ld('2025-01-07'), endEstimated: false },
       { id: 'keep', start: ld('2025-03-01'), end: ld('2025-03-05'), endEstimated: false },
     ]);
-    await saveDayEntry({ date: ld('2025-01-06'), symptoms: ['cramps'], mood: null, note: 'note' });
+    await saveDayEntry({ date: ld('2025-01-06'), symptoms: ['cramps'], intensity: {}, moods: [], sex: false, note: 'note' });
     await saveSettings({ ...DEFAULT_SETTINGS, defaultCycleLength: 30 });
 
     const plan = await planTextImport(FILE, TODAY);

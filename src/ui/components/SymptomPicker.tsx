@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { MOODS, SYMPTOMS } from '../../domain/catalog';
 import { formatDayMonthRu } from '../../domain/dates';
+import { emptyDayEntry } from '../../domain/dayEntry';
 import type { DayEntry, LocalDate, MoodId, SymptomId } from '../../domain/types';
 import { saveDayEntry } from '../../storage/repository';
 import { BottomSheet } from './BottomSheet';
@@ -12,22 +13,22 @@ interface Props {
   entry: DayEntry | undefined;
 }
 
-/** «Самочувствие»: симптомы (несколько) и настроение (одно) — FR-010, FR-011; 004 FR-003. */
+const toggleIn = <T,>(list: T[], id: T) => (list.includes(id) ? list.filter((x) => x !== id) : [...list, id]);
+
+/** «Самочувствие»: симптомы и настроения (несколько) — FR-010, FR-011; 004 FR-003; 009. */
 export function SymptomPicker({ open, onClose, date, entry }: Props) {
   const [symptoms, setSymptoms] = useState<SymptomId[]>([]);
-  const [mood, setMood] = useState<MoodId | null>(null);
+  const [moods, setMoods] = useState<MoodId[]>([]);
 
   useEffect(() => {
     if (!open) return;
     setSymptoms(entry?.symptoms ?? []);
-    setMood(entry?.mood ?? null);
+    setMoods(entry?.moods ?? []);
   }, [open, entry]);
 
-  const toggle = (id: SymptomId) =>
-    setSymptoms((cur) => (cur.includes(id) ? cur.filter((s) => s !== id) : [...cur, id]));
-
   const save = async () => {
-    await saveDayEntry({ date, symptoms, mood, note: entry?.note ?? '' });
+    // Остальные поля записи (отметка секса, заметка, степени) сохраняются как есть.
+    await saveDayEntry({ ...(entry ?? emptyDayEntry(date)), symptoms, moods });
     onClose();
   };
 
@@ -41,7 +42,7 @@ export function SymptomPicker({ open, onClose, date, entry }: Props) {
             type="button"
             className="chip"
             aria-pressed={symptoms.includes(s.id)}
-            onClick={() => toggle(s.id)}
+            onClick={() => setSymptoms((cur) => toggleIn(cur, s.id))}
           >
             {s.label}
           </button>
@@ -54,8 +55,8 @@ export function SymptomPicker({ open, onClose, date, entry }: Props) {
             key={m.id}
             type="button"
             className="chip"
-            aria-pressed={mood === m.id}
-            onClick={() => setMood((cur) => (cur === m.id ? null : m.id))}
+            aria-pressed={moods.includes(m.id)}
+            onClick={() => setMoods((cur) => toggleIn(cur, m.id))}
           >
             {m.label}
           </button>

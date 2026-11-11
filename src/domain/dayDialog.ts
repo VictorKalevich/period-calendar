@@ -37,8 +37,8 @@ export function dayDialogFor(
   };
 }
 
-/** Самочувствие — отмечены симптомы или настроение. */
-export const hasWellbeing = (e: DayEntry) => e.symptoms.length > 0 || e.mood !== null;
+/** Самочувствие — отмечены симптомы или настроения. */
+export const hasWellbeing = (e: DayEntry) => e.symptoms.length > 0 || e.moods.length > 0;
 
 export const hasNote = (e: DayEntry) => e.note !== '';
 
@@ -55,10 +55,10 @@ export function visibleEntryDates(entries: DayEntry[], settings: Settings): Set<
 export function visibleEntryParts(
   e: DayEntry | undefined,
   settings: Settings,
-): { symptoms: SymptomId[]; mood: MoodId | null; note: string } {
+): { symptoms: SymptomId[]; moods: MoodId[]; note: string } {
   return {
     symptoms: e && settings.showWellbeing ? e.symptoms : [],
-    mood: e && settings.showWellbeing ? e.mood : null,
+    moods: e && settings.showWellbeing ? e.moods : [],
     note: e && settings.showNotes ? e.note : '',
   };
 }

@@ -2,8 +2,7 @@ import { useMemo } from 'react';
 import { visibleEntryDates } from '../domain/dayDialog';
 import { buildForecast, todaySummary } from '../domain/forecast';
 import type { DayContext, TodaySummary } from '../domain/types';
-import { db } from '../storage/db';
-import { getPeriods, getSettings } from '../storage/repository';
+import { getDayEntries, getPeriods, getSettings } from '../storage/repository';
 import { useLiveQuery } from './useLiveQuery';
 import { useToday } from './useToday';
 
@@ -17,7 +16,7 @@ export function useForecast(): ForecastState | null {
   const today = useToday();
   const periods = useLiveQuery(getPeriods, []);
   const settings = useLiveQuery(getSettings, []);
-  const entries = useLiveQuery(() => db.days.toArray(), []);
+  const entries = useLiveQuery(getDayEntries, []);
 
   return useMemo(() => {
     if (!periods || !settings || !entries) return null;

@@ -15,7 +15,31 @@ export type SymptomId =
   | 'cravings'
   | 'insomnia';
 
-export type MoodId = 'great' | 'calm' | 'sensitive' | 'irritable' | 'sad' | 'anxious';
+/** Коды настроений (фича 009) — постоянны; подписи в catalog.ts. */
+export type MoodId =
+  | 'joyful'
+  | 'cheerful'
+  | 'content'
+  | 'delighted'
+  | 'inspired'
+  | 'energetic'
+  | 'playful'
+  | 'calm'
+  | 'tender'
+  | 'confident'
+  | 'grateful'
+  | 'sensitive'
+  | 'sad'
+  | 'anxious'
+  | 'irritable'
+  | 'angry'
+  | 'lonely'
+  | 'overwhelmed'
+  | 'indifferent'
+  | 'mood_swings';
+
+/** Интенсивность самочувствия (фича 009): слабо · средне · сильно. */
+export type Intensity = 'mild' | 'moderate' | 'severe';
 
 export interface Period {
   id: string;
@@ -26,10 +50,16 @@ export interface Period {
   endEstimated: boolean;
 }
 
+/** Запись дня, схема v6 (фича 009) — specs/009-day-marks/contracts/day-entry.md. */
 export interface DayEntry {
   date: LocalDate;
   symptoms: SymptomId[];
-  mood: MoodId | null;
+  /** Степень для отмеченных пунктов самочувствия; только коды из `symptoms`. */
+  intensity: Partial<Record<SymptomId, Intensity>>;
+  /** Несколько настроений (до 009 — одно `mood`). */
+  moods: MoodId[];
+  /** Отметка секса за день. */
+  sex: boolean;
   /** 0…1000 символов. */
   note: string;
 }

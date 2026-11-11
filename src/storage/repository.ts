@@ -1,5 +1,5 @@
 import { db } from './db';
-import { isEmptyDayEntry, normalizeDayEntry } from '../domain/dayEntry';
+import { coerceDayEntry, isEmptyDayEntry } from '../domain/dayEntry';
 import { buildForecast } from '../domain/forecast';
 import { normalizePeriods } from '../domain/periods';
 import { DEFAULT_SETTINGS, type DayEntry, type LocalDate, type Period, type Settings } from '../domain/types';
@@ -42,23 +42,32 @@ export async function normalizeStoredPeriods(today: LocalDate): Promise<boolean>
   return true;
 }
 
+// Записи дня читаются мягко (009 FR-003/FR-004): запись старой формы или испорченная не ломает экран.
 export async function getDayEntry(date: LocalDate): Promise<DayEntry | undefined> {
-  return db.days.get(date);
+  return coerceDayEntry(await db.days.get(date)) ?? undefined;
 }
 
 export async function getDayEntries(): Promise<DayEntry[]> {
-  return db.days.toArray();
+  const out: DayEntry[] = [];
+  for (const raw of await db.days.toArray()) {
+    const entry = coerceDayEntry(raw);
+    if (entry) out.push(entry);
+  }
+  return out;
 }
 
-/** Проверяет и сохраняет запись дня; пустая запись удаляется. Некорректная — исключение. */
+/**
+ * Сохраняет запись дня, приведённую мягким разбором (009 FR-003): непонятные части становятся
+ * пустыми. Пустая запись удаляется. Исключение — только если нет корректной даты.
+ */
 export async function saveDayEntry(entry: DayEntry): Promise<void> {
-  const res = normalizeDayEntry(entry);
-  if (!res.ok) throw new Error(`Invalid day entry: ${res.error}`);
-  if (isEmptyDayEntry(res.value)) {
-    await db.days.delete(res.value.date);
+  const value = coerceDayEntry(entry);
+  if (!value) throw new Error(`Invalid day entry date: ${String(entry?.date)}`);
+  if (isEmptyDayEntry(value)) {
+    await db.days.delete(value.date);
     return;
   }
-  await db.days.put(res.value);
+  await db.days.put(value);
 }
 
 export async function getSettings(): Promise<Settings> {

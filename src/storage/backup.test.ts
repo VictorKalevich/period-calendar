@@ -13,6 +13,7 @@ import {
   saveSettings,
   setDevMode,
 } from './repository';
+import { emptyDayEntry } from '../domain/dayEntry';
 import { DEFAULT_SETTINGS, type LocalDate, type Period } from '../domain/types';
 
 const ld = (s: string) => s as LocalDate;
@@ -24,7 +25,7 @@ const periods: Period[] = [
 
 async function seed() {
   await savePeriods(periods);
-  await saveDayEntry({ date: ld('2026-10-01'), symptoms: ['cramps'], mood: 'calm', note: 'ok' });
+  await saveDayEntry({ ...emptyDayEntry(ld('2026-10-01')), symptoms: ['cramps'], moods: ['calm'], note: 'ok' });
   await saveSettings({ ...DEFAULT_SETTINGS, defaultCycleLength: 30 });
   await savePushState({ clientId: 'c1', token: 'secret', subscribed: true, pendingSync: false, lastSyncedHash: null });
 }
@@ -62,7 +63,7 @@ describe('buildBackup', () => {
       exportedAt: '2026-10-23T10:15:00.000Z',
       data: {
         periods,
-        days: [{ date: '2026-10-01', symptoms: ['cramps'], mood: 'calm', note: 'ok' }],
+        days: [{ date: '2026-10-01', symptoms: ['cramps'], intensity: {}, moods: ['calm'], sex: false, note: 'ok' }],
         settings: { ...DEFAULT_SETTINGS, defaultCycleLength: 30 },
       },
     });
@@ -158,8 +159,6 @@ describe('parseBackup', () => {
     ['duplicate ids', (f) => void f.data.periods.push({ id: 'x', start: '2026-09-01', end: null, endEstimated: false })],
     ['cycle length out of range', (f) => void (f.data.settings.defaultCycleLength = 50)],
     ['period length out of range', (f) => void (f.data.settings.defaultPeriodLength = 1)],
-    ['unknown symptom', (f) => void (f.data.days[0]!.symptoms = ['sneezing'])],
-    ['note too long', (f) => void (f.data.days[0]!.note = 'я'.repeat(1001))],
     ['duplicate day', (f) => void f.data.days.push({ ...f.data.days[0]! })],
     ['missing data', (f) => void delete (f as Partial<typeof f>).data],
   ];

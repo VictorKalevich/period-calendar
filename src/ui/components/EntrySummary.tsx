@@ -5,7 +5,7 @@ import type { DayEntry, Settings } from '../../domain/types';
 /** Краткий показ записанного за день в карточке дня — только включённые типы (004 FR-009). */
 export function EntrySummary({ entry, settings }: { entry: DayEntry | undefined; settings: Settings }) {
   const parts = visibleEntryParts(entry, settings);
-  const tags = [...parts.symptoms.map(symptomLabel), ...(parts.mood ? [moodLabel(parts.mood)] : [])];
+  const tags = [...parts.symptoms.map(symptomLabel), ...parts.moods.map(moodLabel)];
   if (tags.length === 0 && !parts.note) return null;
   return (
     <div className="entry">

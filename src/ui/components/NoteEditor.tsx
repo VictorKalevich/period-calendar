@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { formatDayMonthRu } from '../../domain/dates';
+import { emptyDayEntry } from '../../domain/dayEntry';
 import { MAX_NOTE_LENGTH, type DayEntry, type LocalDate } from '../../domain/types';
 import { saveDayEntry } from '../../storage/repository';
 import { BottomSheet } from './BottomSheet';
@@ -20,7 +21,8 @@ export function NoteEditor({ open, onClose, date, entry }: Props) {
   }, [open, entry]);
 
   const persist = async (note: string) => {
-    await saveDayEntry({ date, symptoms: entry?.symptoms ?? [], mood: entry?.mood ?? null, note });
+    // Остальные поля записи сохраняются как есть (009).
+    await saveDayEntry({ ...(entry ?? emptyDayEntry(date)), note });
     onClose();
   };
 
