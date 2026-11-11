@@ -7,7 +7,7 @@ import type { LocalDate } from '../../domain/types';
 import { useLiveQuery } from '../../hooks/useLiveQuery';
 import { useToday } from '../../hooks/useToday';
 import { getDayEntries, getPeriods, getSettings } from '../../storage/repository';
-import { DoctorReportSection } from '../components/DoctorReportSection';
+import { DoctorReportButton } from '../components/DoctorReportButton';
 
 const fullDate = (d: LocalDate) => format(parseLD(d), 'd MMMM yyyy', { locale: ru });
 
@@ -23,7 +23,10 @@ export function StatsScreen() {
 
   return (
     <>
-      <h1 className="t-screen-title screen__title">Статистика</h1>
+      <div className="screen__header">
+        <h1 className="t-screen-title screen__title">Статистика</h1>
+        <DoctorReportButton periods={periods} entries={entries} settings={settings} today={today} />
+      </div>
 
       {!hasCompleted ? (
         <section className="card settings-card">
@@ -64,7 +67,6 @@ export function StatsScreen() {
         </section>
       )}
 
-      <DoctorReportSection periods={periods} entries={entries} settings={settings} today={today} />
     </>
   );
 }

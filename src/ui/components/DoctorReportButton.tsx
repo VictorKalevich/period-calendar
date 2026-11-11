@@ -14,10 +14,10 @@ interface Props {
 type State = { kind: 'idle' } | { kind: 'busy' } | { kind: 'error' } | { kind: 'ready'; file: File; pages: number };
 
 /**
- * «Отчёт для врача» на «Статистике» (specs/011-doctor-report, design.md «Экран „Статистика“»):
- * PDF создаётся на устройстве; затем лист «Поделиться» / «Сохранить на устройство».
+ * Кнопка «Отчёт» в шапке «Статистики» (specs/011-doctor-report, 013): PDF создаётся на устройстве,
+ * затем лист «Поделиться» / «Сохранить на устройство». Без отметок месячных кнопки нет.
  */
-export function DoctorReportSection({ periods, entries, settings, today }: Props) {
+export function DoctorReportButton({ periods, entries, settings, today }: Props) {
   const [state, setState] = useState<State>({ kind: 'idle' });
   if (periods.length === 0) return null;
 
@@ -36,27 +36,26 @@ export function DoctorReportSection({ periods, entries, settings, today }: Props
   const ready = state.kind === 'ready' ? state : null;
 
   return (
-    <section className="card settings-card" aria-labelledby="report-title">
-      <h2 id="report-title" className="t-card-title settings-card__title">
-        Отчёт для врача
-      </h2>
-      <p className="t-caption settings-card__text">
-        PDF за последние 12 месяцев: длина циклов, график, самочувствие и настроение. Заметки и отметки секса в отчёт
-        не входят.
-      </p>
-      <button type="button" className="btn btn--primary" disabled={state.kind === 'busy'} onClick={create}>
-        {state.kind === 'busy' ? 'Создаю отчёт…' : 'Создать отчёт'}
+    <>
+      <button type="button" className="btn btn--compact btn--raised" disabled={state.kind === 'busy'} onClick={create}>
+        {state.kind === 'busy' ? 'Создаю…' : 'Отчёт'}
       </button>
-      {state.kind === 'error' && (
-        <p className="notice notice--error" role="alert">
-          Не удалось создать отчёт
-        </p>
-      )}
-      <BottomSheet open={ready !== null} onClose={close} title="Отчёт готов">
+      <BottomSheet
+        open={ready !== null || state.kind === 'error'}
+        onClose={close}
+        title={state.kind === 'error' ? 'Отчёт не создан' : 'Отчёт готов'}
+      >
+        {state.kind === 'error' && (
+          <p className="notice notice--error" role="alert">
+            Не удалось создать отчёт
+          </p>
+        )}
         {ready && (
           <>
-            <p className="t-body sheet__note">PDF, страниц: {ready.pages}</p>
-            {/* Файл готов заранее: «Поделиться» вызывается прямо из нажатия (research.md R2). */}
+            <p className="t-body sheet__note">
+              PDF за последние 12 месяцев, страниц: {ready.pages}. Заметки и отметки секса в отчёт не входят.
+            </p>
+            {/* Файл готов заранее: «Поделиться» вызывается прямо из нажатия (011 research.md R2). */}
             {canShareFile(ready.file) && (
               <button
                 type="button"
@@ -75,12 +74,12 @@ export function DoctorReportSection({ periods, entries, settings, today }: Props
             >
               Сохранить на устройство
             </button>
-            <button type="button" className="btn btn--ghost" onClick={close}>
-              Закрыть
-            </button>
           </>
         )}
+        <button type="button" className="btn btn--ghost" onClick={close}>
+          Закрыть
+        </button>
       </BottomSheet>
-    </section>
+    </>
   );
 }
