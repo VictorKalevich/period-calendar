@@ -35,7 +35,7 @@ export function CalendarScreen() {
 
   if (!state || !ctx || !day) return null;
   const info = getInfo(day);
-  const { showWellbeing, showMood, showNotes } = ctx.settings;
+  const { showWellbeing, showMood, showNotes, showSex } = ctx.settings;
 
   return (
     <>
@@ -47,7 +47,7 @@ export function CalendarScreen() {
         onSelect={onSelect}
         banner={<StatusBanner summary={state.summary} />}
       />
-      <Legend showEntries={showWellbeing || showMood || showNotes} />
+      <Legend showEntries={showWellbeing || showMood || showNotes} showSex={showSex} />
       <DayCard info={info} phase={cardPhase(info, ctx.forecast)}>
         <EntrySummary entry={entry} settings={ctx.settings} />
       </DayCard>

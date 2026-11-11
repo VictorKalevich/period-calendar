@@ -259,6 +259,13 @@
   right: -6px;
 }
 
+/* Сердечко отметки секса (009): над левым верхним краем круга, зеркально короне */
+.day__heart {
+  position: absolute;
+  top: -6px;
+  left: -5px;
+}
+
 .day__dot {
   position: absolute;
   bottom: 4px;
@@ -419,6 +426,23 @@
   margin: 0;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+}
+
+/* Кнопка с иконкой слева от текста (отметка секса в диалоге дня, 009) */
+.btn--icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn--icon svg {
+  color: var(--btnBg);
+  flex: 0 0 auto;
+}
+
+.entry__sex {
+  gap: 6px;
 }
 
 /* Выбор симптомов и настроения */

@@ -1,4 +1,6 @@
 import { dayDialogFor } from '../../domain/dayDialog';
+import { emptyDayEntry } from '../../domain/dayEntry';
+import { saveDayEntry } from '../../storage/repository';
 import type { DayContext, DayEntry, LocalDate } from '../../domain/types';
 import { DayDialog } from './DayDialog';
 import { MoodPicker } from './MoodPicker';
@@ -20,7 +22,9 @@ interface Props {
 /** Листы дня: диалог по нажатию на дату и открываемые из него «Самочувствие», «Настроение» и «Заметки». */
 export function DaySheets({ which, onChange, date, ctx, entry }: Props) {
   const periodLength = ctx.forecast?.periodLength ?? ctx.settings.defaultPeriodLength;
-  const dialog = dayDialogFor(date, ctx.today, ctx.periods, periodLength, ctx.settings);
+  const dialog = dayDialogFor(date, ctx.today, ctx.periods, periodLength, ctx.settings, entry);
+  // Отметка секса — сразу в записи дня; остальные поля записи сохраняются (009 FR-014).
+  const toggleSex = () => saveDayEntry({ ...(entry ?? emptyDayEntry(date)), sex: !entry?.sex });
   const close = () => onChange(null);
   return (
     <>
@@ -33,6 +37,7 @@ export function DaySheets({ which, onChange, date, ctx, entry }: Props) {
         }}
         dialog={dialog}
         onExtra={(extra) => onChange(SHEET_FOR_EXTRA[extra])}
+        onToggleSex={toggleSex}
       />
       <SymptomPicker open={which === 'symptoms'} onClose={close} date={date} entry={entry} />
       <MoodPicker open={which === 'mood'} onClose={close} date={date} entry={entry} />

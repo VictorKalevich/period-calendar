@@ -198,6 +198,8 @@ export interface DayInfo {
   phase: Phase | null;
   isToday: boolean;
   hasEntry: boolean;
+  /** Отметка секса — сердечко (фича 009); только при включённой «Отметке секса». */
+  sex: boolean;
 }
 
 export interface DayContext {
@@ -205,6 +207,8 @@ export interface DayContext {
   periods: Period[];
   settings: Settings;
   entries: ReadonlySet<LocalDate>;
+  /** Дни с отметкой секса (фича 009); пусто или нет, если «Отметка секса» выключена. */
+  sexDates?: ReadonlySet<LocalDate>;
   today: LocalDate;
 }
 

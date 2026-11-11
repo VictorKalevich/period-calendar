@@ -15,6 +15,8 @@ export interface DayDialog {
   periodActions: PeriodAction[];
   /** «Самочувствие», «Настроение» и «Заметки» — только включённые, в этом порядке. */
   extras: DayExtra[];
+  /** Кнопка отметки секса (009): null — выключено или будущий день. */
+  sex: 'mark' | 'unmark' | null;
   /** Есть хотя бы одна кнопка, кроме «Отмена». */
   opens: boolean;
 }
@@ -25,8 +27,10 @@ export function dayDialogFor(
   periods: Period[],
   periodLength: number,
   settings: Settings,
+  entry?: DayEntry,
 ): DayDialog {
   const periodActions = periodActionsFor(date, today, periods, periodLength);
+  const sex = !settings.showSex || date > today ? null : entry?.sex ? 'unmark' : 'mark';
   const extras: DayExtra[] = [];
   if (settings.showWellbeing) extras.push('wellbeing');
   if (settings.showMood) extras.push('mood');
@@ -35,7 +39,8 @@ export function dayDialogFor(
     title: formatDayMonthRu(date),
     periodActions,
     extras,
-    opens: periodActions.length > 0 || extras.length > 0,
+    sex,
+    opens: periodActions.length > 0 || extras.length > 0 || sex !== null,
   };
 }
 
@@ -60,14 +65,21 @@ export function visibleEntryDates(entries: DayEntry[], settings: Settings): Set<
   );
 }
 
+/** Дни с сердечком (009 FR-015): только при включённой «Отметке секса». */
+export function visibleSexDates(entries: DayEntry[], settings: Settings): Set<LocalDate> {
+  if (!settings.showSex) return new Set();
+  return new Set(entries.filter((e) => e.sex).map((e) => e.date));
+}
+
 /** Сводка записи для карточки дня: выключенные типы скрыты, но не удалены (FR-009). */
 export function visibleEntryParts(
   e: DayEntry | undefined,
   settings: Settings,
-): { symptoms: SymptomId[]; moods: MoodId[]; note: string } {
+): { symptoms: SymptomId[]; moods: MoodId[]; sex: boolean; note: string } {
   return {
     symptoms: e && settings.showWellbeing ? e.symptoms : [],
     moods: e && settings.showMood ? e.moods : [],
+    sex: !!e && settings.showSex && e.sex,
     note: e && settings.showNotes ? e.note : '',
   };
 }

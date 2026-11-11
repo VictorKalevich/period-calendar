@@ -56,6 +56,27 @@ export const ChevronRight = (p: IconProps) => (
   </Svg>
 );
 
+const HEART_PATH =
+  'M12 20.5s-7.6-4.7-9.2-9.5C1.6 7.4 3.8 4 7.2 4c2 0 3.6 1.1 4.8 2.8C13.2 5.1 14.8 4 16.8 4c3.4 0 5.6 3.4 4.4 7-1.6 4.8-9.2 9.5-9.2 9.5z';
+
+/**
+ * Сердечко отметки секса (фича 009, design.md): заливка `btnBg`, обводка `surface`.
+ * `plain` — в кнопке: цветом текста, без обводки.
+ */
+export function Heart({ size = 14, className, plain = false }: { size?: number; className?: string; plain?: boolean }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" focusable="false" className={className}>
+      <path
+        d={HEART_PATH}
+        fill={plain ? 'currentColor' : 'var(--btnBg)'}
+        stroke={plain ? 'none' : 'var(--surface)'}
+        strokeWidth={2}
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 /** Корона овуляции — точный путь из design.md, цвета через токены. */
 export function Crown({ size = 18, className }: { size?: number; className?: string }) {
   return (

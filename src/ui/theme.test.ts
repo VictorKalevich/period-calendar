@@ -58,4 +58,12 @@ describe.each([
   it.each(TEXT_PAIRS)('%s on %s has contrast ≥ 4.5:1', (fg, bg) => {
     expect(contrast(theme[fg]!, theme[bg]!)).toBeGreaterThanOrEqual(4.5);
   });
+
+  // Фича 009: сердечко отметки секса — графический объект (WCAG 1.4.11), ≥ 3:1 к фону вокруг.
+  it.each([
+    ['btnBg', 'surface'],
+    ['btnBg', 'bg'],
+  ])('%s graphic on %s has contrast ≥ 3:1', (fg, bg) => {
+    expect(contrast(theme[fg]!, theme[bg]!)).toBeGreaterThanOrEqual(3);
+  });
 });

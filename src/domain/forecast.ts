@@ -173,6 +173,7 @@ export function dayInfo(date: LocalDate, ctx: DayContext): DayInfo {
     phase: null,
     isToday: date === today,
     hasEntry: entries.has(date),
+    sex: ctx.sexDates?.has(date) ?? false,
   };
   if (!forecast || !own) return base;
 

@@ -109,6 +109,18 @@ export function SettingsScreen() {
           />
         </label>
         <label className="toggle">
+          <span>
+            Отметка секса
+            <span className="t-small toggle__hint">Сердечко в календаре</span>
+          </span>
+          <input
+            type="checkbox"
+            role="switch"
+            checked={settings.showSex}
+            onChange={(e) => update({ showSex: e.target.checked })}
+          />
+        </label>
+        <label className="toggle">
           <span>Заметки</span>
           <input
             type="checkbox"

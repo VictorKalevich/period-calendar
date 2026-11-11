@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { emptyDayEntry } from './dayEntry';
-import { cardPhase, dayDialogFor, hasMood, hasNote, hasWellbeing, visibleEntryDates, visibleEntryParts } from './dayDialog';
+import {
+  cardPhase,
+  dayDialogFor,
+  hasMood,
+  hasNote,
+  hasWellbeing,
+  visibleEntryDates,
+  visibleEntryParts,
+  visibleSexDates,
+} from './dayDialog';
 import { buildForecast, dayInfo } from './forecast';
 import { DEFAULT_SETTINGS, type DayEntry, type LocalDate, type Period, type Settings } from './types';
 
@@ -80,17 +89,17 @@ describe('видимость записей — 4 комбинации', () => {
   });
 
   it.each([
-    ['оба выключены', COMBOS[0]![1], { symptoms: [], moods: [], note: '' }],
-    ['только самочувствие', COMBOS[1]![1], { symptoms: ['acne'], moods: [], note: '' }],
-    ['только заметки', COMBOS[2]![1], { symptoms: [], moods: [], note: 'и то и другое' }],
-    ['оба включены', COMBOS[3]![1], { symptoms: ['acne'], moods: [], note: 'и то и другое' }],
-    ['только настроение (009)', { ...DEFAULT_SETTINGS, showMood: true }, { symptoms: [], moods: ['sad'], note: '' }],
+    ['оба выключены', COMBOS[0]![1], { symptoms: [], moods: [], sex: false, note: '' }],
+    ['только самочувствие', COMBOS[1]![1], { symptoms: ['acne'], moods: [], sex: false, note: '' }],
+    ['только заметки', COMBOS[2]![1], { symptoms: [], moods: [], sex: false, note: 'и то и другое' }],
+    ['оба включены', COMBOS[3]![1], { symptoms: ['acne'], moods: [], sex: false, note: 'и то и другое' }],
+    ['только настроение (009)', { ...DEFAULT_SETTINGS, showMood: true }, { symptoms: [], moods: ['sad'], sex: false, note: '' }],
   ] as const)('сводка в карточке: %s', (_name, settings, parts) => {
     expect(visibleEntryParts(entries[3], settings)).toEqual(parts);
   });
 
   it('сводка без записи — пустая', () => {
-    expect(visibleEntryParts(undefined, COMBOS[3]![1])).toEqual({ symptoms: [], moods: [], note: '' });
+    expect(visibleEntryParts(undefined, COMBOS[3]![1])).toEqual({ symptoms: [], moods: [], sex: false, note: '' });
   });
 });
 
@@ -132,5 +141,43 @@ describe('dayDialogFor — «Настроение» (009)', () => {
   it('будущий день только с «Настроением» — диалог открывается', () => {
     const d = dayDialogFor(ld('2026-10-25'), TODAY, periods, L, { ...DEFAULT_SETTINGS, showMood: true });
     expect(d).toMatchObject({ periodActions: [], extras: ['mood'], opens: true });
+  });
+});
+
+// Фича 009: отметка секса — кнопка в диалоге сегодняшнего и прошлых дней, сердечко в календаре.
+describe('отметка секса (009)', () => {
+  const on: Settings = { ...DEFAULT_SETTINGS, showSex: true };
+  const marked = { ...emptyDayEntry(ld('2026-10-15')), sex: true };
+
+  it('выключена — кнопки нет', () => {
+    expect(dayDialogFor(ld('2026-10-15'), TODAY, periods, L, DEFAULT_SETTINGS, marked).sex).toBeNull();
+  });
+
+  it('прошлый день и сегодня: «mark» без отметки, «unmark» с отметкой', () => {
+    expect(dayDialogFor(ld('2026-10-15'), TODAY, periods, L, on).sex).toBe('mark');
+    expect(dayDialogFor(ld('2026-10-15'), TODAY, periods, L, on, emptyDayEntry(ld('2026-10-15'))).sex).toBe('mark');
+    expect(dayDialogFor(ld('2026-10-15'), TODAY, periods, L, on, marked).sex).toBe('unmark');
+    expect(dayDialogFor(TODAY, TODAY, periods, L, on).sex).toBe('mark');
+  });
+
+  it('будущий день — кнопки нет; если включена только отметка секса, диалог не открывается', () => {
+    const d = dayDialogFor(ld('2026-10-25'), TODAY, periods, L, on);
+    expect(d).toMatchObject({ sex: null, extras: [], opens: false });
+  });
+
+  it('visibleSexDates — дни с отметкой только при включённом переключателе', () => {
+    const entries: DayEntry[] = [marked, { ...emptyDayEntry(ld('2026-10-16')), note: 'x' }, { ...emptyDayEntry(ld('2026-10-17')), sex: true }];
+    expect([...visibleSexDates(entries, on)].sort()).toEqual(['2026-10-15', '2026-10-17']);
+    expect(visibleSexDates(entries, DEFAULT_SETTINGS).size).toBe(0);
+  });
+
+  it('отметка секса не влияет на точку «Есть записи»', () => {
+    const all: Settings = { ...on, showWellbeing: true, showMood: true, showNotes: true };
+    expect(visibleEntryDates([marked], all).size).toBe(0);
+  });
+
+  it('сводка в карточке: sex только при включённом переключателе', () => {
+    expect(visibleEntryParts(marked, on).sex).toBe(true);
+    expect(visibleEntryParts(marked, DEFAULT_SETTINGS).sex).toBe(false);
   });
 });

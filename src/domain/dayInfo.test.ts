@@ -204,3 +204,13 @@ describe('dayInfo with forecast', () => {
     expect(dayInfo(ld('2026-03-16'), c)).toMatchObject({ ovulation: false, phase: 'luteal', probability: 'medium' });
   });
 });
+
+// Фича 009: сердечко — DayInfo.sex по ctx.sexDates.
+describe('dayInfo.sex (009)', () => {
+  it('true только для дней из sexDates; без sexDates — false', () => {
+    const c: DayContext = { ...ctx([], '2026-10-23'), sexDates: new Set([ld('2026-10-20')]) };
+    expect(dayInfo(ld('2026-10-20'), c).sex).toBe(true);
+    expect(dayInfo(ld('2026-10-21'), c).sex).toBe(false);
+    expect(dayInfo(ld('2026-10-20'), ctx([], '2026-10-23')).sex).toBe(false);
+  });
+});

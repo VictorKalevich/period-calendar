@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { formatDayMonthRu } from '../../domain/dates';
 import type { DayInfo } from '../../domain/types';
-import { Crown } from './Icons';
+import { Crown, Heart } from './Icons';
 
 interface Props {
   info: DayInfo;
@@ -18,6 +18,7 @@ function describe(info: DayInfo): string {
   if (info.ovulation) parts.push('овуляция');
   else if (info.fertile) parts.push('фертильное окно');
   if (info.hasEntry) parts.push('есть записи');
+  if (info.sex) parts.push('секс');
   return parts.join(', ');
 }
 
@@ -46,6 +47,7 @@ export const DayCell = memo(function DayCell({ info, inMonth, selected, onSelect
       <span className={cls.join(' ')}>
         {Number(info.date.slice(8))}
         {info.ovulation && <Crown className="day__crown" />}
+        {info.sex && <Heart className="day__heart" />}
         {info.hasEntry && <span className="day__dot" aria-hidden="true" />}
       </span>
     </button>

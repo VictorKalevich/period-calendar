@@ -4,6 +4,7 @@ import type { PeriodAction } from '../../domain/periods';
 import { MAX_PERIOD_DAYS, type PeriodError } from '../../domain/types';
 import { savePeriods } from '../../storage/repository';
 import { BottomSheet } from './BottomSheet';
+import { Heart } from './Icons';
 
 const ERRORS: Record<PeriodError, string> = {
   'future-date': 'Нельзя отметить месячные в будущем',
@@ -20,15 +21,19 @@ interface Props {
   onClose: () => void;
   /** Состав диалога — dayDialogFor (фича 004); UI только рисует. */
   dialog: DayDialogModel;
-  /** Открыть выбор самочувствия или редактор заметки для этого дня. */
+  /** Открыть выбор самочувствия, настроения или редактор заметки для этого дня. */
   onExtra: (extra: DayExtra) => void;
+  /** Поставить или снять отметку секса для этого дня (009). */
+  onToggleSex: () => Promise<void>;
 }
+
+const SEX_LABELS = { mark: 'Отметить секс', unmark: 'Убрать отметку секса' } as const;
 
 /**
  * Диалог по нажатию на дату: заголовок — дата; кнопки месячных (003) с подтверждением удаления;
- * затем «Самочувствие» и «Заметки», если включены; «Отмена».
+ * отметка секса (009); затем «Самочувствие», «Настроение» и «Заметки», если включены; «Отмена».
  */
-export function DayDialog({ open, onClose, dialog, onExtra }: Props) {
+export function DayDialog({ open, onClose, dialog, onExtra, onToggleSex }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [confirming, setConfirming] = useState<PeriodAction | null>(null);
 
@@ -78,6 +83,19 @@ export function DayDialog({ open, onClose, dialog, onExtra }: Props) {
             <p className="sheet__error" role="alert">
               {error}
             </p>
+          )}
+          {dialog.sex && (
+            <button
+              type="button"
+              className="btn btn--icon"
+              onClick={async () => {
+                await onToggleSex();
+                close();
+              }}
+            >
+              <Heart size={18} plain />
+              {SEX_LABELS[dialog.sex]}
+            </button>
           )}
           {dialog.extras.map((extra) => (
             <button
