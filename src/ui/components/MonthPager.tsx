@@ -90,7 +90,7 @@ export function MonthPager({ today, earliest, getInfo, selected, onSelect, banne
       <header className="month-header">
         <button
           type="button"
-          className="round-btn"
+          className="icon-btn icon-btn--raised"
           aria-label="Предыдущий месяц"
           onClick={() => goTo(active - 1)}
           disabled={active <= first}
@@ -102,7 +102,7 @@ export function MonthPager({ today, earliest, getInfo, selected, onSelect, banne
         </h1>
         <button
           type="button"
-          className="round-btn"
+          className="icon-btn icon-btn--raised"
           aria-label="Следующий месяц"
           onClick={() => goTo(active + 1)}
           disabled={active >= last}

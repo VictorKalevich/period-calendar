@@ -48,7 +48,7 @@ export function DoctorReportSection({ periods, entries, settings, today }: Props
         {state.kind === 'busy' ? 'Создаю отчёт…' : 'Создать отчёт'}
       </button>
       {state.kind === 'error' && (
-        <p className="sheet__error" role="alert">
+        <p className="notice notice--error" role="alert">
           Не удалось создать отчёт
         </p>
       )}

@@ -80,7 +80,7 @@ export function DayDialog({ open, onClose, dialog, onExtra, onToggleSex }: Props
             </button>
           ))}
           {error && (
-            <p className="sheet__error" role="alert">
+            <p className="notice notice--error" role="alert">
               {error}
             </p>
           )}

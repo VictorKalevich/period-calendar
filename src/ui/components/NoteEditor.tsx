@@ -32,7 +32,7 @@ export function NoteEditor({ open, onClose, date, entry }: Props) {
 
   const day = formatDayMonthRu(date);
   const trash = entry?.note && !confirming && (
-    <button type="button" className="sheet__action" aria-label="Удалить заметку" onClick={() => setConfirming(true)}>
+    <button type="button" className="icon-btn icon-btn--danger sheet__action" aria-label="Удалить заметку" onClick={() => setConfirming(true)}>
       <TrashIcon size={20} />
     </button>
   );

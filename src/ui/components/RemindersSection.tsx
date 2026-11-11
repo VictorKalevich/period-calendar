@@ -49,7 +49,7 @@ export function RemindersSection({ settings }: { settings: Settings }) {
     );
   } else if (permission === 'denied') {
     body = (
-      <p className="sheet__error" role="alert">
+      <p className="notice notice--error" role="alert">
         Уведомления запрещены. Разрешите их в Настройки iPhone → Уведомления → Цикл.
       </p>
     );
@@ -57,7 +57,7 @@ export function RemindersSection({ settings }: { settings: Settings }) {
     body = (
       <>
         {subscribed ? (
-          <p className="settings-card__ok" role="status">
+          <p className="notice notice--ok" role="status">
             Напоминания включены{push?.pendingSync ? ' · расписание отправится при подключении к интернету' : ''}
           </p>
         ) : (

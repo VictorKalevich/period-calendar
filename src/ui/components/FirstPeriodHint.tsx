@@ -16,7 +16,7 @@ export function FirstPeriodHint() {
         можно — и выберите «Начало месячных».
       </p>
       <p className="hint__text">Историю из другого приложения можно загрузить в Настройках → «Резервная копия».</p>
-      <button type="button" className="hint__close" aria-label="Скрыть подсказку" onClick={() => void dismissFirstPeriodHint()}>
+      <button type="button" className="icon-btn hint__close" aria-label="Скрыть подсказку" onClick={() => void dismissFirstPeriodHint()}>
         <CloseIcon size={20} />
       </button>
     </section>

@@ -12,7 +12,8 @@ const FOOTER = 24;
 const CONTENT_W = PAGE.w - 2 * MARGIN;
 const BOTTOM = PAGE.h - MARGIN - FOOTER;
 
-const C = {
+/** Палитра печати — токены светлой темы (theme.css); совпадение проверяет palette.test.ts (013). */
+export const REPORT_PALETTE = {
   page: '#FFFFFF',
   bg: '#FBF7F5',
   ink: '#2B2330',
@@ -23,6 +24,8 @@ const C = {
   btnBg: '#C8467F',
   violet: '#8572DE',
 } as const;
+
+const C = REPORT_PALETTE;
 
 const FONT = 'Nunito, system-ui, sans-serif';
 

@@ -9,7 +9,7 @@ export function UpdateBanner() {
   return (
     <div className="update-banner" role="status">
       <span>Доступна новая версия</span>
-      <button type="button" className="update-banner__btn" onClick={applyUpdate}>
+      <button type="button" className="btn btn--primary btn--compact" onClick={applyUpdate}>
         Обновить
       </button>
     </div>

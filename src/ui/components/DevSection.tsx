@@ -29,7 +29,7 @@ export function DevSection() {
       </button>
       {!subscribed && <p className="t-caption settings-card__text">Сначала включите напоминания.</p>}
       {result && (
-        <p className={result === 'sent' ? 'settings-card__ok' : 'sheet__error'} role={result === 'sent' ? 'status' : 'alert'}>
+        <p className={result === 'sent' ? 'notice notice--ok' : 'notice notice--error'} role={result === 'sent' ? 'status' : 'alert'}>
           {TEST_RESULT_TEXT[result]}
         </p>
       )}

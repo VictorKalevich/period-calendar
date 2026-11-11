@@ -21,7 +21,7 @@ export function Stepper({ label, value, min, max, unit, format, widest, onChange
       <div className="stepper__controls">
         <button
           type="button"
-          className="round-btn"
+          className="icon-btn icon-btn--secondary"
           aria-label={`${label}: меньше`}
           disabled={value <= min}
           onClick={() => onChange(value - 1)}
@@ -42,7 +42,7 @@ export function Stepper({ label, value, min, max, unit, format, widest, onChange
         )}
         <button
           type="button"
-          className="round-btn"
+          className="icon-btn icon-btn--secondary"
           aria-label={`${label}: больше`}
           disabled={value >= max}
           onClick={() => onChange(value + 1)}

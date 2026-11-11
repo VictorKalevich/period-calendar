@@ -120,7 +120,7 @@ export function BackupSection() {
         onChange={(e) => onFile(e.target.files?.[0])}
       />
       {message && (
-        <p className={message.error ? 'sheet__error' : 'settings-card__ok'} role={message.error ? 'alert' : 'status'}>
+        <p className={message.error ? 'notice notice--error' : 'notice notice--ok'} role={message.error ? 'alert' : 'status'}>
           {message.text}
         </p>
       )}
