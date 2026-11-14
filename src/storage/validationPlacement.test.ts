@@ -10,4 +10,11 @@ describe('правила корректности — в домене', () => {
     expect(source('domain/dayEntry.ts')).not.toMatch(/\bisRecord\b/);
     expect(source('storage/backup.ts')).not.toMatch(/const\s+isObject\b/);
   });
+
+  it("ключ настроек: литерал 'settings' в repository.ts и backup.ts — только в определении SETTINGS_KEY", () => {
+    const lines = ['storage/repository.ts', 'storage/backup.ts']
+      .flatMap((path) => source(path).split('\n'))
+      .filter((line) => line.includes("'settings'"));
+    expect(lines.map((line) => line.trim())).toEqual(["export const SETTINGS_KEY = 'settings';"]);
+  });
 });

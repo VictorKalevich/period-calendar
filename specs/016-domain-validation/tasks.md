@@ -126,7 +126,7 @@ US1 и US2 вызывают её функции. Вызывающие места
 
 **Independent Test**: `npx vitest run src/storage/settingsRead.test.ts src/storage/validationPlacement.test.ts`.
 
-- [ ] T010 [US1] Failing tests до кода:
+- [X] T010 [US1] Failing tests до кода:
   - в `src/storage/settingsRead.test.ts` (новый файл из T003, допустимо дополнять), `describe('чтение настроек по правилам')`. Сохранённые «прочие» поля — корректные и отличные от умолчаний (`defaultCycleLength: 30`, `showNotes: true`):
     1. `it.each` некорректных полей: `defaultCycleLength` `'abc'`, `50`, `30.5`, `null`, `undefined`; `defaultPeriodLength` `'5'`; `ovulationShift` `9`; `remindPeriod` `'yes'`; `showSex` `1` → поле равно `DEFAULT_SETTINGS[key]`, остальные — сохранённые (SC-004).
     2. В базе не объект (`'abc'`, `[1, 2]`, `5`, `true`) → `getSettings()` равен `DEFAULT_SETTINGS`.
@@ -134,7 +134,7 @@ US1 и US2 вызывают её функции. Вызывающие места
     4. В базе `{ ...DEFAULT_SETTINGS, defaultCycleLength: 'abc' }` и месячные 2026-10-01…2026-10-05 → `buildForecast({ periods: await getPeriods(), settings: await getSettings(), today: '2026-11-14' })` не бросает, `cycleLength` = 28 (испорченное поле не доходит до прогноза).
     5. `SETTINGS_KEY` экспортирован из `./repository` и равен `'settings'`.
   - в `src/storage/validationPlacement.test.ts`: литерал `'settings'` встречается в `src/storage/repository.ts` и `src/storage/backup.ts` вместе ровно один раз — в строке `export const SETTINGS_KEY = 'settings'` (FR-010).
-- [ ] T011 [US1] В `src/storage/repository.ts`: `export const SETTINGS_KEY = 'settings'`; `getSettings` — `const raw = (await db.kv.get(SETTINGS_KEY))?.value; return { ...coerceSettings(raw, DEFAULT_SETTINGS), ...extraSettingFields(raw) };` с комментарием из контракта. В `src/storage/backup.ts` `applyBackup` пишет `{ key: SETTINGS_KEY, value: b.settings }` (импорт из `./repository`). `saveSettings`, `updateSettings` не меняются. Коммит «016: настройки читаются из базы по правилам домена» (T010, T011)
+- [X] T011 [US1] В `src/storage/repository.ts`: `export const SETTINGS_KEY = 'settings'`; `getSettings` — `const raw = (await db.kv.get(SETTINGS_KEY))?.value; return { ...coerceSettings(raw, DEFAULT_SETTINGS), ...extraSettingFields(raw) };` с комментарием из контракта. В `src/storage/backup.ts` `applyBackup` пишет `{ key: SETTINGS_KEY, value: b.settings }` (импорт из `./repository`). `saveSettings`, `updateSettings` не меняются. Коммит «016: настройки читаются из базы по правилам домена» (T010, T011)
 
 **Checkpoint**: характеризация T003 и новые тесты зелёные; `db.test.ts`, `update.test.ts`, `upgrade-v2.test.ts`, `useLiveQuery.test.ts` — без изменений и зелёные.
 

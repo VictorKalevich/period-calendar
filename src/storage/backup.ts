@@ -14,7 +14,7 @@ import {
 } from '../domain/types';
 import { db, SCHEMA_VERSION } from './db';
 import { migrateData } from './migrations';
-import { getDayEntries, getPeriods, getSettings } from './repository';
+import { getDayEntries, getPeriods, getSettings, SETTINGS_KEY } from './repository';
 
 // Формат резервной копии — contracts/backup-format.md. PushState (токен) в файл не попадает.
 
@@ -181,6 +181,6 @@ export async function applyBackup(b: ParsedBackup): Promise<void> {
     await db.days.clear();
     await db.periods.bulkPut(b.periods);
     await db.days.bulkPut(b.days);
-    await db.kv.put({ key: 'settings', value: b.settings });
+    await db.kv.put({ key: SETTINGS_KEY, value: b.settings });
   });
 }
