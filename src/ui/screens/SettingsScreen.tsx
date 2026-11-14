@@ -6,14 +6,19 @@ import { BackupSection } from '../components/BackupSection';
 import { DevSection } from '../components/DevSection';
 import { ForecastInfo } from '../components/ForecastInfo';
 import { RemindersSection } from '../components/RemindersSection';
+import { SaveError, useSaveError } from '../components/SaveError';
 import { Stepper } from '../components/Stepper';
 import { VersionTapper } from '../components/VersionTapper';
 
 export function SettingsScreen() {
   const settings = useLiveQuery(getSettings, []);
   const devMode = useLiveQuery(getDevMode, []);
+  // Отказ записи — сообщение в карточке, где было действие (014).
+  const cycleSave = useSaveError();
+  const entriesSave = useSaveError();
   if (!settings) return null;
-  const update = (patch: Partial<Settings>) => updateSettings(patch);
+  const update = (patch: Partial<Settings>) => void cycleSave.save(() => updateSettings(patch));
+  const updateEntries = (patch: Partial<Settings>) => void entriesSave.save(() => updateSettings(patch));
 
   return (
     <>
@@ -78,6 +83,7 @@ export function SettingsScreen() {
         <p id="ovulation-mode-hint" className="t-caption settings-card__hint">
           Овуляция будет рассчитана примерно за 14 дней до ожидаемого начала месячных
         </p>
+        <SaveError shown={cycleSave.failed} />
       </section>
 
       <section className="card settings-card" aria-labelledby="entries-title">
@@ -93,7 +99,7 @@ export function SettingsScreen() {
             type="checkbox"
             role="switch"
             checked={settings.showWellbeing}
-            onChange={(e) => update({ showWellbeing: e.target.checked })}
+            onChange={(e) => updateEntries({ showWellbeing: e.target.checked })}
           />
         </label>
         {settings.showWellbeing && (
@@ -106,7 +112,7 @@ export function SettingsScreen() {
               type="checkbox"
               role="switch"
               checked={settings.showIntensity}
-              onChange={(e) => update({ showIntensity: e.target.checked })}
+              onChange={(e) => updateEntries({ showIntensity: e.target.checked })}
             />
           </label>
         )}
@@ -119,7 +125,7 @@ export function SettingsScreen() {
             type="checkbox"
             role="switch"
             checked={settings.showMood}
-            onChange={(e) => update({ showMood: e.target.checked })}
+            onChange={(e) => updateEntries({ showMood: e.target.checked })}
           />
         </label>
         <label className="toggle">
@@ -131,7 +137,7 @@ export function SettingsScreen() {
             type="checkbox"
             role="switch"
             checked={settings.showSex}
-            onChange={(e) => update({ showSex: e.target.checked })}
+            onChange={(e) => updateEntries({ showSex: e.target.checked })}
           />
         </label>
         <label className="toggle">
@@ -140,9 +146,10 @@ export function SettingsScreen() {
             type="checkbox"
             role="switch"
             checked={settings.showNotes}
-            onChange={(e) => update({ showNotes: e.target.checked })}
+            onChange={(e) => updateEntries({ showNotes: e.target.checked })}
           />
         </label>
+        <SaveError shown={entriesSave.failed} />
       </section>
 
       <RemindersSection settings={settings} />

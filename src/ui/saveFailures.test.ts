@@ -7,12 +7,24 @@ import { buildForecast } from '../domain/forecast';
 import type { PeriodAction } from '../domain/periods';
 import { DEFAULT_SETTINGS, type DayContext, type DayEntry, type LocalDate, type Period, type Settings } from '../domain/types';
 import { db } from '../storage/db';
-import { getDayEntry, getPeriods, saveDayEntry, savePeriods } from '../storage/repository';
+import { disableReminders, enableReminders } from '../push/subscribe';
+import {
+  getDayEntry,
+  getDevMode,
+  getFirstPeriodHintDismissed,
+  getPeriods,
+  getSettings,
+  saveDayEntry,
+  savePeriods,
+} from '../storage/repository';
 import { DayDialog } from './components/DayDialog';
 import { DaySheets } from './components/DaySheets';
+import { FirstPeriodHint } from './components/FirstPeriodHint';
 import { MoodPicker } from './components/MoodPicker';
 import { NoteEditor } from './components/NoteEditor';
 import { SymptomPicker } from './components/SymptomPicker';
+import { VersionTapper } from './components/VersionTapper';
+import { SettingsScreen } from './screens/SettingsScreen';
 import { button, click, mount, unmountAll, waitUntil } from './testing';
 
 // Фича 014 (FR-010–FR-014, SC-004): отказ записи — сообщение там, где было действие; лист не закрывается,
@@ -69,6 +81,7 @@ async function typeInto(el: HTMLTextAreaElement, text: string) {
 }
 
 beforeEach(async () => {
+  vi.clearAllMocks();
   await db.delete();
   await db.open();
   vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -244,5 +257,103 @@ describe('листы дня', () => {
     await waitUntil(() => saveNotice(m.container) !== undefined, 'сообщение');
     expect(notices(m.container).map((p) => p.textContent)).toEqual([SAVE_FAILED]);
     expect(onClose).not.toHaveBeenCalled();
+  });
+});
+
+/** Переключатель по подписи (первый текстовый узел метки). */
+const toggle = (root: ParentNode, label: string) =>
+  [...root.querySelectorAll('label.toggle')].find((l) => l.firstElementChild?.firstChild?.textContent?.trim() === label)
+    ?.querySelector('input') as HTMLInputElement | undefined;
+
+const card = (root: ParentNode, titleId: string) => root.querySelector(`section[aria-labelledby="${titleId}"]`)!;
+
+async function settingsScreen() {
+  const m = await mount(createElement(SettingsScreen));
+  await waitUntil(() => m.container.textContent?.includes('Резервная копия') === true, 'настройки загрузились');
+  return m;
+}
+
+describe('вне листов', () => {
+  it('карточка «Цикл»: сообщение последним элементом, значение прежнее; повтор сохраняет', async () => {
+    const m = await settingsScreen();
+    const more = m.container.querySelector('[aria-label="Длина цикла по умолчанию: больше"]')!;
+
+    const spies = failWrites(db.kv, 'put');
+    await click(more);
+    await waitUntil(() => saveNotice(m.container) !== undefined, 'сообщение');
+    expect(card(m.container, 'cycle-title').lastElementChild).toBe(saveNotice(m.container));
+    expect(notices(m.container)).toHaveLength(1);
+    expect(card(m.container, 'cycle-title').querySelector('output')?.textContent).toBe('28 дн.');
+    expect((await getSettings()).defaultCycleLength).toBe(28);
+
+    restore(spies);
+    await click(more);
+    await waitUntil(() => card(m.container, 'cycle-title').querySelector('output')?.textContent === '29 дн.', 'новое значение');
+    expect(saveNotice(m.container)).toBeUndefined();
+  });
+
+  it('карточка «Записи дня»: переключатель не включился, сообщение в карточке', async () => {
+    const m = await settingsScreen();
+    failWrites(db.kv, 'put');
+    await click(toggle(card(m.container, 'entries-title'), 'Самочувствие'));
+    await waitUntil(() => saveNotice(m.container) !== undefined, 'сообщение');
+    expect(card(m.container, 'entries-title').lastElementChild).toBe(saveNotice(m.container));
+    expect(toggle(card(m.container, 'entries-title'), 'Самочувствие')!.checked).toBe(false);
+    expect((await getSettings()).showWellbeing).toBe(false);
+  });
+
+  it('карточка «Напоминания»: сообщение последним элементом; подписка не трогается', async () => {
+    const m = await settingsScreen();
+    const reminders = () => card(m.container, 'reminders-title');
+
+    const spies = failWrites(db.kv, 'put');
+    await click(toggle(reminders(), 'За 2 дня до месячных'));
+    await waitUntil(() => saveNotice(m.container) !== undefined, 'сообщение');
+    expect(reminders().lastElementChild).toBe(saveNotice(m.container));
+    expect(toggle(reminders(), 'За 2 дня до месячных')!.checked).toBe(true);
+    expect(enableReminders).not.toHaveBeenCalled();
+    expect(disableReminders).not.toHaveBeenCalled();
+
+    restore(spies);
+    await click(toggle(reminders(), 'За 2 дня до месячных'));
+    await waitUntil(() => toggle(reminders(), 'За 2 дня до месячных')!.checked === false, 'выключено');
+    expect(saveNotice(m.container)).toBeUndefined();
+  });
+
+  it('строка версии: сообщение под ней, тоста нет, режим разработчика прежний', async () => {
+    const m = await mount(createElement(VersionTapper, { devMode: false }));
+    const version = m.container.querySelector('button.version')!;
+    const tap7 = async () => {
+      for (let i = 0; i < 7; i++) await click(version);
+    };
+
+    const spies = failWrites(db.kv, 'put');
+    await tap7();
+    await waitUntil(() => saveNotice(m.container) !== undefined, 'сообщение');
+    expect(version.nextElementSibling).toBe(saveNotice(m.container));
+    expect(m.container.querySelector('p.toast')!.textContent).toBe('');
+    expect(await getDevMode()).toBe(false);
+
+    restore(spies);
+    await tap7();
+    await waitUntil(() => m.container.querySelector('p.toast')!.textContent === 'Режим разработчика включён', 'тост');
+    expect(saveNotice(m.container)).toBeUndefined();
+    expect(await getDevMode()).toBe(true);
+  });
+
+  it('подсказка «Как получить прогноз»: сообщение отдельным блоком под ней, флаг прежний', async () => {
+    const m = await mount(createElement(FirstPeriodHint));
+    const close = m.container.querySelector('[aria-label="Скрыть подсказку"]')!;
+
+    const spies = failWrites(db.kv, 'put');
+    await click(close);
+    await waitUntil(() => saveNotice(m.container) !== undefined, 'сообщение');
+    expect(m.container.querySelector('section.hint')!.nextElementSibling).toBe(saveNotice(m.container));
+    expect(await getFirstPeriodHintDismissed()).toBe(false);
+
+    restore(spies);
+    await click(close);
+    await waitUntil(() => saveNotice(m.container) === undefined, 'сообщение исчезло');
+    expect(await getFirstPeriodHintDismissed()).toBe(true);
   });
 });

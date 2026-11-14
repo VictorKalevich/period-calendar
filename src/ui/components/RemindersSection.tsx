@@ -12,12 +12,14 @@ import {
 import { syncReminders } from '../../push/sync';
 import { useLiveQuery } from '../../hooks/useLiveQuery';
 import { getPushState, updateSettings } from '../../storage/repository';
+import { SaveError, useSaveError } from './SaveError';
 
 /** Push-напоминания (US4, FR-022–FR-025). */
 export function RemindersSection({ settings }: { settings: Settings }) {
   const push = useLiveQuery(getPushState, []);
   const [permission, setPermission] = useState(notificationPermission);
   const [busy, setBusy] = useState(false);
+  const saveError = useSaveError();
   const subscribed = push?.subscribed === true;
 
   const enable = async () => {
@@ -32,7 +34,8 @@ export function RemindersSection({ settings }: { settings: Settings }) {
 
   const toggle = async (patch: Partial<Settings>) => {
     const next = { ...settings, ...patch };
-    await updateSettings(patch);
+    // Настройка не сохранилась — сообщение в карточке, подписку не трогаем (014).
+    if (!(await saveError.save(() => updateSettings(patch)))) return;
     if (!next.remindPeriod && !next.remindOvulation && !next.remindMissedPeriod) await disableReminders();
     else if (!subscribed && permission !== 'denied') await enable();
   };
@@ -115,6 +118,7 @@ export function RemindersSection({ settings }: { settings: Settings }) {
       </h2>
       <p className="t-caption settings-card__text">Приходят в 12:00. На сервер уходят только даты и тексты напоминаний.</p>
       {body}
+      <SaveError shown={saveError.failed} />
     </section>
   );
 }
