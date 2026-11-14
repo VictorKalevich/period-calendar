@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
 import { MOODS } from '../../domain/catalog';
 import { formatDayMonthRu } from '../../domain/dates';
-import { emptyDayEntry } from '../../domain/dayEntry';
 import type { DayEntry, LocalDate, MoodId } from '../../domain/types';
-import { saveDayEntry } from '../../storage/repository';
+import { updateDayEntry } from '../../storage/repository';
 import { BottomSheet } from './BottomSheet';
 import { SaveError, useSaveError } from './SaveError';
 
@@ -28,8 +27,9 @@ export function MoodPicker({ open, onClose, date, entry }: Props) {
   const toggle = (id: MoodId) => setMoods((cur) => (cur.includes(id) ? cur.filter((m) => m !== id) : [...cur, id]));
 
   const save = async () => {
-    // Остальные поля записи сохраняются как есть. Отказ записи — лист открыт, выбор цел (014).
-    if (await saveError.save(() => saveDayEntry({ ...(entry ?? emptyDayEntry(date)), moods }))) onClose();
+    // Меняются только настроения, поверх записи в базе (015); остальные поля — как есть.
+    // Отказ записи — лист открыт, выбор цел (014).
+    if (await saveError.save(() => updateDayEntry(date, { moods }))) onClose();
   };
 
   return (

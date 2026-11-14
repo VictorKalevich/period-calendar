@@ -88,7 +88,7 @@ description: "Task list for feature 015-atomic-day-writes"
 
 **Checkpoint**: коммит «015: updateDayEntry — изменение записи дня в одной транзакции» (T003–T004)
 
-- [ ] T005 [US1] Failing tests в `src/ui/dayWrites.test.ts`, `describe('точечное изменение')`, до правки компонентов. `DAY = '2026-11-10'`, `OTHER = '2026-11-09'`:
+- [X] T005 [US1] Failing tests в `src/ui/dayWrites.test.ts`, `describe('точечное изменение')`, до правки компонентов. `DAY = '2026-11-10'`, `OTHER = '2026-11-09'`:
   1. **Запись ещё не пришла на экран** (в базе есть, `entry: undefined`):
      - в базе DAY `{ symptoms: ['headache'], note: 'n', sex: true }`; `MoodPicker` — «Радостная», «Готово» → в базе `{ symptoms: ['headache'], moods: ['joyful'], note: 'n', sex: true }`;
      - аналогично `SymptomPicker` (в базе `{ moods: ['calm'], note: 'n' }`, нажать «Тошнота») и `NoteEditor` (в базе `{ moods: ['calm'] }`, ввести «т», «Сохранить») — остальные поля сохранены;
@@ -101,7 +101,7 @@ description: "Task list for feature 015-atomic-day-writes"
      - `DaySheets`, «Отметить секс» → DAY = `{ ...emptyDayEntry(DAY), sex: true }`, OTHER прежний.
      Сейчас запись уходит в OTHER — тесты красные.
   3. **Поиск по исходникам** (SC-005, FR-008): все `.ts` и `.tsx` в `src/ui` рекурсивно (`readdirSync`/`readFileSync` из `node:fs`, как в `src/domain/isolation.test.ts`), кроме `*.test.ts` и `testing.ts`, не содержат `saveDayEntry`. Сейчас его вызывают 4 файла — тест красный.
-- [ ] T006 [US1] Перевод четырёх мест на `updateDayEntry` по таблице `contracts/repository.md` — до прохождения T005 при зелёных T002 и `src/ui/saveFailures.test.ts`, `src/ui/normalPath.test.ts`:
+- [X] T006 [US1] Перевод четырёх мест на `updateDayEntry` по таблице `contracts/repository.md` — до прохождения T005 при зелёных T002 и `src/ui/saveFailures.test.ts`, `src/ui/normalPath.test.ts`:
   - `src/ui/components/DaySheets.tsx`: `const toggleSex = () => updateDayEntry(date, { sex: !entry?.sex });` и комментарий: значение — по надписи кнопки, остальные поля берутся из базы в транзакции (009 FR-014, research R2);
   - `src/ui/components/SymptomPicker.tsx`: `updateDayEntry(date, { symptoms, intensity: levels })`;
   - `src/ui/components/MoodPicker.tsx`: `updateDayEntry(date, { moods })`;

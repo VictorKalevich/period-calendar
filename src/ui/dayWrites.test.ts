@@ -1,5 +1,7 @@
 // @vitest-environment happy-dom
 import 'fake-indexeddb/auto';
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { act, createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { emptyDayEntry } from '../domain/dayEntry';
@@ -18,6 +20,7 @@ import { button, click, mount, settle, unmountAll } from './testing';
 const ld = (s: string) => s as LocalDate;
 const TODAY = ld('2026-11-14');
 const DAY = ld('2026-11-10');
+const OTHER = ld('2026-11-09');
 const ALL_ON: Settings = { ...DEFAULT_SETTINGS, showSex: true, showWellbeing: true, showMood: true, showNotes: true, showIntensity: true };
 
 const ctx: DayContext = {
@@ -136,5 +139,96 @@ describe('запись дня из листов — как раньше (хар�
     await click(button(m.container, 'Удалить'));
     expect(await getDayEntry(DAY)).toBeUndefined();
     expect(onClose).toHaveBeenCalled();
+  });
+});
+
+describe('точечное изменение: только своё поле и только в свой день (фича 015)', () => {
+  describe('запись дня есть в базе, но на экран ещё не пришла', () => {
+    it('«Настроение» не затирает самочувствие, заметку и отметку секса', async () => {
+      await stored({ symptoms: ['headache'], note: 'n', sex: true });
+      const m = await mount(createElement(MoodPicker, { open: true, onClose: vi.fn(), date: DAY, entry: undefined }));
+      await click(button(m.container, 'Радостная'));
+      await click(button(m.container, 'Готово'));
+      expect(await getDayEntry(DAY)).toEqual(day(DAY, { symptoms: ['headache'], moods: ['joyful'], note: 'n', sex: true }));
+    });
+
+    it('«Самочувствие» не затирает настроение и заметку', async () => {
+      await stored({ moods: ['calm'], note: 'n' });
+      const m = await mount(createElement(SymptomPicker, { open: true, onClose: vi.fn(), date: DAY, entry: undefined, showIntensity: true }));
+      await click(button(m.container, 'Тошнота'));
+      await click(button(m.container, 'Готово'));
+      expect(await getDayEntry(DAY)).toEqual(
+        day(DAY, { symptoms: ['nausea'], intensity: { nausea: 'moderate' }, moods: ['calm'], note: 'n' }),
+      );
+    });
+
+    it('«Заметка» не затирает настроение', async () => {
+      await stored({ moods: ['calm'] });
+      const m = await mount(createElement(NoteEditor, { open: true, onClose: vi.fn(), date: DAY, entry: undefined }));
+      await typeInto(m.container.querySelector('textarea')!, 'т');
+      await click(button(m.container, 'Сохранить'));
+      expect(await getDayEntry(DAY)).toEqual(day(DAY, { moods: ['calm'], note: 'т' }));
+    });
+
+    it('«Отметить секс» не затирает заметку', async () => {
+      await stored({ note: 'n' });
+      const m = await mount(sheets(undefined));
+      await click(button(m.container, 'Отметить секс'));
+      expect(await getDayEntry(DAY)).toEqual(day(DAY, { note: 'n', sex: true }));
+    });
+  });
+
+  describe('лист получил запись другого дня', () => {
+    it('«Настроение» пишет в свой день, запись другого дня не меняется', async () => {
+      const other = await stored({ note: 'other' }, OTHER);
+      const m = await mount(createElement(MoodPicker, { open: true, onClose: vi.fn(), date: DAY, entry: other }));
+      await click(button(m.container, 'Радостная'));
+      await click(button(m.container, 'Готово'));
+      expect(await getDayEntry(DAY)).toEqual(day(DAY, { moods: ['joyful'] }));
+      expect(await getDayEntry(OTHER)).toEqual(other);
+    });
+
+    it('«Самочувствие» пишет в свой день, запись другого дня не меняется', async () => {
+      const other = await stored({ note: 'other' }, OTHER);
+      const m = await mount(createElement(SymptomPicker, { open: true, onClose: vi.fn(), date: DAY, entry: other, showIntensity: true }));
+      await click(button(m.container, 'Тошнота'));
+      await click(button(m.container, 'Готово'));
+      expect(await getDayEntry(DAY)).toEqual(day(DAY, { symptoms: ['nausea'], intensity: { nausea: 'moderate' } }));
+      expect(await getDayEntry(OTHER)).toEqual(other);
+    });
+
+    it('«Заметка» пишет в свой день, запись другого дня не меняется', async () => {
+      const other = await stored({ note: 'other' }, OTHER);
+      const m = await mount(createElement(NoteEditor, { open: true, onClose: vi.fn(), date: DAY, entry: other }));
+      const area = m.container.querySelector('textarea')!;
+      expect(area.value).toBe('other');
+      await typeInto(area, 'день');
+      await click(button(m.container, 'Сохранить'));
+      expect(await getDayEntry(DAY)).toEqual(day(DAY, { note: 'день' }));
+      expect(await getDayEntry(OTHER)).toEqual(other);
+    });
+
+    it('«Отметить секс» ставит отметку своему дню, запись другого дня не меняется', async () => {
+      const other = await stored({ note: 'other' }, OTHER);
+      const m = await mount(sheets(other));
+      await click(button(m.container, 'Отметить секс'));
+      expect(await getDayEntry(DAY)).toEqual(day(DAY, { sex: true }));
+      expect(await getDayEntry(OTHER)).toEqual(other);
+    });
+  });
+
+  describe('интерфейс не собирает запись дня из снимка (SC-005)', () => {
+    const uiDir = __dirname;
+    const sources = (readdirSync(uiDir, { recursive: true }) as string[])
+      .map((f) => f.replaceAll('\\', '/'))
+      .filter((f) => /\.tsx?$/.test(f) && !f.endsWith('.test.ts') && f !== 'testing.ts');
+
+    it('есть исходники для проверки', () => {
+      expect(sources).toContain('components/DaySheets.tsx');
+    });
+
+    it.each(sources)('%s не вызывает saveDayEntry', (file) => {
+      expect(readFileSync(join(uiDir, file), 'utf8')).not.toMatch(/\bsaveDayEntry\b/);
+    });
   });
 });

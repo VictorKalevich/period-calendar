@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { INTENSITIES, SYMPTOMS } from '../../domain/catalog';
 import { formatDayMonthRu } from '../../domain/dates';
-import { DEFAULT_INTENSITY, emptyDayEntry, withDefaultIntensity } from '../../domain/dayEntry';
+import { DEFAULT_INTENSITY, withDefaultIntensity } from '../../domain/dayEntry';
 import type { DayEntry, Intensity, LocalDate, SymptomId } from '../../domain/types';
-import { saveDayEntry } from '../../storage/repository';
+import { updateDayEntry } from '../../storage/repository';
 import { BottomSheet } from './BottomSheet';
 import { SaveError, useSaveError } from './SaveError';
 
@@ -53,9 +53,9 @@ export function SymptomPicker({ open, onClose, date, entry, showIntensity }: Pro
   const setLevel = (id: SymptomId, level: Intensity) => setLevels((cur) => ({ ...cur, [id]: level }));
 
   const save = async () => {
-    // Остальные поля записи сохраняются как есть. При выключенной интенсивности степени не меняются.
-    // Отказ записи — лист открыт, пункты и степени целы (014).
-    if (await saveError.save(() => saveDayEntry({ ...(entry ?? emptyDayEntry(date)), symptoms, intensity: levels }))) onClose();
+    // Меняются только пункты и степени, поверх записи в базе (015); остальные поля — как есть.
+    // При выключенной интенсивности степени не меняются. Отказ записи — лист открыт, пункты и степени целы (014).
+    if (await saveError.save(() => updateDayEntry(date, { symptoms, intensity: levels }))) onClose();
   };
 
   const selected = SYMPTOMS.filter((s) => symptoms.includes(s.id));
