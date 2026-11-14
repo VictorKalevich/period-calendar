@@ -37,7 +37,7 @@ description: "Task list for feature 015-atomic-day-writes"
 
 ## Phase 1: Setup
 
-- [ ] T001 Базовая линия на ветке `015-atomic-day-writes`: `npm test` — 631 тест в 40 файлах, `npm run build` зелёный (записано при подготовке шага; повторить, если ветка менялась)
+- [X] T001 Базовая линия на ветке `015-atomic-day-writes`: `npm test` — 631 тест в 40 файлах, `npm run build` зелёный (записано при подготовке шага; повторить, если ветка менялась)
 
 ---
 
@@ -46,7 +46,7 @@ description: "Task list for feature 015-atomic-day-writes"
 **Purpose**: зафиксировать поведение листов и отметки секса на обычном пути до перевода на `updateDayEntry`
 (FR-013, US4).
 
-- [ ] T002 Характеризационные тесты в новом файле `src/ui/dayWrites.test.ts`, `describe('запись дня из листов — как раньше')`. День `DAY = '2026-11-10'`, `TODAY = '2026-11-14'`; контекст диалога — как `ctxFor([])` в `src/ui/saveFailures.test.ts` (все записи дня включены, `showIntensity: true`). В каждом сценарии запись сначала сохраняется в базе через `saveDayEntry`, и эта же запись передаётся в `entry`. Зелёные до и после правок:
+- [X] T002 Характеризационные тесты в новом файле `src/ui/dayWrites.test.ts`, `describe('запись дня из листов — как раньше')`. День `DAY = '2026-11-10'`, `TODAY = '2026-11-14'`; контекст диалога — как `ctxFor([])` в `src/ui/saveFailures.test.ts` (все записи дня включены, `showIntensity: true`). В каждом сценарии запись сначала сохраняется в базе через `saveDayEntry`, и эта же запись передаётся в `entry`. Зелёные до и после правок:
   1. `DaySheets` (`which: 'day'`), запись `{ note: 'n' }`: нажать «Отметить секс» → в базе `{ sex: true, note: 'n' }`.
   2. `DaySheets`, запись `{ sex: true, moods: ['calm'] }`: нажать «Убрать отметку секса» → в базе `{ moods: ['calm'] }`, `sex: false`.
   3. `DaySheets`, записи нет, `entry: undefined`: два нажатия «Отметить секс» в одном `act` без ожидания между ними, затем `settle()` → в базе `sex: true` (research R2).
