@@ -179,32 +179,48 @@ async function attemptPush(
   return result;
 }
 
-/** Cron: отправляет наступившие напоминания всем подпискам. */
+/**
+ * Cron: отправляет наступившие напоминания всем подпискам. Каждая запись — в своём `try/catch` (фича 018):
+ * повреждённая запись или отказ KV на ней не прерывают рассылку остальным.
+ */
 export async function runSchedule(env: Env, now: number = Date.now(), fetcher: Fetcher = fetch): Promise<void> {
   let cursor: string | undefined;
   do {
     const page = await env.SUBS.list({ prefix: 'sub:', cursor });
     for (const { name } of page.keys) {
-      const rec = await env.SUBS.get<StoredRecord>(name, 'json');
-      if (!rec) continue;
-      const keep: ReminderJSON[] = [];
-      let gone = false;
-      for (const r of rec.reminders) {
-        const at = Date.parse(r.sendAt);
-        if (gone || at > now) {
-          keep.push(r);
-          continue;
+      let step = 'read';
+      try {
+        const rec = await env.SUBS.get<StoredRecord>(name, 'json');
+        if (!rec) continue;
+        step = 'send';
+        const keep: ReminderJSON[] = [];
+        let gone = false;
+        for (const r of rec.reminders) {
+          const at = Date.parse(r.sendAt);
+          if (gone || at > now) {
+            keep.push(r);
+            continue;
+          }
+          const { status } = await attemptPush(rec.subscription, { title: r.title, body: r.body, id: r.id }, env, now, fetcher, 'scheduled');
+          if (status === 404 || status === 410) {
+            gone = true;
+            continue;
+          }
+          const delivered = status >= 200 && status < 300;
+          if (!delivered && now - at < STALE_MS) keep.push(r);
         }
-        const { status } = await attemptPush(rec.subscription, { title: r.title, body: r.body, id: r.id }, env, now, fetcher, 'scheduled');
-        if (status === 404 || status === 410) {
-          gone = true;
-          continue;
+        if (gone) {
+          step = 'delete';
+          await env.SUBS.delete(name);
+        } else if (keep.length !== rec.reminders.length) {
+          step = 'save';
+          await env.SUBS.put(name, JSON.stringify({ ...rec, reminders: keep }));
         }
-        const delivered = status >= 200 && status < 300;
-        if (!delivered && now - at < STALE_MS) keep.push(r);
+      } catch (e) {
+        // Только шаг и имя ошибки: сообщение (например, у JSON.parse) содержит фрагмент записи — адрес
+        // подписки или текст напоминания; ключ записи тоже не пишется.
+        console.warn(`scheduled record skipped: step=${step} reason=${e instanceof Error ? e.name : typeof e}`);
       }
-      if (gone) await env.SUBS.delete(name);
-      else if (keep.length !== rec.reminders.length) await env.SUBS.put(name, JSON.stringify({ ...rec, reminders: keep }));
     }
     cursor = page.list_complete ? undefined : page.cursor;
   } while (cursor);

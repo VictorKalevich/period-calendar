@@ -206,7 +206,7 @@ PowerShell); коммиты с `worker/` — ещё `npm test --prefix worker` �
 
 **Independent Test**: `npm test --prefix worker -- test/schedule.test.ts`.
 
-- [ ] T015 [P] [US3] Failing tests до кода — новый `worker/test/schedule.test.ts` (помощники `./support`; research R8). Три записи в KV в порядке вставки; исправные — `{ tokenHash: 'h', subscription: subscription('a' | 'c'), reminders: [наступившее, будущее] }` (наступившее — `sendAt` = `NOW − 1 ч`, будущее — `NOW + 7 дней`; тексты — `'Календарь цикла'` / `'Сегодня Ты КОРОЛЕВА'`); `fetcher` — `vi.fn` с ответом `201` (или `410` для отдельного endpoint); `vi.spyOn(console, 'warn')`.
+- [X] T015 [P] [US3] Failing tests до кода — новый `worker/test/schedule.test.ts` (помощники `./support`; research R8). Три записи в KV в порядке вставки; исправные — `{ tokenHash: 'h', subscription: subscription('a' | 'c'), reminders: [наступившее, будущее] }` (наступившее — `sendAt` = `NOW − 1 ч`, будущее — `NOW + 7 дней`; тексты — `'Календарь цикла'` / `'Сегодня Ты КОРОЛЕВА'`); `fetcher` — `vi.fn` с ответом `201` (или `410` для отдельного endpoint); `vi.spyOn(console, 'warn')`.
   1. первая запись — не JSON (`'{oops https://web.push.apple.com/secret Сегодня'`) → `runSchedule` разрешается; `fetcher` вызван для обеих исправных; у них осталось только будущее напоминание; повреждённая запись — байт в байт прежняя; `console.warn` ровно один раз с `'scheduled record skipped: step=read reason=SyntaxError'`;
   2. запись не той формы `{ tokenHash: 'x' }` (нет `reminders`) → исправные обработаны; журнал `'scheduled record skipped: step=send reason=TypeError'`;
   3. `put` в KV падает для одной исправной записи (наследник `MemoryKV`) → другая исправная обработана; журнал `'scheduled record skipped: step=save reason=Error'`;
@@ -214,7 +214,7 @@ PowerShell); коммиты с `worker/` — ещё `npm test --prefix worker` �
   5. во всех случаях ни одна строка журнала пропуска не содержит `sub:`, `web.push.apple.com/`, текстов напоминаний и `oops`;
   6. отказ `list` → `runSchedule` отклоняется (как раньше; зелёный и до правки).
   Убедиться, что п. 1–4 падают на текущем коде.
-- [ ] T016 [US3] `worker/src/index.ts`, `runSchedule`: обработка одной записи — в `try/catch`; `let step = 'read'` перед `SUBS.get`, `'send'` перед обходом напоминаний, `'delete'` / `'save'` перед записью; в `catch` — `console.warn(\`scheduled record skipped: step=${step} reason=${e instanceof Error ? e.name : typeof e}\`)` и переход к следующей; комментарий: почему не сообщение (фрагмент записи в сообщении `JSON.parse`). `SUBS.list` — вне `try`. Обработка исправной записи — без изменений. T015, `worker/test/api.test.ts`, `worker/test/contract.test.ts` зелёные; `npm run typecheck --prefix worker` зелёный.
+- [X] T016 [US3] `worker/src/index.ts`, `runSchedule`: обработка одной записи — в `try/catch`; `let step = 'read'` перед `SUBS.get`, `'send'` перед обходом напоминаний, `'delete'` / `'save'` перед записью; в `catch` — `console.warn(\`scheduled record skipped: step=${step} reason=${e instanceof Error ? e.name : typeof e}\`)` и переход к следующей; комментарий: почему не сообщение (фрагмент записи в сообщении `JSON.parse`). `SUBS.list` — вне `try`. Обработка исправной записи — без изменений. T015, `worker/test/api.test.ts`, `worker/test/contract.test.ts` зелёные; `npm run typecheck --prefix worker` зелёный.
 
 **Checkpoint**: коммит «018: рассылка воркера — сбой одной записи не мешает остальным» (T015–T016)
 
