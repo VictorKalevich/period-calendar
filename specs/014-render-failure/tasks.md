@@ -70,9 +70,9 @@ Error('QuotaExceededError'))`, аналогично `db.kv.put`, `db.periods.bul
 
 **Independent Test**: `src/hooks/useLiveQuery.test.ts` — отклонённый запрос внутри `ErrorBoundary` с `EmergencyScreen` показывает карточку.
 
-- [ ] T013 [US2] Характеризационный тест `src/hooks/useLiveQuery.test.ts` (happy-dom + fake-indexeddb; зелёный до изменения хука): пробный компонент `useLiveQuery(getSettings, [])` рисует `null`, пока значение `undefined`, затем значение; после `updateSettings({ defaultCycleLength: 30 })` — новое значение; при смене `deps` (запрос `getDayEntry(date)` с другой датой) прежнее значение держится до прихода нового
-- [ ] T014 [US2] Failing test в `src/hooks/useLiveQuery.test.ts`: запрос `() => Promise.reject(err)` внутри `<ErrorBoundary fallback={<EmergencyScreen />}>` → показана карточка «Что-то пошло не так»; `console.error` вызван с `'liveQuery failed'` и `err`
-- [ ] T015 [US2] `src/hooks/useLiveQuery.ts`: состояние `{ value?: T; error?: unknown; failed: boolean }` (или эквивалент), `next` → `{ value, failed: false }`, `error` → прежний `console.error('liveQuery failed', err)` и `{ failed: true, error }`; при отрисовке `if (failed) throw error`; сигнатура и возвращаемый тип `T | undefined` прежние; импорты — только React и Dexie — до прохождения T014 при зелёном T013
+- [X] T013 [US2] Характеризационный тест `src/hooks/useLiveQuery.test.ts` (happy-dom + fake-indexeddb; зелёный до изменения хука): пробный компонент `useLiveQuery(getSettings, [])` рисует `null`, пока значение `undefined`, затем значение; после `updateSettings({ defaultCycleLength: 30 })` — новое значение; при смене `deps` (запрос `getDayEntry(date)` с другой датой) прежнее значение держится до прихода нового
+- [X] T014 [US2] Failing test в `src/hooks/useLiveQuery.test.ts`: запрос `() => Promise.reject(err)` внутри `<ErrorBoundary fallback={<EmergencyScreen />}>` → показана карточка «Что-то пошло не так»; `console.error` вызван с `'liveQuery failed'` и `err`
+- [X] T015 [US2] `src/hooks/useLiveQuery.ts`: состояние `{ value?: T; error?: unknown; failed: boolean }` (или эквивалент), `next` → `{ value, failed: false }`, `error` → прежний `console.error('liveQuery failed', err)` и `{ failed: true, error }`; при отрисовке `if (failed) throw error`; сигнатура и возвращаемый тип `T | undefined` прежние; импорты — только React и Dexie — до прохождения T014 при зелёном T013
 
 **Checkpoint**: коммит «014: useLiveQuery передаёт ошибку границе» (T013–T015)
 
