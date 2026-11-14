@@ -160,13 +160,13 @@ description: "Task list for feature 017-forecast-model"
 
 ## Phase 6: Polish & проверки
 
-- [ ] T013 Проверки `quickstart.md`:
+- [X] T013 Проверки `quickstart.md`:
   - `npm test` — зелёный, тестов ≥ 957 + новые; `npm run build` — зелёный;
   - `git diff --stat refactoring...HEAD -- "*.test.ts" "*.snap"` — только новые файлы: `src/domain/forecastCharacterization.test.ts`, `src/domain/forecastDerivations.test.ts`, `src/domain/derivationPlacement.test.ts`, `src/domain/explanationTexts.test.ts`, `src/storage/periodLength.test.ts`;
   - команды раздела 5 `quickstart.md`;
   - `git diff refactoring...HEAD` — без испорченной кириллицы и BOM, без изменений вне объёма шага: не меняются `src/storage/db.ts`, `src/storage/migrations/`, `src/storage/backup.ts`, `src/push/`, `src/hooks/`, `worker/`, тексты и разметка.
-- [ ] T014 Отметить задачи `[X]` в `specs/017-forecast-model/tasks.md`; коммит «017: задачи выполнены»
-- [ ] T015 Для журнала (`docs/refactoring-roadmap.md` обновляется после слияния, шаг 9 «Порядка работы»): число тестов до → после; отступления — таблица Complexity Tracking в `plan.md`; попутные находки — research R11
+- [X] T014 Отметить задачи `[X]` в `specs/017-forecast-model/tasks.md`; коммит «017: задачи выполнены»
+- [X] T015 Для журнала (`docs/refactoring-roadmap.md` обновляется после слияния, шаг 9 «Порядка работы»): число тестов до → после; отступления — таблица Complexity Tracking в `plan.md`; попутные находки — research R11
 
 ---
 
