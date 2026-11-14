@@ -5,6 +5,7 @@ import { DEFAULT_INTENSITY, emptyDayEntry, withDefaultIntensity } from '../../do
 import type { DayEntry, Intensity, LocalDate, SymptomId } from '../../domain/types';
 import { saveDayEntry } from '../../storage/repository';
 import { BottomSheet } from './BottomSheet';
+import { SaveError, useSaveError } from './SaveError';
 
 interface Props {
   open: boolean;
@@ -24,9 +25,11 @@ type Levels = Partial<Record<SymptomId, Intensity>>;
 export function SymptomPicker({ open, onClose, date, entry, showIntensity }: Props) {
   const [symptoms, setSymptoms] = useState<SymptomId[]>([]);
   const [levels, setLevels] = useState<Levels>({});
+  const saveError = useSaveError();
 
   useEffect(() => {
     if (!open) return;
+    saveError.reset();
     const saved = entry?.symptoms ?? [];
     setSymptoms(saved);
     // У старых пунктов без степени при включённой интенсивности выбрано «средне» (012 FR-006).
@@ -51,8 +54,8 @@ export function SymptomPicker({ open, onClose, date, entry, showIntensity }: Pro
 
   const save = async () => {
     // Остальные поля записи сохраняются как есть. При выключенной интенсивности степени не меняются.
-    await saveDayEntry({ ...(entry ?? emptyDayEntry(date)), symptoms, intensity: levels });
-    onClose();
+    // Отказ записи — лист открыт, пункты и степени целы (014).
+    if (await saveError.save(() => saveDayEntry({ ...(entry ?? emptyDayEntry(date)), symptoms, intensity: levels }))) onClose();
   };
 
   const selected = SYMPTOMS.filter((s) => symptoms.includes(s.id));
@@ -90,6 +93,7 @@ export function SymptomPicker({ open, onClose, date, entry, showIntensity }: Pro
           ))}
         </div>
       )}
+      <SaveError shown={saveError.failed} />
       <button type="button" className="btn btn--primary" onClick={save}>
         Готово
       </button>

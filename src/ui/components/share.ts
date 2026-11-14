@@ -1,4 +1,6 @@
 // Поделиться файлом через системное меню или сохранить его на устройство (резервная копия, отчёт 011).
+import { exportBackup } from '../../storage/backup';
+import { attempt } from '../attempt';
 
 /** Умеет ли устройство делиться этим файлом (Web Share с файлами). */
 export const canShareFile = (file: File) => navigator.canShare?.({ files: [file] }) === true;
@@ -28,3 +30,12 @@ export async function shareOrDownload(file: File) {
   if (canShareFile(file) && (await shareFile(file))) return;
   downloadFile(file);
 }
+
+/**
+ * Экспорт резервной копии — один путь для «Настроек» и аварийного экрана (фича 014): не зависит от
+ * прогноза и отрисовки экранов. `false` — копию создать не удалось (например, база недоступна).
+ */
+export const exportData = (): Promise<boolean> => attempt('export', async () => shareOrDownload(await exportBackup()));
+
+/** Сообщение о неудачном экспорте — на аварийном экране и в «Резервной копии» (014). */
+export const EXPORT_FAILED_TEXT = 'Не удалось создать резервную копию';

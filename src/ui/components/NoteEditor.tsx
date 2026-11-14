@@ -5,6 +5,7 @@ import { MAX_NOTE_LENGTH, type DayEntry, type LocalDate } from '../../domain/typ
 import { saveDayEntry } from '../../storage/repository';
 import { BottomSheet } from './BottomSheet';
 import { TrashIcon } from './Icons';
+import { SaveError, useSaveError } from './SaveError';
 
 interface Props {
   open: boolean;
@@ -17,22 +18,29 @@ interface Props {
 export function NoteEditor({ open, onClose, date, entry }: Props) {
   const [text, setText] = useState('');
   const [confirming, setConfirming] = useState(false);
+  const saveError = useSaveError();
 
   useEffect(() => {
     if (!open) return;
     setText(entry?.note ?? '');
     setConfirming(false);
+    saveError.reset();
   }, [open, entry]);
 
   const persist = async (note: string) => {
-    // Остальные поля записи сохраняются как есть (009).
-    await saveDayEntry({ ...(entry ?? emptyDayEntry(date)), note });
-    onClose();
+    // Остальные поля записи сохраняются как есть (009). Отказ записи — лист открыт, текст цел (014).
+    if (await saveError.save(() => saveDayEntry({ ...(entry ?? emptyDayEntry(date)), note }))) onClose();
+  };
+
+  // Переход между редактором и подтверждением убирает сообщение об ошибке (014).
+  const confirm = (on: boolean) => {
+    saveError.reset();
+    setConfirming(on);
   };
 
   const day = formatDayMonthRu(date);
   const trash = entry?.note && !confirming && (
-    <button type="button" className="icon-btn icon-btn--danger sheet__action" aria-label="Удалить заметку" onClick={() => setConfirming(true)}>
+    <button type="button" className="icon-btn icon-btn--danger sheet__action" aria-label="Удалить заметку" onClick={() => confirm(true)}>
       <TrashIcon size={20} />
     </button>
   );
@@ -42,10 +50,11 @@ export function NoteEditor({ open, onClose, date, entry }: Props) {
       {confirming ? (
         <>
           <p className="t-body sheet__note">Заметка за {day} будет удалена.</p>
+          <SaveError shown={saveError.failed} />
           <button type="button" className="btn btn--primary" onClick={() => persist('')}>
             Удалить
           </button>
-          <button type="button" className="btn btn--ghost" onClick={() => setConfirming(false)}>
+          <button type="button" className="btn btn--ghost" onClick={() => confirm(false)}>
             Отмена
           </button>
         </>
@@ -65,6 +74,7 @@ export function NoteEditor({ open, onClose, date, entry }: Props) {
               {text.length} / {MAX_NOTE_LENGTH}
             </span>
           </label>
+          <SaveError shown={saveError.failed} />
           <button type="button" className="btn btn--primary" onClick={() => persist(text)}>
             Сохранить
           </button>
