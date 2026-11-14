@@ -1,8 +1,8 @@
 import { addMonths } from 'date-fns';
 import { moodLabel, MOODS, symptomLabel, SYMPTOMS } from './catalog';
 import { averageCycleLength, averagePeriodLength, buildCycles } from './cycles';
-import { addDaysLD, diffDays, parseLD, toLocalDate } from './dates';
-import { buildForecast, todaySummary } from './forecast';
+import { diffDays, parseLD, toLocalDate } from './dates';
+import { buildForecast, nextPredictedStart, originalPredictedStart } from './forecast';
 import type { DayEntry, Intensity, LocalDate, MoodId, Period, Settings, SymptomId } from './types';
 
 // Отчёт для врача (фича 011) — specs/011-doctor-report/contracts/report.md. Чистые функции:
@@ -78,10 +78,7 @@ export function buildDoctorReport(input: DoctorReportInput): DoctorReport {
   const delayDays = forecast?.delayDays ?? 0;
   let nextPeriod: LocalDate | null = null;
   if (forecast) {
-    nextPeriod =
-      delayDays > 0
-        ? addDaysLD(today, -delayDays)
-        : todaySummary({ forecast, periods, settings, entries: new Set(), today }).nextPeriod;
+    nextPeriod = delayDays > 0 ? originalPredictedStart(forecast) : nextPredictedStart(forecast, today);
   }
 
   const inPeriod = entries.filter((e) => e.date >= from && e.date <= today);

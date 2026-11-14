@@ -1,22 +1,36 @@
 import { diffDays } from './dates';
+import { sortByStart } from './periods';
 import { AVERAGE_WINDOW, OUTLIER_CYCLE, type Confidence, type Cycle, type Period } from './types';
 
 const CONFIDENCE_MIN_CYCLES = 3;
 const CONFIDENCE_MAX_SPREAD = 7;
 
-export function buildCycles(periods: Period[]): Cycle[] {
-  const sorted = [...periods].sort((a, b) => (a.start < b.start ? -1 : a.start > b.start ? 1 : 0));
-  return sorted.map((p, i) => {
+/** Месячные и цикл, который они начинают. */
+export interface PeriodCycle {
+  period: Period;
+  cycle: Cycle;
+}
+
+/** Месячные по началу и цикл каждого из них — одна сортировка для циклов и прогноза (фича 017). */
+export function buildPeriodCycles(periods: Period[]): PeriodCycle[] {
+  return sortByStart(periods).map((p, i, sorted) => {
     const next = sorted[i + 1];
     const length = next ? diffDays(next.start, p.start) : null;
     return {
-      start: p.start,
-      length,
-      periodLength: p.end ? diffDays(p.end, p.start) + 1 : null,
-      periodEndEstimated: p.endEstimated,
-      isOutlier: length !== null && (length < OUTLIER_CYCLE.min || length > OUTLIER_CYCLE.max),
+      period: p,
+      cycle: {
+        start: p.start,
+        length,
+        periodLength: p.end ? diffDays(p.end, p.start) + 1 : null,
+        periodEndEstimated: p.endEstimated,
+        isOutlier: length !== null && (length < OUTLIER_CYCLE.min || length > OUTLIER_CYCLE.max),
+      },
     };
   });
+}
+
+export function buildCycles(periods: Period[]): Cycle[] {
+  return buildPeriodCycles(periods).map((x) => x.cycle);
 }
 
 /** Длины последних 6 завершённых циклов без выбросов (FR-013). */

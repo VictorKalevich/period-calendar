@@ -1,4 +1,5 @@
 import { dayDialogFor } from '../../domain/dayDialog';
+import { effectivePeriodLength } from '../../domain/forecast';
 import { updateDayEntry } from '../../storage/repository';
 import type { DayContext, DayEntry, LocalDate } from '../../domain/types';
 import { DayDialog } from './DayDialog';
@@ -20,7 +21,7 @@ interface Props {
 
 /** Листы дня: диалог по нажатию на дату и открываемые из него «Самочувствие», «Настроение» и «Заметки». */
 export function DaySheets({ which, onChange, date, ctx, entry }: Props) {
-  const periodLength = ctx.forecast?.periodLength ?? ctx.settings.defaultPeriodLength;
+  const periodLength = effectivePeriodLength(ctx.periods, ctx.settings);
   const dialog = dayDialogFor(date, ctx.today, ctx.periods, periodLength, ctx.settings, entry);
   // Отметка секса — сразу в записи дня (009 FR-014): значение — как на нажатой кнопке, остальные поля
   // берутся из базы в той же транзакции (фича 015, research R2).
