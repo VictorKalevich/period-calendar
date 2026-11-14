@@ -1,11 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { handleRequest, runSchedule } from '../src/index';
+import { handleRequest, runSchedule, TEST_NOTIFICATION } from '../src/index';
 import { validatePutBody } from '../src/validate';
 import { sendPush } from '../src/webpush';
 import { toLocalDate } from '../../src/domain/dates';
 import { buildForecast } from '../../src/domain/forecast';
 import { MAX_REMINDERS, planReminders, toServerReminders } from '../../src/domain/reminders';
 import { DEFAULT_SETTINGS, type LocalDate, type Period, type Settings } from '../../src/domain/types';
+import { notificationFromPush } from '../../src/pwa/pushNotification';
 import { makeEnv, MemoryKV, putRequest, subscription, uuid } from './support';
 
 // Фича 018 (шаг 5 рефакторинга): расписание, которое строит приложение, принимает воркер, а уведомление
@@ -184,6 +185,22 @@ describe('уведомление воркера', () => {
     expect(new Set(due.map((r) => kindOf(r.id)))).toEqual(new Set(ALL));
     const payloads = vi.mocked(sendPush).mock.calls.map((call) => call[1]);
     expect(payloads).toStrictEqual(due.map((r) => ({ title: r.title, body: r.body, id: r.id })));
+
+    // Service worker приложения показывает каждое с заголовком и текстом напоминания, метка — его id.
+    const shown = payloads.map((payload) => {
+      const wire = JSON.stringify(payload);
+      return notificationFromPush({ json: () => JSON.parse(wire), text: () => wire });
+    });
+    expect(shown).toStrictEqual(due.map((r) => ({ title: r.title, body: r.body, tag: r.id })));
+  });
+
+  it('тестовое уведомление service worker показывает с текстами сервера', () => {
+    const wire = JSON.stringify(TEST_NOTIFICATION);
+    expect(notificationFromPush({ json: () => JSON.parse(wire), text: () => wire })).toStrictEqual({
+      title: 'Календарь цикла',
+      body: 'Уведомления работают',
+      tag: 'test',
+    });
   });
 });
 
