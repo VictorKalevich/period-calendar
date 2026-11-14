@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { formatDayMonthRu } from '../../domain/dates';
-import { emptyDayEntry } from '../../domain/dayEntry';
 import { MAX_NOTE_LENGTH, type DayEntry, type LocalDate } from '../../domain/types';
-import { saveDayEntry } from '../../storage/repository';
+import { updateDayEntry } from '../../storage/repository';
 import { BottomSheet } from './BottomSheet';
 import { TrashIcon } from './Icons';
 import { SaveError, useSaveError } from './SaveError';
@@ -28,8 +27,9 @@ export function NoteEditor({ open, onClose, date, entry }: Props) {
   }, [open, entry]);
 
   const persist = async (note: string) => {
-    // Остальные поля записи сохраняются как есть (009). Отказ записи — лист открыт, текст цел (014).
-    if (await saveError.save(() => saveDayEntry({ ...(entry ?? emptyDayEntry(date)), note }))) onClose();
+    // Меняется только заметка, поверх записи в базе (015); остальные поля — как есть (009).
+    // Отказ записи — лист открыт, текст цел (014).
+    if (await saveError.save(() => updateDayEntry(date, { note }))) onClose();
   };
 
   // Переход между редактором и подтверждением убирает сообщение об ошибке (014).

@@ -1,6 +1,5 @@
 import { dayDialogFor } from '../../domain/dayDialog';
-import { emptyDayEntry } from '../../domain/dayEntry';
-import { saveDayEntry } from '../../storage/repository';
+import { updateDayEntry } from '../../storage/repository';
 import type { DayContext, DayEntry, LocalDate } from '../../domain/types';
 import { DayDialog } from './DayDialog';
 import { MoodPicker } from './MoodPicker';
@@ -23,8 +22,9 @@ interface Props {
 export function DaySheets({ which, onChange, date, ctx, entry }: Props) {
   const periodLength = ctx.forecast?.periodLength ?? ctx.settings.defaultPeriodLength;
   const dialog = dayDialogFor(date, ctx.today, ctx.periods, periodLength, ctx.settings, entry);
-  // Отметка секса — сразу в записи дня; остальные поля записи сохраняются (009 FR-014).
-  const toggleSex = () => saveDayEntry({ ...(entry ?? emptyDayEntry(date)), sex: !entry?.sex });
+  // Отметка секса — сразу в записи дня (009 FR-014): значение — как на нажатой кнопке, остальные поля
+  // берутся из базы в той же транзакции (фича 015, research R2).
+  const toggleSex = () => updateDayEntry(date, { sex: !entry?.sex });
   const close = () => onChange(null);
   return (
     <>
