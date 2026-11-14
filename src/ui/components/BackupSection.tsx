@@ -1,11 +1,11 @@
 import { useRef, useState } from 'react';
 import { toLocalDate } from '../../domain/dates';
 import type { LocalDate } from '../../domain/types';
-import { applyBackup, exportBackup, parseBackup, type ParsedBackup } from '../../storage/backup';
+import { applyBackup, parseBackup, type ParsedBackup } from '../../storage/backup';
 import { getSettings } from '../../storage/repository';
 import { applyTextImport, looksLikeCycleText, planTextImport, type TextImportPlan } from '../../storage/textImport';
 import { BottomSheet } from './BottomSheet';
-import { shareOrDownload } from './share';
+import { EXPORT_FAILED_TEXT, exportData } from './share';
 
 /** «1 запись», «2 записи», «5 записей». */
 export function pluralRu(n: number, [one, few, many]: [string, string, string]): string {
@@ -80,6 +80,12 @@ export function BackupSection() {
     setMessage({ text: 'Данные восстановлены', error: false });
   };
 
+  // Тот же экспорт, что на аварийном экране (014); неудача — сообщение, прочие сообщения не трогаются.
+  const exportCopy = async () => {
+    const ok = await exportData();
+    setMessage((m) => (ok ? (m?.text === EXPORT_FAILED_TEXT ? null : m) : { text: EXPORT_FAILED_TEXT, error: true }));
+  };
+
   const confirmText = async () => {
     if (!textPlan) return;
     try {
@@ -106,7 +112,7 @@ export function BackupSection() {
       <p className="t-caption settings-card__text">
         Данные хранятся только на этом телефоне. Сохраняйте копию в «Файлы», чтобы не потерять их при смене телефона.
       </p>
-      <button type="button" className="btn btn--primary" onClick={async () => shareOrDownload(await exportBackup())}>
+      <button type="button" className="btn btn--primary" onClick={() => void exportCopy()}>
         Экспорт
       </button>
       <button type="button" className="btn" onClick={() => input.current?.click()}>

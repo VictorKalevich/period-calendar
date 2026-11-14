@@ -36,3 +36,6 @@ export async function shareOrDownload(file: File) {
  * прогноза и отрисовки экранов. `false` — копию создать не удалось (например, база недоступна).
  */
 export const exportData = (): Promise<boolean> => attempt('export', async () => shareOrDownload(await exportBackup()));
+
+/** Сообщение о неудачном экспорте — на аварийном экране и в «Резервной копии» (014). */
+export const EXPORT_FAILED_TEXT = 'Не удалось создать резервную копию';
