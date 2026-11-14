@@ -155,14 +155,14 @@ US1 и US2 вызывают её функции. Вызывающие места
 
 ## Phase 6: Polish & проверки
 
-- [ ] T014 Проверки `quickstart.md`:
+- [X] T014 Проверки `quickstart.md`:
   - `npm test` — зелёный, тестов ≥ 695 + новые;
   - `npm run build` — зелёный;
   - `git diff --stat refactoring...HEAD -- "*.test.ts" "*.snap"` — только новые файлы: `src/domain/guards.test.ts`, `src/domain/settings.test.ts`, `src/domain/periodValidation.test.ts`, `src/storage/backupRules.test.ts`, `src/storage/settingsRead.test.ts`, `src/storage/validationPlacement.test.ts`;
   - команды раздела 3 `quickstart.md` (`git grep` по `backup.ts`, `'settings'`, `isRecord`);
   - `git diff refactoring...HEAD` — без испорченной кириллицы и BOM, без изменений вне объёма шага: не меняются `src/storage/db.ts`, `src/storage/migrations/`, `src/push/`, `src/ui/`, `src/hooks/`, `worker/`, `getPeriods`, `savePeriods`.
-- [ ] T015 Отметить задачи `[X]` в `specs/016-domain-validation/tasks.md`; коммит «016: задачи выполнены»
-- [ ] T016 Для журнала (`docs/refactoring-roadmap.md` обновляется после слияния, шаг 9 «Порядка работы»): число тестов до → после; отступления — R2 (`extraSettingFields` в дополнение к `coerceSettings`), R4 (пересечения тоже в домене, одна функция); попутные находки (R7: своя проверка объекта в `migrations/index.ts` пропускает списки; литерал `'settings'` в `push/sync.ts` — шаг 5)
+- [X] T015 Отметить задачи `[X]` в `specs/016-domain-validation/tasks.md`; коммит «016: задачи выполнены»
+- [X] T016 Для журнала (`docs/refactoring-roadmap.md` обновляется после слияния, шаг 9 «Порядка работы»): число тестов до → после; отступления — R2 (`extraSettingFields` в дополнение к `coerceSettings`), R4 (пересечения тоже в домене, одна функция); попутные находки (R7: своя проверка объекта в `migrations/index.ts` пропускает списки; литерал `'settings'` в `push/sync.ts` — шаг 5)
 
 ---
 
