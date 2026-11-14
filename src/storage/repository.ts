@@ -142,3 +142,22 @@ export async function getPushState(): Promise<PushState | undefined> {
 export async function savePushState(state: PushState): Promise<void> {
   await db.kv.put({ key: PUSH_KEY, value: state });
 }
+
+/** Изменение состояния push: идентификатор клиента и токен им не меняются (фича 018). */
+export type PushStatePatch = Partial<Omit<PushState, 'clientId' | 'token'>>;
+export type PushIdentity = Pick<PushState, 'clientId' | 'token'>;
+
+/**
+ * Меняет поля состояния push поверх актуально сохранённого (в одной транзакции, по образцу `updateSettings`),
+ * чтобы запись после сетевого запроса не возвращала устаревший снимок — например, не включала обратно
+ * напоминания, выключенные во время синхронизации. Состояния нет — создаётся из `identity`, если он передан
+ * (у одновременных созданий остаётся первая идентичность), иначе ничего не пишется.
+ */
+export async function updatePushState(patch: PushStatePatch, identity?: PushIdentity): Promise<void> {
+  await db.transaction('rw', db.kv, async () => {
+    const current = await getPushState();
+    const base = current ?? (identity && { ...identity, subscribed: false, pendingSync: false, lastSyncedHash: null });
+    if (!base) return;
+    await db.kv.put({ key: PUSH_KEY, value: { ...base, ...patch } });
+  });
+}
