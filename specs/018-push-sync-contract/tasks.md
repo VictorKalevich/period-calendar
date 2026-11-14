@@ -234,9 +234,11 @@ PowerShell); коммиты с `worker/` — ещё `npm test --prefix worker` �
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T018 Полная проверка: `npm test` (не меньше 1040), `npm run build`, `npm test --prefix worker` (не меньше 37), `npm run typecheck --prefix worker` — всё зелёное; числа записать в отчёт. Для «Журнала» плана рефакторинга (FR-025): шаг **меняет рабочий код `worker/src`** (`index.ts`, `runSchedule`) — шагу 8 нужен `npx wrangler deploy`; подтвердить по `git diff refactoring...HEAD --stat -- worker/src`.
-- [ ] T019 Проверки quickstart п. 4, 5, 7, 8: существующие тесты и снимки не изменены (`git diff refactoring...HEAD --stat -- '*.test.ts' '*.snap'` — только новые файлы); поиск `storage/db`, `'settings'`, `savePushState` в `src/push` (кроме тестов) — пусто; `worker/src` не импортирует `../`; `dist/sw.js` содержит «Календарь цикла»; дифф без испорченной кириллицы и BOM; изменений вне объёма шага нет.
-- [ ] T020 Отметить задачи выполненными в этом файле; коммит «018: задачи выполнены».
+- [X] T018 Полная проверка: `npm test` (не меньше 1040), `npm run build`, `npm test --prefix worker` (не меньше 37), `npm run typecheck --prefix worker` — всё зелёное; числа записать в отчёт. Для «Журнала» плана рефакторинга (FR-025): шаг **меняет рабочий код `worker/src`** (`index.ts`, `runSchedule`) — шагу 8 нужен `npx wrangler deploy`; подтвердить по `git diff refactoring...HEAD --stat -- worker/src`.
+  - Результат: приложение — 1121 тест в 60 файлах (было 1040 в 54); воркер — 111 тестов в 4 файлах (было 37 в 2); сборка и проверка типов воркера зелёные. В `worker/src` изменён только `index.ts` (+34 −18).
+- [X] T019 Проверки quickstart п. 4, 5, 7, 8: существующие тесты и снимки не изменены (`git diff refactoring...HEAD --stat -- '*.test.ts' '*.snap'` — только новые файлы); поиск `storage/db`, `'settings'`, `savePushState` в `src/push` (кроме тестов) — пусто; `worker/src` не импортирует `../`; `dist/sw.js` содержит «Календарь цикла»; дифф без испорченной кириллицы и BOM; изменений вне объёма шага нет.
+  - Результат: все тестовые файлы в диффе — новые (8 шт., статус `A`); поиск в `src/push` и импорты `../` в `worker/src` — пусто; «Календарь цикла» в `dist/sw.js` есть; испорченной кириллицы и BOM нет; изменены только `src/push`, `src/pwa`, `src/storage/repository.ts`, `src/sw.ts`, `worker/src/index.ts`, `worker/test`, документы фичи и документ контракта.
+- [X] T020 Отметить задачи выполненными в этом файле; коммит «018: задачи выполнены».
 
 ---
 
