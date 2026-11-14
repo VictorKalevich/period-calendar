@@ -45,7 +45,7 @@
 проверки не меняются (FR-018); правила слоёв (`docs/refactoring-roadmap.md`); UI только из дизайн-системы
 
 **Scale/Scope**: 4 новых модуля UI (`attempt`, `ErrorBoundary`, `EmergencyScreen`, `SaveError`), правки в
-13 файлах UI/хуков, 8 новых файлов тестов
+13 файлах UI/хуков, 9 новых файлов тестов
 
 ## Constitution Check
 
@@ -90,7 +90,8 @@ docs/design/design.md                        # «Аварийный экран»
 package.json, package-lock.json              # devDependencies: happy-dom
 
 src/ui/attempt.ts, attempt.test.ts           # новый: общий приём (node)
-src/ui/saveFailures.test.ts                  # новый: отказ записи во всех 10 местах
+src/ui/saveFailures.test.ts                  # новый: отказ записи во всех 9 местах записи
+src/ui/normalPath.test.ts (+ __snapshots__)  # новый: снимок разметки обычного пути (до правок)
 src/ui/components/
 ├── SaveError.tsx, SaveError.test.ts         # новый: useSaveError + сообщение
 ├── EmergencyScreen.tsx, EmergencyScreen.test.ts  # новый: EmergencyScreen, EmergencyPage
@@ -116,7 +117,7 @@ src/hooks/useLiveQuery.ts, useLiveQuery.test.ts   # ошибка → грани�
 
 По приоритетам историй (подробно — `tasks.md`, «Checkpoint»):
 
-1. happy-dom + design.md + `attempt` (тесты вперёд).
+1. happy-dom + design.md + `attempt` (тесты вперёд) + снимок разметки обычного пути.
 2. US1: `ErrorBoundary`, `exportData`, `EmergencyScreen`, подключение в `App.tsx` и `main.tsx`.
 3. US2: `useLiveQuery` — ошибка → граница.
 4. US3: сообщение о неудачном экспорте на аварийном экране и в `BackupSection`.
