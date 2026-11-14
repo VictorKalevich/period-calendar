@@ -41,7 +41,7 @@ git diff refactoring...HEAD --stat -- '*.test.ts' '*.snap'
 ```bash
 grep -rnE '\?\?\s*[A-Za-z.?]*defaultPeriodLength' src --include=*.ts --include=*.tsx | grep -v '\.test\.'  # одна строка — effectivePeriodLength
 grep -n 'buildForecast' src/storage/repository.ts src/storage/textImport.ts                                # пусто
-grep -rnE 'delayDays' src/domain --include=*.ts | grep -v '\.test\.' | grep -E '-\s*[A-Za-z.]*delayDays'  # одна строка — originalPredictedStart
+grep -rnE -e '-\s*[A-Za-z.]*delayDays' src --include=*.ts --include=*.tsx | grep -v '\.test\.'          # одна строка — originalPredictedStart
 grep -n 'todaySummary' src/domain/report.ts                                                                 # пусто
 ```
 
