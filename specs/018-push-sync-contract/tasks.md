@@ -31,7 +31,7 @@ PowerShell); коммиты с `worker/` — ещё `npm test --prefix worker` �
   в `beforeEach` — `vi.stubGlobal('window', { PushManager: class {}, Notification: {} })`,
   `vi.stubGlobal('Notification', { permission: 'default', requestPermission: vi.fn(async () => permission) })`,
   `vi.stubGlobal('navigator', { serviceWorker: { ready: Promise.resolve(reg) } })` с
-  `reg.pushManager = { getSubscription: async () => current, subscribe: vi.fn(async () => (current = makeSub(`new-${++n}`))) }`,
+  `reg.pushManager = { getSubscription: async () => current, subscribe: vi.fn(async () => (current = makeSub('new-' + ++n))) }`,
   `vi.stubGlobal('fetch', fetchMock)`; `vi.useFakeTimers({ toFake: ['Date'] })` и
   `vi.setSystemTime(new Date(2026, 9, 23, 9))` (подменяется только `Date`, таймеры IndexedDB настоящие);
   в `afterEach` — `vi.useRealTimers()`, `vi.unstubAllGlobals()`. Подписка браузера — как в браузере: `makeSub(path)` →
