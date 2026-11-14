@@ -22,7 +22,10 @@ export function CalendarScreen() {
 
   const ctx = state?.ctx;
   const day = selected ?? ctx?.today ?? null;
-  const entry = useLiveQuery(() => (day ? getDayEntry(day) : undefined), [day]);
+  const stored = useLiveQuery(() => (day ? getDayEntry(day) : undefined), [day]);
+  // После смены дня хук держит запись прежнего дня, пока не придёт новая (useLiveQuery.test.ts).
+  // Запись чужой даты не показывается и не уходит в диалог и листы (фича 015, research R3).
+  const entry = stored?.date === day ? stored : undefined;
   const hintDismissed = useLiveQuery(getFirstPeriodHintDismissed, []);
   const getInfo = useCallback((date: LocalDate) => dayInfo(date, ctx!), [ctx]);
   // Нажатие выбирает день и открывает диалог, если в нём есть кнопки (003 FR-002, 004 FR-006/FR-007).

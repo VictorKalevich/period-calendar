@@ -120,12 +120,12 @@ description: "Task list for feature 015-atomic-day-writes"
 
 **Independent Test**: `src/ui/screens/CalendarScreen.test.ts`.
 
-- [ ] T007 [US2] Замер мигания «до» (research R4, `quickstart.md` п. 4), до T009. Скрипт CDP в scratchpad, без зависимостей (Node 24, встроенный `WebSocket`; Chrome `C:\Program Files\Google\Chrome\Application\chrome.exe` в headless). Страница — `npm run dev` (Vite, `base: '/period-calendar/'`), окно 390×844, `deviceScaleFactor: 1`. Без `--virtual-time-budget` (замораживает IndexedDB). Шаги:
+- [X] T007 [US2] Замер мигания «до» (research R4, `quickstart.md` п. 4), до T009. Скрипт CDP в scratchpad, без зависимостей (Node 24, встроенный `WebSocket`; Chrome `C:\Program Files\Google\Chrome\Application\chrome.exe` в headless). Страница — `npm run dev` (Vite, `base: '/period-calendar/'`), окно 390×844, `deviceScaleFactor: 1`. Без `--virtual-time-budget` (замораживает IndexedDB). Шаги:
   1. Записать в IndexedDB `cycle-calendar`, таблица `days`, записи двух соседних прошедших дней текущего месяца (заметки «A» и «B») и перезагрузить.
   2. Через `Runtime.evaluate` нажать ячейку A (`button.day-cell[aria-label^="<день> <месяц>"]`, JS `.click()`) и дождаться `.entry` с «A».
   3. Запустить запись кадров (`requestAnimationFrame`, 300 мс, текст `.entry` или «нет») и нажать ячейку B.
   4. Повторить 20 раз (A↔B). Записать число кадров с текстом прежнего дня и без `.entry` до прихода нового.
-- [ ] T008 [US2] Failing test в новом файле `src/ui/screens/CalendarScreen.test.ts` (happy-dom), до T009:
+- [X] T008 [US2] Failing test в новом файле `src/ui/screens/CalendarScreen.test.ts` (happy-dom), до T009:
   - **подмены** (`vi.hoisted` для массивов записей):
     - `vi.mock('../../hooks/useToday', () => ({ useToday: () => '2026-11-14' }))`;
     - `vi.mock('../components/MonthPager', …)` — рисует `null` и запоминает последние пропсы (`onSelect`, `getInfo`);
@@ -135,8 +135,8 @@ description: "Task list for feature 015-atomic-day-writes"
   - `mount(createElement(CalendarScreen))`, дождаться пропсов `MonthPager`;
   - в `act` вызвать `onSelect(getInfo(A))`, дождаться записи `DaySheets` с `date === A` и `entry?.note === 'A'`; затем так же для B;
   - проверка: в каждой записи `DayCard` и `DaySheets` либо `entry === undefined`, либо `entry.date === date`; ни одна запись с `date === B` не содержит `entry?.note === 'A'`. Сейчас первая отрисовка после выбора B получает запись A — тест красный.
-- [ ] T009 [US2] `src/ui/screens/CalendarScreen.tsx`: `const stored = useLiveQuery(() => (day ? getDayEntry(day) : undefined), [day]);` и `const entry = stored?.date === day ? stored : undefined;`. Комментарий: хук держит прежнее значение до прихода нового (`useLiveQuery.test.ts`), а запись чужой даты не показывается и не передаётся в листы (research R3). `src/hooks/useLiveQuery.ts` и `src/hooks/useLiveQuery.test.ts` не менять. До прохождения T008.
-- [ ] T010 [US2] Замер мигания «после» тем же скриптом, что T007. Критерий — только числовой: кадров с переходным состоянием (без `.entry` до прихода нового) не больше, чем кадров с прежней записью «до» (в сумме за 20 переходов). Если больше — остановиться и спросить пользователя. Цифры «до/после» записать для журнала (T015).
+- [X] T009 [US2] `src/ui/screens/CalendarScreen.tsx`: `const stored = useLiveQuery(() => (day ? getDayEntry(day) : undefined), [day]);` и `const entry = stored?.date === day ? stored : undefined;`. Комментарий: хук держит прежнее значение до прихода нового (`useLiveQuery.test.ts`), а запись чужой даты не показывается и не передаётся в листы (research R3). `src/hooks/useLiveQuery.ts` и `src/hooks/useLiveQuery.test.ts` не менять. До прохождения T008.
+- [X] T010 [US2] Замер мигания «после» тем же скриптом, что T007. Критерий — только числовой: кадров с переходным состоянием (без `.entry` до прихода нового) не больше, чем кадров с прежней записью «до» (в сумме за 20 переходов). Если больше — остановиться и спросить пользователя. Цифры «до/после» записать для журнала (T015).
 
 **Checkpoint**: коммит «015: экран «Календарь» — запись только выбранного дня» (T008–T009)
 
