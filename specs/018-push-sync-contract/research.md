@@ -310,6 +310,7 @@ export function createSyncRunner(pass: () => Promise<void>): () => Promise<void>
 | `worker/test/contract.test.ts` | R1–R3 | первым, до любых правок; зелёный на текущем коде. Случаи с `notificationFromPush` — вместе с выносом (R2) |
 | `src/pwa/pushNotification.test.ts` | разбор push-данных как в `sw.ts` | до выноса; падает (нет модуля) |
 | `src/push/sync.test.ts` | интеграция обвязки: правила прохода (FR-011) на настоящем репозитории; выключение и изменение во время синхронизации; наблюдение `liveQuery` (R7) | характеризация правил и наблюдения — до правок, зелёная до и после; гонки — до кода, красные на текущем коде |
+| `src/push/startReminderSync.test.ts` | триггеры фоновой синхронизации (FR-014): старт, задержка 2 с после изменения данных, «онлайн», возврат в приложение; `liveQuery` получает `reminderDataQuery`. `liveQuery` и репозиторий подменены (`vi.mock`), подменены `setTimeout`/`clearTimeout` — база не открывается | до правок, зелёный до и после |
 | `src/storage/pushState.test.ts` | `updatePushState` (R5) | до кода |
 | `src/push/syncCore.test.ts` | `syncPass` и `createSyncRunner` с подменами (R4, R6) | до кода |
 | `src/push/pushPlacement.test.ts` | в `src/push` нет импорта `storage/db`, литерала `'settings'`, вызовов `savePushState`; `syncCore.ts` не обращается к `fetch`, `navigator`, `import.meta.env`, `new Date()` | до правки, падает на текущем коде |

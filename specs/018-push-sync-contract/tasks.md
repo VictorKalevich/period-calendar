@@ -136,6 +136,12 @@ PowerShell); коммиты с `worker/` — ещё `npm test --prefix worker` �
   15. выключение без сети (`fetch` отклоняется) → то же состояние;
   16. выключение без состояния → `fetch` не вызван, `unsubscribe` вызван.
   `describe('reminderDataQuery — наблюдение')` (research R7): `liveQuery(reminderDataQuery).subscribe` со счётчиком; после каждой записи ждать 50 мс (`setTimeout`, настоящий); первое значение → 1; `savePushState(…)` → без новых; `setDevMode(true)` → без новых; `updateSettings({ remindPeriod: false })` → +1; `savePeriods([...])` с другим концом → +1; `unsubscribe()` в конце.
+  Новый `src/push/startReminderSync.test.ts` — триггеры фоновой синхронизации (FR-014; research R9), отдельный файл: подписка `startReminderSync` не отменяется и не должна попасть в другие тесты. `vi.hoisted` — те же `vi.stubEnv`; `vi.mock('dexie', async (importOriginal) => ({ ...(await importOriginal()), liveQuery: vi.fn(() => ({ subscribe: ({ next }) => ((onData = next), { unsubscribe() {} }) })) }))`; `vi.mock('../storage/repository', …)` — `getPushState: vi.fn(async () => undefined)` (каждый проход вызывает его ровно один раз — по нему считаются проходы), `getPeriods`, `getSettings`, `updatePushState`, `savePushState` — `vi.fn`; `vi.stubGlobal('window', { addEventListener: vi.fn() })`, `vi.stubGlobal('document', { visibilityState: 'visible', addEventListener: vi.fn() })`; `vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })`; `startReminderSync()` вызывается один раз (`beforeAll`), обработчики берутся из вызовов `addEventListener`; между случаями `vi.mocked(getPushState).mockClear()`. Случаи:
+  1. `liveQuery` вызван один раз с `reminderDataQuery`; `window.addEventListener` — с `'online'`, `document.addEventListener` — с `'visibilitychange'`;
+  2. `onData()` → до 1999 мс проходов нет, на 2000 мс (`await vi.advanceTimersByTimeAsync`) — один;
+  3. три `onData()` с промежутком 1 с → один проход через 2 с после последнего;
+  4. обработчик `'online'` → проход сразу, без таймера;
+  5. `visibilitychange` при `visibilityState: 'hidden'` → нет прохода; при `'visible'` → один.
   Если что-то на текущем коде ведёт себя иначе — разобраться до правок.
 
 **Checkpoint**: коммит «018: характеризационные тесты синхронизации» (T008)
@@ -227,7 +233,7 @@ PowerShell); коммиты с `worker/` — ещё `npm test --prefix worker` �
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T018 Полная проверка: `npm test` (не меньше 1040), `npm run build`, `npm test --prefix worker` (не меньше 37), `npm run typecheck --prefix worker` — всё зелёное; числа записать в отчёт.
+- [ ] T018 Полная проверка: `npm test` (не меньше 1040), `npm run build`, `npm test --prefix worker` (не меньше 37), `npm run typecheck --prefix worker` — всё зелёное; числа записать в отчёт. Для «Журнала» плана рефакторинга (FR-025): шаг **меняет рабочий код `worker/src`** (`index.ts`, `runSchedule`) — шагу 8 нужен `npx wrangler deploy`; подтвердить по `git diff refactoring...HEAD --stat -- worker/src`.
 - [ ] T019 Проверки quickstart п. 4, 5, 7, 8: существующие тесты и снимки не изменены (`git diff refactoring...HEAD --stat -- '*.test.ts' '*.snap'` — только новые файлы); поиск `storage/db`, `'settings'`, `savePushState` в `src/push` (кроме тестов) — пусто; `worker/src` не импортирует `../`; `dist/sw.js` содержит «Календарь цикла»; дифф без испорченной кириллицы и BOM; изменений вне объёма шага нет.
 - [ ] T020 Отметить задачи выполненными в этом файле; коммит «018: задачи выполнены».
 

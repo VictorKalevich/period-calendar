@@ -22,6 +22,7 @@ npm test --prefix worker -- test/contract.test.ts    # расписание и p
 npm test --prefix worker -- test/schedule.test.ts    # сбой одной записи не мешает остальным (SC-004)
 npx vitest run src/push/syncCore.test.ts             # ядро: гонки, повторный проход, правила (SC-002)
 npx vitest run src/push/sync.test.ts                 # обвязка на настоящем репозитории, наблюдение liveQuery
+npx vitest run src/push/startReminderSync.test.ts    # триггеры фоновой синхронизации (FR-014)
 npx vitest run src/storage/pushState.test.ts         # updatePushState
 npx vitest run src/pwa/pushNotification.test.ts      # разбор уведомления как в sw.ts
 npx vitest run src/push/pushPlacement.test.ts        # нет storage/db, 'settings', savePushState (SC-003)

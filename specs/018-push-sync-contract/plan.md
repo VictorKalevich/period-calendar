@@ -56,7 +56,7 @@ Workers (`@cloudflare/workers-types`)
 
 **Scale/Scope**: правки — `src/push/sync.ts`, `src/push/subscribe.ts`, `src/storage/repository.ts`,
 `src/sw.ts`, `worker/src/index.ts`, документ контракта; новые — `src/push/syncCore.ts`,
-`src/pwa/pushNotification.ts`, 7 файлов тестов и 1 вспомогательный (`worker/test/support.ts`)
+`src/pwa/pushNotification.ts`, 8 файлов тестов и 1 вспомогательный (`worker/test/support.ts`)
 
 ## Constitution Check
 
@@ -114,6 +114,7 @@ worker/test/schedule.test.ts            # новый: R8
 src/pwa/pushNotification.test.ts        # новый
 src/storage/pushState.test.ts           # новый
 src/push/sync.test.ts                   # новый: обвязка, характеризация, гонки, liveQuery
+src/push/startReminderSync.test.ts      # новый: триггеры фоновой синхронизации (характеризация)
 src/push/syncCore.test.ts               # новый
 src/push/pushPlacement.test.ts          # новый: поиск по исходникам
 ```
@@ -130,10 +131,11 @@ src/push/pushPlacement.test.ts          # новый: поиск по исход
 
 1. Контрактный тест (`support.ts`, `contract.test.ts` без случаев service worker) — зелёный на текущем
    коде (US1).
-2. Характеризационные тесты синхронизации (`sync.test.ts`: правила прохода и наблюдение `liveQuery`) —
-   зелёные на текущем коде; для наблюдения прежнее выражение выносится в экспорт `reminderDataQuery` без
-   изменений (US2).
-3. `notificationFromPush` + `sw.ts` через неё; случаи service worker в контрактном тесте (US1).
+2. `notificationFromPush` + `sw.ts` через неё; случаи service worker в контрактном тесте (US1).
+3. Характеризационные тесты синхронизации (`sync.test.ts`: правила прохода, включение и выключение,
+   наблюдение `liveQuery`; `startReminderSync.test.ts`: триггеры фоновой синхронизации) — зелёные на
+   текущем коде; для наблюдения прежнее выражение выносится в экспорт `reminderDataQuery` без изменений
+   (US2).
 4. `updatePushState` (US2).
 5. Ядро `syncCore.ts` (`syncPass`, `createSyncRunner`), `sync.ts` — обвязка; `enable`/`disable` через
    `updatePushState`; гонки в `sync.test.ts`; наблюдение через репозиторий; `pushPlacement.test.ts` (US2).
