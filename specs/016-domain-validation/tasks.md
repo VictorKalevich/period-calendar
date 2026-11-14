@@ -33,7 +33,7 @@ description: "Task list for feature 016-domain-validation"
 
 ## Phase 1: Setup
 
-- [ ] T001 Базовая линия на ветке `016-domain-validation`: `npm test` — 695 тестов в 43 файлах, `npm run build` зелёный (записано при подготовке шага; повторить, если ветка менялась)
+- [X] T001 Базовая линия на ветке `016-domain-validation`: `npm test` — 695 тестов в 43 файлах, `npm run build` зелёный (записано при подготовке шага; повторить, если ветка менялась)
 
 ---
 
@@ -42,7 +42,7 @@ description: "Task list for feature 016-domain-validation"
 **Purpose**: зафиксировать точные тексты ошибок импорта, правила настроек при импорте и чтение корректных
 настроек до переноса правил (FR-003, FR-004, FR-008, research R8).
 
-- [ ] T002 [P] Характеризационные тесты импорта в новом файле `src/storage/backupRules.test.ts` (`node` + `fake-indexeddb/auto`). Основа — корректный файл `schemaVersion: 6`: `data.periods = [{ id: 'x', start: '2026-08-01', end: '2026-08-05', endEstimated: false }]`, `data.days = []`, `data.settings = { ...DEFAULT_SETTINGS }`; функция `err(file)` → `parseBackup(JSON.stringify(file))`, ошибка или `null`. Префикс `P = 'Файл резервной копии повреждён: '`. Зелёные до и после правок, проверка — `toBe` (символ в символ):
+- [X] T002 [P] Характеризационные тесты импорта в новом файле `src/storage/backupRules.test.ts` (`node` + `fake-indexeddb/auto`). Основа — корректный файл `schemaVersion: 6`: `data.periods = [{ id: 'x', start: '2026-08-01', end: '2026-08-05', endEstimated: false }]`, `data.days = []`, `data.settings = { ...DEFAULT_SETTINGS }`; функция `err(file)` → `parseBackup(JSON.stringify(file))`, ошибка или `null`. Префикс `P = 'Файл резервной копии повреждён: '`. Зелёные до и после правок, проверка — `toBe` (символ в символ):
   1. `periods: 'x'` и поля `periods` нет → `P + 'нет списка месячных'`.
   2. Запись `null`, `[1]`, `'s'` → `P + 'запись месячных не объект'`.
   3. `id: 5` → `P + 'некорректный или повторный id: 5'`; `id: ''` → `P + 'некорректный или повторный id: '`; поля `id` нет → `P + 'некорректный или повторный id: undefined'`; две записи с `id: 'x'` (вторая `2026-09-01`, `end: null`) → `P + 'некорректный или повторный id: x'`.
@@ -57,7 +57,7 @@ description: "Task list for feature 016-domain-validation"
   12. Лишнее поле у записи месячных (`color: 'red'`) отбрасывается: `periods` равны `[{ id: 'x', start: '2026-08-01', end: '2026-08-05', endEstimated: false }]`.
   13. Настройки: неизвестное поле файла `futureField: 1` в результат не попадает; неизвестное поле настроек устройства (`parseBackup(text, { ...DEFAULT_SETTINGS, deviceExtra: 'x' } as Settings)`) сохраняется; `Object.keys(result.settings)` равен `Object.keys(device)`.
   14. Границы диапазонов при импорте принимаются: `defaultCycleLength` 21 и 45, `defaultPeriodLength` 2 и 10, `ovulationShift` −5 и 5 (по одному `it.each`); за границей (20, 46, 1, 11, −6, 6) — значение устройства.
-- [ ] T003 [P] Характеризационные тесты чтения настроек в новом файле `src/storage/settingsRead.test.ts`, `describe('чтение настроек — как раньше')` (`node` + `fake-indexeddb/auto`). Зелёные до и после правок:
+- [X] T003 [P] Характеризационные тесты чтения настроек в новом файле `src/storage/settingsRead.test.ts`, `describe('чтение настроек — как раньше')` (`node` + `fake-indexeddb/auto`). Зелёные до и после правок:
   1. В базе `raw = { ...DEFAULT_SETTINGS, defaultCycleLength: 30, futureA: 1, futureB: { x: 1 } }` → `getSettings()` равен `{ ...DEFAULT_SETTINGS, ...raw }`, и `Object.keys` результата равен `Object.keys({ ...DEFAULT_SETTINGS, ...raw })`.
   2. В базе неполная запись с ключами в обратном порядке и неизвестным полем (`{ futureA: 1, showSex: true, defaultCycleLength: 30 }`) → то же равенство значений и порядка ключей с `{ ...DEFAULT_SETTINGS, ...raw }`.
   3. Записи нет и `value: null` → `getSettings()` равен `DEFAULT_SETTINGS`, результат `not.toBe(DEFAULT_SETTINGS)` и `Object.isFrozen(result) === false`.
