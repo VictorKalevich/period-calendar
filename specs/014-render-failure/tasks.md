@@ -117,9 +117,9 @@ Error('QuotaExceededError'))`, аналогично `db.kv.put`, `db.periods.bul
 
 ## Phase 7: Polish & проверки
 
-- [ ] T025 Визуальная проверка (вне репозитория): временная страница предпросмотра в корне проекта (не коммитить, удалить после) с `EmergencyScreen` на фоне `.app__screen` и листом с `SaveError`; `npm run dev`; снимки headless Edge 390×844 в светлой и тёмной теме (`--force-dark-mode` / `--blink-settings=preferredColorScheme=…`) в папку scratchpad; проверить читаемость, кнопки 52 px (≥ 44), отступы `--space-m` в карточке, вид как у карточек Настроек. Если Edge/Chrome недоступен — сообщить пользователю, что темы подтверждены только `theme.test.ts` (пары цветов) и составом классов
-- [ ] T026 Полная проверка: `npm test` (≥ 584 + новые) и `npm run build`; `git diff refactoring...HEAD --stat` — существующие `*.test.ts` не изменены (только новые файлы тестов и снимок); `ForecastInfo.test.ts`, `design-system.test.ts`, `theme.test.ts` зелёные без изменений; `git diff refactoring...HEAD -- src/ui/app.css src/ui/theme.css` пустой (новых классов и токенов нет, FR-015); `SCHEMA_VERSION` и `this.version(…)` в `src/storage/db.ts`, `src/domain/`, `src/storage/`, `src/push/`, `worker/`, `vitest.config.ts` не тронуты; `src/main.tsx` — `<App />` внутри `ErrorBoundary` с `EmergencyPage` (просмотр кода, FR-003); diff без испорченной кириллицы и BOM; правила слоёв: `src/hooks/useLiveQuery.ts` импортирует только `react` и `dexie`; собрать попутные находки для «Журнала» `docs/refactoring-roadmap.md` (FR-021)
-- [ ] T027 Отметить задачи выполненными в `specs/014-render-failure/tasks.md`; коммит «014: задачи выполнены»
+- [X] T025 Визуальная проверка (вне репозитория): временная страница предпросмотра в корне проекта (не коммитить, удалить после) с `EmergencyScreen` на фоне `.app__screen` и листом с `SaveError`; `npm run dev`; снимки headless Edge 390×844 в светлой и тёмной теме (`--force-dark-mode` / `--blink-settings=preferredColorScheme=…`) в папку scratchpad; проверить читаемость, кнопки 52 px (≥ 44), отступы `--space-m` в карточке, вид как у карточек Настроек. Если Edge/Chrome недоступен — сообщить пользователю, что темы подтверждены только `theme.test.ts` (пары цветов) и составом классов
+- [X] T026 Полная проверка: `npm test` (≥ 584 + новые) и `npm run build`; `git diff refactoring...HEAD --stat` — существующие `*.test.ts` не изменены (только новые файлы тестов и снимок); `ForecastInfo.test.ts`, `design-system.test.ts`, `theme.test.ts` зелёные без изменений; `git diff refactoring...HEAD -- src/ui/app.css src/ui/theme.css` пустой (новых классов и токенов нет, FR-015); `SCHEMA_VERSION` и `this.version(…)` в `src/storage/db.ts`, `src/domain/`, `src/storage/`, `src/push/`, `worker/`, `vitest.config.ts` не тронуты; `src/main.tsx` — `<App />` внутри `ErrorBoundary` с `EmergencyPage` (просмотр кода, FR-003); diff без испорченной кириллицы и BOM; правила слоёв: `src/hooks/useLiveQuery.ts` импортирует только `react` и `dexie`; собрать попутные находки для «Журнала» `docs/refactoring-roadmap.md` (FR-021)
+- [X] T027 Отметить задачи выполненными в `specs/014-render-failure/tasks.md`; коммит «014: задачи выполнены»
 
 ---
 
@@ -145,3 +145,15 @@ Error('QuotaExceededError'))`, аналогично `db.kv.put`, `db.periods.bul
 MVP — US1 (аварийный экран при сбое отрисовки): уже закрывает самый опасный случай (нет пути к экспорту).
 Затем US2 (ошибка чтения базы — тот же экран), US3 (экспорт проверен и сообщает о неудаче), US4 (отказ
 записи). Коммиты — по «Checkpoint» выше; каждый проходит `npm test` и `npm run build`.
+
+## Итог проверки (2026-11-14)
+
+- Тесты: 584 → 631 (33 → 40 файлов), `npm run build` зелёный; существующие тесты не изменены, снимок
+  обычного пути (T005) совпал после всех правок.
+- T025: предпросмотр в headless Chrome через DevTools Protocol, 390×844, DPR 1, обе темы
+  (`Emulation.setEmulatedMedia`). Настоящее приложение с испорченной записью месячных: «Статистика» →
+  аварийная карточка, навигация видна, после сбоя «Настройки» открываются. Кнопки карточки 318×52,
+  «Готово» в листе 350×52, вкладки 122×44 — все ≥ 44. Карточка и сообщение читаемы в обеих темах.
+  Страница предпросмотра удалена, в репозиторий не попала.
+- T026: `app.css`, `theme.css`, `src/storage`, `src/domain`, `src/push`, `worker/`, `vitest.config.ts` не
+  изменены; `useLiveQuery` импортирует только `react` и `dexie`; BOM и испорченной кириллицы нет.
