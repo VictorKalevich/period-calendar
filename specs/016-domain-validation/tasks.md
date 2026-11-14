@@ -98,7 +98,7 @@ US1 и US2 вызывают её функции. Вызывающие места
 
 ### Месячные
 
-- [ ] T008 [US3] Failing tests в новом файле `src/domain/periodValidation.test.ts`, до кода; `TODAY = '2026-11-14'`, `LEN = 5`; `v(input)` → `validatePeriods(input, TODAY, LEN)`. Каждый код — `toEqual` с параметрами (SC-002, таблица «Ошибка проверки» в `data-model.md`):
+- [X] T008 [US3] Failing tests в новом файле `src/domain/periodValidation.test.ts`, до кода; `TODAY = '2026-11-14'`, `LEN = 5`; `v(input)` → `validatePeriods(input, TODAY, LEN)`. Каждый код — `toEqual` с параметрами (SC-002, таблица «Ошибка проверки» в `data-model.md`):
   1. `not-a-list`: `'x'`, `undefined`, `null`, `{}`, `5`.
   2. `not-an-object`: `[null]`, `[[1]]`, `['s']`, `[5]`.
   3. `invalid-id`: `id` `5`, `''`, `null`, поля нет → `{ code: 'invalid-id', id: <значение> }`.
@@ -113,7 +113,7 @@ US1 и US2 вызывают её функции. Вызывающие места
   12. Успех: неупорядоченный список → отсортирован по началу; лишние поля отброшены (только `id`, `start`, `end`, `endEstimated`); соседние 2026-08-01…2026-08-05 и 2026-08-06…2026-08-08 объединены в одни 2026-08-01…2026-08-08; соприкасающиеся без объединения 2026-08-01…2026-08-10 и 2026-08-11…2026-08-20 — две записи; `[]` → `{ ok: true, value: [] }`.
   13. `periodLength` влияет на оценку незакрытых: `[{ a: 2026-08-01, end: null }, { b: 2026-08-06…2026-08-07 }]` при `LEN = 5` → одни месячные 2026-08-01…2026-08-07, `endEstimated: false`; при длине 3 → две записи, у `a` `end: null`.
   14. Вход не меняется (`structuredClone` до и после равны); на смешанном входе (`[корректная запись, 'x']`) — не бросает, `not-an-object`.
-- [ ] T009 [US3] Создать `src/domain/periodValidation.ts` по контракту: тип `PeriodValidationError`; `validatePeriods(input, today, periodLength)` — этап 1 переносит проверки `parsePeriods` из `backup.ts` в прежнем порядке, возвращая коды вместо текстов (`isObject` из `./guards`, `isLocalDate`, `diffDays` из `./dates`, `MAX_PERIOD_DAYS`, `Result` из `./types`); этап 2 — `normalizePeriods(periods, today, periodLength)` и проверка соседних `periodEnd(prev, periodLength) >= next.start` → `{ code: 'overlap', first: prev.start, second: next.start }` (`./periods`). Без чтения текущего времени. Вызывающих мест пока нет. Коммит «016: строгая проверка месячных в домене» (T008, T009)
+- [X] T009 [US3] Создать `src/domain/periodValidation.ts` по контракту: тип `PeriodValidationError`; `validatePeriods(input, today, periodLength)` — этап 1 переносит проверки `parsePeriods` из `backup.ts` в прежнем порядке, возвращая коды вместо текстов (`isObject` из `./guards`, `isLocalDate`, `diffDays` из `./dates`, `MAX_PERIOD_DAYS`, `Result` из `./types`); этап 2 — `normalizePeriods(periods, today, periodLength)` и проверка соседних `periodEnd(prev, periodLength) >= next.start` → `{ code: 'overlap', first: prev.start, second: next.start }` (`./periods`). Без чтения текущего времени. Вызывающих мест пока нет. Коммит «016: строгая проверка месячных в домене» (T008, T009)
 
 **Checkpoint**: тесты домена и `src/domain/isolation.test.ts` зелёные; `backup.ts` пока использует свои правила.
 
