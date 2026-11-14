@@ -5,6 +5,7 @@ import { emptyDayEntry } from '../../domain/dayEntry';
 import type { DayEntry, LocalDate, MoodId } from '../../domain/types';
 import { saveDayEntry } from '../../storage/repository';
 import { BottomSheet } from './BottomSheet';
+import { SaveError, useSaveError } from './SaveError';
 
 interface Props {
   open: boolean;
@@ -16,17 +17,19 @@ interface Props {
 /** Лист «Настроение» (009 FR-010–FR-012): несколько настроений или ни одного, без эмодзи. */
 export function MoodPicker({ open, onClose, date, entry }: Props) {
   const [moods, setMoods] = useState<MoodId[]>([]);
+  const saveError = useSaveError();
 
   useEffect(() => {
-    if (open) setMoods(entry?.moods ?? []);
+    if (!open) return;
+    setMoods(entry?.moods ?? []);
+    saveError.reset();
   }, [open, entry]);
 
   const toggle = (id: MoodId) => setMoods((cur) => (cur.includes(id) ? cur.filter((m) => m !== id) : [...cur, id]));
 
   const save = async () => {
-    // Остальные поля записи сохраняются как есть.
-    await saveDayEntry({ ...(entry ?? emptyDayEntry(date)), moods });
-    onClose();
+    // Остальные поля записи сохраняются как есть. Отказ записи — лист открыт, выбор цел (014).
+    if (await saveError.save(() => saveDayEntry({ ...(entry ?? emptyDayEntry(date)), moods }))) onClose();
   };
 
   return (
@@ -39,6 +42,7 @@ export function MoodPicker({ open, onClose, date, entry }: Props) {
           </button>
         ))}
       </fieldset>
+      <SaveError shown={saveError.failed} />
       <button type="button" className="btn btn--primary" onClick={save}>
         Готово
       </button>

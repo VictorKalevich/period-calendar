@@ -5,6 +5,7 @@ import { MAX_PERIOD_DAYS, type PeriodError } from '../../domain/types';
 import { savePeriods } from '../../storage/repository';
 import { BottomSheet } from './BottomSheet';
 import { Heart } from './Icons';
+import { SaveError, useSaveError } from './SaveError';
 
 const ERRORS: Record<PeriodError, string> = {
   'future-date': 'Нельзя отметить месячные в будущем',
@@ -36,21 +37,30 @@ const SEX_LABELS = { mark: 'Отметить секс', unmark: 'Убрать о
 export function DayDialog({ open, onClose, dialog, onExtra, onToggleSex }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [confirming, setConfirming] = useState<PeriodAction | null>(null);
+  // Отказ записи — диалог открыт, сообщение на месте доменной ошибки; одновременно — одно сообщение (014).
+  const saveError = useSaveError();
 
   const close = () => {
     setError(null);
     setConfirming(null);
+    saveError.reset();
     onClose();
+  };
+
+  const confirm = (action: PeriodAction | null) => {
+    saveError.reset();
+    setConfirming(action);
   };
 
   const run = async (action: PeriodAction) => {
     const res = action.apply();
     if (!res.ok) {
+      saveError.reset();
       setError(ERRORS[res.error]);
       return;
     }
-    await savePeriods(res.value);
-    close();
+    setError(null);
+    if (await saveError.save(() => savePeriods(res.value))) close();
   };
 
   const title = confirming ? 'Удалить месячные?' : dialog.title;
@@ -60,10 +70,11 @@ export function DayDialog({ open, onClose, dialog, onExtra, onToggleSex }: Props
       {confirming ? (
         <>
           <p className="t-body sheet__note">{confirming.confirm}</p>
+          <SaveError shown={saveError.failed} />
           <button type="button" className="btn btn--primary" onClick={() => run(confirming)}>
             Удалить
           </button>
-          <button type="button" className="btn btn--ghost" onClick={() => setConfirming(null)}>
+          <button type="button" className="btn btn--ghost" onClick={() => confirm(null)}>
             Отмена
           </button>
         </>
@@ -74,7 +85,7 @@ export function DayDialog({ open, onClose, dialog, onExtra, onToggleSex }: Props
               key={a.kind}
               type="button"
               className={i === 0 ? 'btn btn--primary' : 'btn'}
-              onClick={() => (a.confirm ? setConfirming(a) : run(a))}
+              onClick={() => (a.confirm ? confirm(a) : run(a))}
             >
               {a.label}
             </button>
@@ -84,13 +95,14 @@ export function DayDialog({ open, onClose, dialog, onExtra, onToggleSex }: Props
               {error}
             </p>
           )}
+          <SaveError shown={saveError.failed} />
           {dialog.sex && (
             <button
               type="button"
               className="btn btn--icon"
               onClick={async () => {
-                await onToggleSex();
-                close();
+                setError(null);
+                if (await saveError.save(onToggleSex)) close();
               }}
             >
               <Heart size={18} plain />
