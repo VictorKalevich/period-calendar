@@ -147,7 +147,7 @@ PowerShell); коммиты с `worker/` — ещё `npm test --prefix worker` �
 
 **Checkpoint**: коммит «018: характеризационные тесты синхронизации» (T008)
 
-- [ ] T009 [P] [US2] Failing tests до кода — новый `src/storage/pushState.test.ts` (`node` + `fake-indexeddb/auto`) для `updatePushState(patch, identity?)` (research R5, data-model «PushStatePatch»):
+- [X] T009 [P] [US2] Failing tests до кода — новый `src/storage/pushState.test.ts` (`node` + `fake-indexeddb/auto`) для `updatePushState(patch, identity?)` (research R5, data-model «PushStatePatch»):
   1. нет записи, нет `identity` → `getPushState()` — `undefined`;
   2. нет записи, `identity = { clientId: 'id-1', token: 't-1' }`, патч `{ subscribed: true, pendingSync: true, lastSyncedHash: null }` → `toStrictEqual({ clientId: 'id-1', token: 't-1', subscribed: true, pendingSync: true, lastSyncedHash: null })`;
   3. нет записи, `identity`, пустой патч → `{ clientId: 'id-1', token: 't-1', subscribed: false, pendingSync: false, lastSyncedHash: null }`;
@@ -157,7 +157,7 @@ PowerShell); коммиты с `worker/` — ещё `npm test --prefix worker` �
   7. «снимок устарел»: прочитать состояние, затем `updatePushState({ subscribed: false })`, затем `updatePushState({ pendingSync: false, lastSyncedHash: 'h' })` → `subscribed: false`;
   8. другие ключи `kv` (настройки, режим разработчика) не меняются.
   Убедиться, что тест падает (функции нет).
-- [ ] T010 [US2] `src/storage/repository.ts`: `export type PushStatePatch = Partial<Omit<PushState, 'clientId' | 'token'>>`, `export type PushIdentity = Pick<PushState, 'clientId' | 'token'>`, `export async function updatePushState(patch: PushStatePatch, identity?: PushIdentity)` — одна транзакция `rw` по `db.kv`: `current = await getPushState()`; основа `current ?? (identity && { ...identity, subscribed: false, pendingSync: false, lastSyncedHash: null })`; нет основы — выход; `db.kv.put({ key: PUSH_KEY, value: { ...основа, ...patch } })`. Комментарий — по образцу `updateSettings`. `getPushState`, `savePushState` не меняются. T009 зелёный.
+- [X] T010 [US2] `src/storage/repository.ts`: `export type PushStatePatch = Partial<Omit<PushState, 'clientId' | 'token'>>`, `export type PushIdentity = Pick<PushState, 'clientId' | 'token'>`, `export async function updatePushState(patch: PushStatePatch, identity?: PushIdentity)` — одна транзакция `rw` по `db.kv`: `current = await getPushState()`; основа `current ?? (identity && { ...identity, subscribed: false, pendingSync: false, lastSyncedHash: null })`; нет основы — выход; `db.kv.put({ key: PUSH_KEY, value: { ...основа, ...patch } })`. Комментарий — по образцу `updateSettings`. `getPushState`, `savePushState` не меняются. T009 зелёный.
 
 **Checkpoint**: коммит «018: updatePushState — состояние push поверх актуального» (T009–T010)
 
