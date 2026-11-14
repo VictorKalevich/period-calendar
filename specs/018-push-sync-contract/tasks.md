@@ -117,7 +117,7 @@ PowerShell); коммиты с `worker/` — ещё `npm test --prefix worker` �
 
 **Independent Test**: `npx vitest run src/push src/storage/pushState.test.ts`.
 
-- [ ] T008 [US2] Характеризация — **до правок логики, зелёная до и после**. В `src/push/sync.ts` вынести прежнее выражение наблюдения в экспорт без изменений: `export const reminderDataQuery = () => Promise.all([db.periods.toArray(), db.kv.get('settings')]);` и `liveQuery(reminderDataQuery)` в `startReminderSync`. Новый `src/push/sync.test.ts` (обвязка — см. «Обвязка push» выше; `S0 = { clientId: uuid, token: 'tok_…', subscribed: true, pendingSync: true, lastSyncedHash: null }`, месячные `[p('a', '2026-10-15')]`):
+- [X] T008 [US2] Характеризация — **до правок логики, зелёная до и после**. В `src/push/sync.ts` вынести прежнее выражение наблюдения в экспорт без изменений: `export const reminderDataQuery = () => Promise.all([db.periods.toArray(), db.kv.get('settings')]);` и `liveQuery(reminderDataQuery)` в `startReminderSync`. Новый `src/push/sync.test.ts` (обвязка — см. «Обвязка push» выше; `S0 = { clientId: uuid, token: 'tok_…', subscribed: true, pendingSync: true, lastSyncedHash: null }`, месячные `[p('a', '2026-10-15')]`):
   `describe('syncReminders — правила прохода как раньше')`:
   1. нет состояния → `fetch` не вызван, состояния нет;
   2. `subscribed: false` → `fetch` не вызван, состояние то же;

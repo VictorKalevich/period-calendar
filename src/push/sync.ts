@@ -54,6 +54,9 @@ async function doSync(): Promise<void> {
   }
 }
 
+/** Данные, от которых зависит расписание: их изменение запускает синхронизацию. */
+export const reminderDataQuery = () => Promise.all([db.periods.toArray(), db.kv.get('settings')]);
+
 /** Запускает фоновую синхронизацию: при старте, при изменениях данных и при появлении сети. */
 export function startReminderSync(): void {
   if (!isPushConfigured()) return;
@@ -62,7 +65,7 @@ export function startReminderSync(): void {
     clearTimeout(timer);
     timer = setTimeout(() => void syncReminders(), DEBOUNCE_MS);
   };
-  liveQuery(() => Promise.all([db.periods.toArray(), db.kv.get('settings')])).subscribe({ next: schedule });
+  liveQuery(reminderDataQuery).subscribe({ next: schedule });
   window.addEventListener('online', () => void syncReminders());
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') void syncReminders();
