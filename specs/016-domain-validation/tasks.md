@@ -84,7 +84,7 @@ US1 и US2 вызывают её функции. Вызывающие места
 
 ### Настройки
 
-- [ ] T006 [US3] Failing tests в новом файле `src/domain/settings.test.ts`, до кода:
+- [X] T006 [US3] Failing tests в новом файле `src/domain/settings.test.ts`, до кода:
   1. `FALLBACK` отличается от `DEFAULT_SETTINGS` в каждом поле: `defaultCycleLength: 33`, `defaultPeriodLength: 7`, `ovulationShift: 4`, все логические — противоположные значениям по умолчанию.
   2. Таблица `FIELDS: Record<keyof Settings, { valid: unknown[]; invalid: unknown[] }>`: `defaultCycleLength` — valid `[21, 28, 45]`, invalid `[20, 46, 30.5, '30', NaN, Infinity, null, undefined, true]`; `defaultPeriodLength` — valid `[2, 5, 10]`, invalid `[1, 11, 4.5, '4', NaN, null]`; `ovulationShift` — valid `[-5, 0, 5]`, invalid `[-6, 6, 1.5, '2', NaN, null]`; каждое из 10 логических — valid `[true, false]`, invalid `['true', 'false', 1, 0, null, undefined]`. Правило из `data-model.md`: «целое — `Number.isInteger`… Границы включительно».
   3. Тест полноты: `Object.keys(FIELDS).sort()` равен `Object.keys(DEFAULT_SETTINGS).sort()` (13 полей, SC-001).
@@ -94,7 +94,7 @@ US1 и US2 вызывают её функции. Вызывающие места
   7. Неизвестное поле входа (`futureA`) в результат не попадает; неизвестное поле `fallback` (`deviceExtra`) сохраняется; `Object.keys(result)` равен `Object.keys(fallback)`.
   8. Входы не меняются: `Object.freeze` у `raw` и `fallback` — без исключения, оба прежние.
   9. `extraSettingFields`: `{ ...DEFAULT_SETTINGS, defaultCycleLength: 'abc', b: 2, a: 1 }` → `{ b: 2, a: 1 }`, ключи `['b', 'a']`; не объект (`undefined`, `null`, `'x'`, `[1]`) и `{}` → `{}`; `JSON.parse('{"__proto__": {"polluted": 1}, "x": 1}')` → у результата прототип — `Object.prototype`, `({} as Record<string, unknown>).polluted` — `undefined`.
-- [ ] T007 [US3] Создать `src/domain/settings.ts` по контракту: закрытые `isIntIn`, `isBool`, таблица `SETTING_RULES: { readonly [K in keyof Settings]: (v: unknown) => boolean }` (правила из `backup.ts`, диапазоны — `CYCLE_LENGTH_RANGE`, `PERIOD_LENGTH_RANGE`, `OVULATION_SHIFT_RANGE` из `./types`); `coerceSettings(raw, fallback)` — `out = { ...fallback }`, при `!isObject(raw)` вернуть `out`, иначе для каждого ключа `SETTING_RULES` с корректным `raw[key]` — `out[key] = raw[key]`; `extraSettingFields(raw)` — `Object.fromEntries(Object.entries(raw).filter(([k]) => !Object.hasOwn(SETTING_RULES, k)))` для объекта, иначе `{}`. Вызывающих мест пока нет. Коммит «016: правила настроек в домене» (T006, T007)
+- [X] T007 [US3] Создать `src/domain/settings.ts` по контракту: закрытые `isIntIn`, `isBool`, таблица `SETTING_RULES: { readonly [K in keyof Settings]: (v: unknown) => boolean }` (правила из `backup.ts`, диапазоны — `CYCLE_LENGTH_RANGE`, `PERIOD_LENGTH_RANGE`, `OVULATION_SHIFT_RANGE` из `./types`); `coerceSettings(raw, fallback)` — `out = { ...fallback }`, при `!isObject(raw)` вернуть `out`, иначе для каждого ключа `SETTING_RULES` с корректным `raw[key]` — `out[key] = raw[key]`; `extraSettingFields(raw)` — `Object.fromEntries(Object.entries(raw).filter(([k]) => !Object.hasOwn(SETTING_RULES, k)))` для объекта, иначе `{}`. Вызывающих мест пока нет. Коммит «016: правила настроек в домене» (T006, T007)
 
 ### Месячные
 
