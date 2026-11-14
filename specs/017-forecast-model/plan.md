@@ -119,20 +119,21 @@ src/storage/periodLength.test.ts             # новый: нормализац�
 
 1. Характеризационные тесты: `forecastCharacterization.test.ts` (снимок пишется на текущем коде) и
    `storage/periodLength.test.ts` — зелёные до правок.
-2. `sortByStart` экспортируется, `buildPeriodCycles` + `buildCycles` через неё (US3).
-3. `buildForecast` — месячные из `buildPeriodCycles`, без второй сортировки; `cycleFrom({ … })` (US3).
-4. `effectivePeriodLength`; `buildForecast` считает длину ею (US1).
-5. Потребители длины: `dayInfo`, `normalizeStoredPeriods`, `planTextImport`, `DaySheets`, `CalendarScreen`
+2. `effectivePeriodLength`; `buildForecast` считает длину ею (US1).
+3. Потребители длины: `dayInfo`, `normalizeStoredPeriods`, `planTextImport`, `DaySheets`, `CalendarScreen`
    (US1).
-6. `nextPredictedStart`, `originalPredictedStart`; `todaySummary`, `planReminders`, `buildDoctorReport`
+4. `nextPredictedStart`, `originalPredictedStart`; `todaySummary`, `planReminders`, `buildDoctorReport`
    (US2).
-7. Тест текстов (US3).
-8. Задачи выполнены.
+5. `sortByStart` экспортируется, `buildPeriodCycles`; `buildForecast` — месячные из пар, без второй
+   сортировки; `cycleFrom({ … })` (US3).
+6. Тест текстов (US3).
+7. Задачи выполнены.
 
-`derivationPlacement.test.ts` (поиск по исходникам) растёт вместе с правками: в коммитах 3, 5 и 6
-добавляется проверка своего шага («в `forecast.ts` нет сортировки и `sorted[`; сравнение по началу одно;
-вызовы `cycleFrom` с объектом», «`?? …defaultPeriodLength` — один раз; хранилище не строит прогноз»,
-«обратный счёт от `delayDays` — один; отчёт без `todaySummary`»). Каждая пишется до правки и падает до неё.
+`derivationPlacement.test.ts` (поиск по исходникам) растёт вместе с правками: в коммитах 3, 4 и 5
+добавляется проверка своего шага («`?? …defaultPeriodLength` — один раз; хранилище не строит прогноз»,
+«обратный счёт от `delayDays` — один; отчёт без `todaySummary`», «в `forecast.ts` и `cycles.ts` нет
+сортировки, в `forecast.ts` нет `sorted[`; сравнение по началу одно; вызовы `cycleFrom` с объектом»). Каждая
+пишется до правки и падает до неё.
 
 ## Complexity Tracking
 
