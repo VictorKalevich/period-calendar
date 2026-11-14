@@ -1,9 +1,18 @@
 import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { emptyDayEntry } from '../domain/dayEntry';
-import type { DayEntry, LocalDate } from '../domain/types';
+import type { DayEntry, LocalDate, Period } from '../domain/types';
 import { db } from './db';
-import { getDayEntry, saveDayEntry, updateDayEntry } from './repository';
+import {
+  getDayEntry,
+  getPeriods,
+  getSettings,
+  normalizeStoredPeriods,
+  saveDayEntry,
+  savePeriods,
+  updateDayEntry,
+  updateSettings,
+} from './repository';
 
 // Фича 015 (шаг 2 рефакторинга): изменение записи дня — дата и изменённые поля, применяемые к актуальной
 // записи в одной транзакции.
@@ -90,5 +99,38 @@ describe('updateDayEntry', () => {
   it('заметка приводится, как при сохранении: не длиннее 1000 символов', async () => {
     await updateDayEntry(D, { note: 'ю'.repeat(1001) });
     expect((await getDayEntry(D))?.note).toBe('ю'.repeat(1000));
+  });
+});
+
+describe('normalizeStoredPeriods — одна транзакция (US3)', () => {
+  // Те же месячные, что в repository.test.ts (003 FR-016): a и b соседние — объединяются.
+  const STORED: Period[] = [
+    { id: 'a', start: ld('2026-10-01'), end: ld('2026-10-04'), endEstimated: false },
+    { id: 'b', start: ld('2026-10-05'), end: ld('2026-10-07'), endEstimated: false },
+    { id: 'c', start: ld('2026-10-29'), end: null, endEstimated: false },
+  ];
+  const NORMALIZED: Period[] = [
+    { id: 'a', start: ld('2026-10-01'), end: ld('2026-10-07'), endEstimated: false },
+    { id: 'c', start: ld('2026-10-29'), end: null, endEstimated: false },
+  ];
+  const TODAY = ld('2026-10-30');
+
+  it('запись месячных, начатая сразу после нормализации, не теряется', async () => {
+    await savePeriods(STORED);
+    const X: Period = { id: 'x', start: ld('2026-09-01'), end: ld('2026-09-05'), endEstimated: false };
+    const normalized = normalizeStoredPeriods(TODAY);
+    const saved = savePeriods([X]);
+    await Promise.all([normalized, saved]);
+    expect(await normalized).toBe(true);
+    expect(await getPeriods()).toEqual([X]);
+  });
+
+  it('изменение настроек, начатое сразу после нормализации, сохраняется; месячные объединены', async () => {
+    await savePeriods(STORED);
+    const normalized = normalizeStoredPeriods(TODAY);
+    const changed = updateSettings({ defaultCycleLength: 30 });
+    await Promise.all([normalized, changed]);
+    expect((await getSettings()).defaultCycleLength).toBe(30);
+    expect(await getPeriods()).toEqual(NORMALIZED);
   });
 });
