@@ -5,7 +5,13 @@ import { MAX_PERIOD_DAYS, type LocalDate, type Period, type Result } from './typ
 // отсортированный по началу; исходный массив не меняется. Все изменения нормализуются:
 // пересекающиеся и соседние месячные объединяются (specs/003-calendar-tap-actions, ревизия 2).
 
-const sortByStart = (ps: Period[]) => [...ps].sort((a, b) => (a.start < b.start ? -1 : a.start > b.start ? 1 : 0));
+/**
+ * Новый массив месячных по возрастанию начала; исходный не меняется, равные начала — в исходном порядке.
+ * Единственное сравнение месячных «по началу» (фича 017): им пользуются циклы, прогноз и нормализация.
+ */
+export function sortByStart(periods: Period[]): Period[] {
+  return [...periods].sort((a, b) => (a.start < b.start ? -1 : a.start > b.start ? 1 : 0));
+}
 
 /** Последний день месячных; для незакрытых — оценка по `periodLength`. */
 export function periodEnd(p: Period, periodLength: number): LocalDate {

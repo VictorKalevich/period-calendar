@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it } from 'vitest';
+import { buildCycles, buildPeriodCycles } from './cycles';
 import { addDaysLD } from './dates';
 import { buildForecast, effectivePeriodLength, nextPredictedStart, originalPredictedStart } from './forecast';
+import { sortByStart } from './periods';
 import { DEFAULT_SETTINGS, type Forecast, type LocalDate, type Period, type Settings } from './types';
 
 // Фича 017: производные прогноза — одна функция домена на величину (contracts/forecast-derivations.md).
@@ -158,5 +160,37 @@ describe('originalPredictedStart и nextPredictedStart', () => {
     expect(la).toEqual(tokyo);
     expect(berlin).toEqual(tokyo);
     expect(tokyo[1]).toEqual(['2026-03-30', '2026-03-31', 5]);
+  });
+});
+
+describe('sortByStart и buildPeriodCycles', () => {
+  const sameStart = [p('a', '2026-09-01', '2026-09-03'), p('b', '2026-09-01', '2026-09-06'), p('c', '2026-09-29', '2026-10-02')];
+
+  it('sortByStart: новый массив по возрастанию начала, в том числе через год; вход не меняется', () => {
+    const input = [p('c', '2026-01-01'), p('a', '2025-12-31', '2026-01-03'), p('b', '2025-02-10', '2025-02-14')];
+    const before = structuredClone(input);
+    const sorted = sortByStart(input);
+    expect(sorted).not.toBe(input);
+    expect(sorted.map((x) => x.id)).toEqual(['b', 'a', 'c']);
+    expect(input).toEqual(before);
+  });
+
+  it('sortByStart: равные начала — в порядке входа', () => {
+    expect(sortByStart([sameStart[2]!, sameStart[1]!, sameStart[0]!]).map((x) => x.id)).toEqual(['b', 'a', 'c']);
+    expect(sortByStart(sameStart).map((x) => x.id)).toEqual(['a', 'b', 'c']);
+  });
+
+  it('buildPeriodCycles: пары в порядке sortByStart, месячные — те же объекты', () => {
+    const input = HISTORIES['неупорядоченный вход']!;
+    const pairs = buildPeriodCycles(input);
+    expect(pairs.map((x) => x.period.id)).toEqual(sortByStart(input).map((x) => x.id));
+    for (const pair of pairs) expect(input).toContain(pair.period);
+    expect(pairs.find((x) => x.period.id === 'a')!.period).toBe(input[1]);
+    expect(buildPeriodCycles([])).toEqual([]);
+  });
+
+  const histories = [...Object.entries(HISTORIES), ['одинаковые начала', sameStart] as const];
+  it.each(histories)('buildPeriodCycles: циклы пар — те же, что у buildCycles (%s)', (_name, ps) => {
+    expect(buildPeriodCycles(ps).map((x) => x.cycle)).toEqual(buildCycles(ps));
   });
 });

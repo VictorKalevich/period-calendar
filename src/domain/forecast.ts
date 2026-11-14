@@ -1,6 +1,13 @@
 import { addMonths } from 'date-fns';
 import { addDaysLD, diffDays, maxLD, minLD, parseLD, rangeLD, toLocalDate } from './dates';
-import { averageCycleLength, averagePeriodLength, buildCycles, forecastConfidence } from './cycles';
+import {
+  averageCycleLength,
+  averagePeriodLength,
+  buildCycles,
+  buildPeriodCycles,
+  forecastConfidence,
+  type PeriodCycle,
+} from './cycles';
 import { periodEnd } from './periods';
 import {
   LUTEAL_PHASE_DAYS,
@@ -50,16 +57,29 @@ export function ovulationFor(
   return minLD(raw, addDaysLD(cycle.nextStart, -1));
 }
 
-/** `ovulationBound` — начало следующих месячных для расчёта овуляции; у текущего цикла — прогнозное, без задержки. */
-function cycleFrom(
-  start: LocalDate,
-  nextStart: LocalDate,
-  kind: PredictedCycle['kind'],
-  periodLength: number,
-  settings: Settings,
-  periodLast: LocalDate = addDaysLD(start, periodLength - 1),
-  ovulationBound: LocalDate = nextStart,
-): PredictedCycle {
+/** Значения для сборки цикла прогноза — именованные, а не позиционные (фича 017). */
+interface CycleInput {
+  start: LocalDate;
+  /** Начало следующих месячных (у текущего цикла при задержке — сегодня). */
+  nextStart: LocalDate;
+  kind: PredictedCycle['kind'];
+  periodLength: number;
+  settings: Settings;
+  /** Последний день месячных цикла; по умолчанию — оценка по `periodLength`. */
+  periodLast?: LocalDate;
+  /** Начало следующих месячных для расчёта овуляции; у текущего цикла — прогнозное, без задержки. */
+  ovulationBound?: LocalDate;
+}
+
+function cycleFrom({
+  start,
+  nextStart,
+  kind,
+  periodLength,
+  settings,
+  periodLast = addDaysLD(start, periodLength - 1),
+  ovulationBound = nextStart,
+}: CycleInput): PredictedCycle {
   const ovulation = ovulationFor({ start, periodLast, nextStart: ovulationBound }, settings);
   return {
     start,
@@ -82,29 +102,48 @@ export function buildForecast(input: {
   const { periods, settings, today, horizonMonths = 12 } = input;
   if (periods.length === 0) return null;
 
-  const cycles = buildCycles(periods);
+  // Месячные и их циклы — из одной сортировки: последний день месячных цикла берётся из той же пары.
+  const history = buildPeriodCycles(periods);
+  const cycles = history.map((x) => x.cycle);
   const cycleLength = averageCycleLength(cycles) ?? settings.defaultCycleLength;
   const periodLength = effectivePeriodLength(periods, settings);
-  const starts = cycles.map((c) => c.start);
-  const last = starts.at(-1)!;
+  const lastDayOf = (x: PeriodCycle) => periodEnd(x.period, periodLength);
+  const current = history.at(-1)!;
+  const last = current.cycle.start;
 
   const predictedStart = addDaysLD(last, cycleLength);
   const delayDays = Math.max(0, diffDays(today, predictedStart));
   const nextStart = delayDays > 0 ? today : predictedStart;
 
-  // Месячные в порядке начала — как циклы в buildCycles.
-  const sorted = [...periods].sort((a, b) => (a.start < b.start ? -1 : a.start > b.start ? 1 : 0));
-  const lastDayOf = (i: number) => periodEnd(sorted[i]!, periodLength);
-
   const out: PredictedCycle[] = [];
-  for (let i = 0; i < starts.length - 1; i++) {
-    out.push(cycleFrom(starts[i]!, starts[i + 1]!, 'completed', periodLength, settings, lastDayOf(i)));
+  for (let i = 0; i < history.length - 1; i++) {
+    const x = history[i]!;
+    out.push(
+      cycleFrom({
+        start: x.cycle.start,
+        nextStart: history[i + 1]!.cycle.start,
+        kind: 'completed',
+        periodLength,
+        settings,
+        periodLast: lastDayOf(x),
+      }),
+    );
   }
-  out.push(cycleFrom(last, nextStart, 'current', periodLength, settings, lastDayOf(starts.length - 1), predictedStart));
+  out.push(
+    cycleFrom({
+      start: last,
+      nextStart,
+      kind: 'current',
+      periodLength,
+      settings,
+      periodLast: lastDayOf(current),
+      ovulationBound: predictedStart,
+    }),
+  );
 
   const horizon = toLocalDate(addMonths(parseLD(today), horizonMonths));
   for (let s = nextStart; s <= horizon; s = addDaysLD(s, cycleLength)) {
-    out.push(cycleFrom(s, addDaysLD(s, cycleLength), 'predicted', periodLength, settings));
+    out.push(cycleFrom({ start: s, nextStart: addDaysLD(s, cycleLength), kind: 'predicted', periodLength, settings }));
   }
 
   return { cycleLength, periodLength, confidence: forecastConfidence(cycles), delayDays, cycles: out };

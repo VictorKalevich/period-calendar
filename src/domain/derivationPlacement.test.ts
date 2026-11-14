@@ -44,4 +44,23 @@ describe('производные прогноза — в одном месте',
   it('отчёт не вызывает сводку «Сегодня» (FR-007)', () => {
     expect(source('domain/report.ts')).not.toContain('todaySummary');
   });
+
+  it('сравнение месячных по началу — одно, в sortByStart (FR-009)', () => {
+    const found = linesMatching(/\.start\s*<\s*\w+\.start\s*\?\s*-1/);
+    expect(found.map((x) => x.file)).toEqual(['domain/periods.ts']);
+  });
+
+  it.each(['domain/forecast.ts', 'domain/cycles.ts'])('%s не сортирует месячные сам (FR-009, FR-010)', (file) => {
+    expect(source(file)).not.toContain('.sort(');
+  });
+
+  it('прогноз не обращается к месячным по индексу цикла (FR-010)', () => {
+    expect(source('domain/forecast.ts')).not.toContain('sorted[');
+  });
+
+  it('сборка цикла прогноза — с именованными полями (FR-011)', () => {
+    const text = source('domain/forecast.ts');
+    expect(text).toContain('cycleFrom({');
+    expect(text).not.toMatch(/cycleFrom\(\s*(?!\{)/);
+  });
 });
