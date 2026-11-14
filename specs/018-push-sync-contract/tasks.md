@@ -161,7 +161,7 @@ PowerShell); коммиты с `worker/` — ещё `npm test --prefix worker` �
 
 **Checkpoint**: коммит «018: updatePushState — состояние push поверх актуального» (T009–T010)
 
-- [ ] T011 [P] [US2] Failing tests до кода — новый `src/push/syncCore.test.ts` (`node`, без IndexedDB) для `syncPass` и `createSyncRunner` (contracts/sync-core.md). Подмена `fakeDeps(over)`: состояние в памяти, `updateState: vi.fn(async (patch) => { if (state) state = { ...state, ...patch } })`, `getSubscription → { toJSON: () => SUB_JSON }`, `loadData → { periods, settings }` (изменяемые), `send: vi.fn(async () => ({ ok: true }))`, `url: (s) => 'https://push.example/v1/clients/' + s.clientId`, `now: () => NOW`, `NOW = new Date(2026, 9, 23, 9)`.
+- [X] T011 [P] [US2] Failing tests до кода — новый `src/push/syncCore.test.ts` (`node`, без IndexedDB) для `syncPass` и `createSyncRunner` (contracts/sync-core.md). Подмена `fakeDeps(over)`: состояние в памяти, `updateState: vi.fn(async (patch) => { if (state) state = { ...state, ...patch } })`, `getSubscription → { toJSON: () => SUB_JSON }`, `loadData → { periods, settings }` (изменяемые), `send: vi.fn(async () => ({ ok: true }))`, `url: (s) => 'https://push.example/v1/clients/' + s.clientId`, `now: () => NOW`, `NOW = new Date(2026, 9, 23, 9)`.
   `describe('syncPass')`:
   1. `isConfigured() === false` → `getState` не вызван, `send` не вызван;
   2. нет состояния / `subscribed: false` → `send` и `updateState` не вызваны;
@@ -184,7 +184,7 @@ PowerShell); коммиты с `worker/` — ещё `npm test --prefix worker` �
   18. после завершения всего новый вызов запускает новый проход;
   19. **изменение во время синхронизации отправляется повторным проходом**: `createSyncRunner(() => syncPass(deps))`; первый `send` отложен; пока он идёт — меняются настройки в `loadData` и снова вызывается запуск; после ответа — `send` вызван дважды, второе тело — по новым настройкам; итоговый `lastSyncedHash` — отпечаток второго тела.
   Убедиться, что тест падает (модуля нет).
-- [ ] T012 [US2] Новый `src/push/syncCore.ts` (contracts/sync-core.md; research R4, R6): `SyncDeps`, `syncPass(deps)` — шаги 1–8 контракта (прежние правила `doSync`, записи только `deps.updateState(patch)`), SHA-256 через `crypto.subtle` внутри модуля; `createSyncRunner(pass)` — как в research R6. Импорты — только `domain` и `import type` из `storage/repository`; без `fetch`, `navigator`, `import.meta.env`, `new Date(`. T011 зелёный.
+- [X] T012 [US2] Новый `src/push/syncCore.ts` (contracts/sync-core.md; research R4, R6): `SyncDeps`, `syncPass(deps)` — шаги 1–8 контракта (прежние правила `doSync`, записи только `deps.updateState(patch)`), SHA-256 через `crypto.subtle` внутри модуля; `createSyncRunner(pass)` — как в research R6. Импорты — только `domain` и `import type` из `storage/repository`; без `fetch`, `navigator`, `import.meta.env`, `new Date(`. T011 зелёный.
 
 **Checkpoint**: коммит «018: ядро синхронизации — проход и повторный проход» (T011–T012)
 
