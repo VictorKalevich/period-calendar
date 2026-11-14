@@ -158,14 +158,14 @@ description: "Task list for feature 015-atomic-day-writes"
 
 ## Phase 6: Polish & проверки
 
-- [ ] T013 Проверки `quickstart.md`:
+- [X] T013 Проверки `quickstart.md`:
   - `npm test` — зелёный, тестов ≥ 631 + новые;
   - `npm run build` — зелёный;
   - `git diff --stat refactoring...HEAD -- "*.test.ts" "*.snap"` — только новые файлы `src/storage/atomicWrites.test.ts`, `src/ui/dayWrites.test.ts`, `src/ui/screens/CalendarScreen.test.ts`;
   - `git grep -n "saveDayEntry" -- src/ui ":!*.test.ts"` — пусто;
   - `git diff refactoring...HEAD` — без испорченной кириллицы и BOM, без изменений вне объёма шага: не меняются `src/hooks`, `src/domain`, `src/push`, `src/storage/db.ts`, `worker/`, `savePeriods`.
-- [ ] T014 Отметить задачи `[X]` в `specs/015-atomic-day-writes/tasks.md`; коммит «015: задачи выполнены»
-- [ ] T015 Для журнала (`docs/refactoring-roadmap.md` обновляется после слияния, шаг 9 «Порядка работы»): число тестов до → после; отступления — R2 (отметка секса по надписи), R3 (хук не меняется, решение пользователя); замер мигания T007/T010; попутные находки
+- [X] T014 Отметить задачи `[X]` в `specs/015-atomic-day-writes/tasks.md`; коммит «015: задачи выполнены»
+- [X] T015 Для журнала (`docs/refactoring-roadmap.md` обновляется после слияния, шаг 9 «Порядка работы»): число тестов до → после; отступления — R2 (отметка секса по надписи), R3 (хук не меняется, решение пользователя); замер мигания T007/T010; попутные находки
 
 ---
 
