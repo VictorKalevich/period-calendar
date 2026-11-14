@@ -2,9 +2,11 @@ import { db } from './db';
 import { coerceDayEntry, emptyDayEntry, isEmptyDayEntry } from '../domain/dayEntry';
 import { buildForecast } from '../domain/forecast';
 import { normalizePeriods } from '../domain/periods';
+import { coerceSettings, extraSettingFields } from '../domain/settings';
 import { DEFAULT_SETTINGS, type DayEntry, type LocalDate, type Period, type Settings } from '../domain/types';
 
-const SETTINGS_KEY = 'settings';
+/** Ключ записи настроек в `kv`; им же пишет `applyBackup` (фича 016). */
+export const SETTINGS_KEY = 'settings';
 const PUSH_KEY = 'push';
 const DEV_MODE_KEY = 'devMode';
 const FIRST_PERIOD_HINT_KEY = 'firstPeriodHintDismissed';
@@ -90,9 +92,14 @@ export async function updateDayEntry(date: LocalDate, patch: DayEntryPatch): Pro
   });
 }
 
+/**
+ * Настройки читаются по правилам домена (фича 016): некорректное или отсутствующее поле — значение по
+ * умолчанию. Неизвестные поля записи сохраняются после известных, чтобы не потеряться при `updateSettings`,
+ * который пишет запись целиком.
+ */
 export async function getSettings(): Promise<Settings> {
-  const rec = await db.kv.get(SETTINGS_KEY);
-  return { ...DEFAULT_SETTINGS, ...(rec?.value as Partial<Settings> | undefined) };
+  const raw = (await db.kv.get(SETTINGS_KEY))?.value;
+  return { ...coerceSettings(raw, DEFAULT_SETTINGS), ...extraSettingFields(raw) };
 }
 
 export async function saveSettings(settings: Settings): Promise<void> {
