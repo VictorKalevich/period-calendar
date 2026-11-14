@@ -54,7 +54,8 @@ description: "Task list for feature 015-atomic-day-writes"
   5. `SymptomPicker` (`showIntensity: true`), запись `{ moods: ['calm'], note: 'n' }`: нажать «Головная боль», «Готово» → в базе `{ symptoms: ['headache'], intensity: { headache: 'moderate' }, moods: ['calm'], note: 'n' }`.
   6. `NoteEditor`, запись `{ moods: ['calm'], note: 'старая' }`: ввести «новая», «Сохранить» → `{ moods: ['calm'], note: 'новая' }`. Ввод текста — как `typeInto` в `saveFailures.test.ts`.
   7. `NoteEditor`, запись `{ note: 'только' }`: корзина «Удалить заметку», «Удалить» → записи дня нет (`getDayEntry` → `undefined`).
-  8. В каждом сценарии лист или диалог закрылся: вызван `onClose` или `onChange(null)`.
+  8. `SymptomPicker` (`showIntensity: false`), запись `{ symptoms: ['headache'], intensity: { headache: 'severe' } }`: нажать «Тошнота», «Готово» → в базе `{ symptoms: ['headache', 'nausea'], intensity: { headache: 'severe' } }`: степень прежнего пункта сохранена, у нового её нет (edge case спецификации). Порядок пунктов — по справочнику (`coerceDayEntry`).
+  9. В каждом сценарии лист или диалог закрылся: вызван `onClose` или `onChange(null)`.
 
 **Checkpoint**: тесты зелёные на текущем коде; коммит «015: характеризационные тесты записи дня из листов» (T002)
 
@@ -95,7 +96,7 @@ description: "Task list for feature 015-atomic-day-writes"
      Сейчас запись собирается из пустой и затирает поля — тесты красные.
   2. **Запись другого дня в `entry`**: в базе OTHER `{ note: 'other' }`, в листы с `date: DAY` передаётся эта запись:
      - `MoodPicker` — «Радостная», «Готово» → DAY = `{ ...emptyDayEntry(DAY), moods: ['joyful'] }`, OTHER прежний;
-     - то же для `SymptomPicker` («Тошнота»);
+     - `SymptomPicker` (`showIntensity: true`) — «Тошнота», «Готово» → DAY = `{ ...emptyDayEntry(DAY), symptoms: ['nausea'], intensity: { nausea: 'moderate' } }`, OTHER прежний;
      - `NoteEditor`: поле показывает «other»; ввести «день», «Сохранить» → DAY = `{ ...emptyDayEntry(DAY), note: 'день' }`, OTHER прежний;
      - `DaySheets`, «Отметить секс» → DAY = `{ ...emptyDayEntry(DAY), sex: true }`, OTHER прежний.
      Сейчас запись уходит в OTHER — тесты красные.
@@ -135,7 +136,7 @@ description: "Task list for feature 015-atomic-day-writes"
   - в `act` вызвать `onSelect(getInfo(A))`, дождаться записи `DaySheets` с `date === A` и `entry?.note === 'A'`; затем так же для B;
   - проверка: в каждой записи `DayCard` и `DaySheets` либо `entry === undefined`, либо `entry.date === date`; ни одна запись с `date === B` не содержит `entry?.note === 'A'`. Сейчас первая отрисовка после выбора B получает запись A — тест красный.
 - [ ] T009 [US2] `src/ui/screens/CalendarScreen.tsx`: `const stored = useLiveQuery(() => (day ? getDayEntry(day) : undefined), [day]);` и `const entry = stored?.date === day ? stored : undefined;`. Комментарий: хук держит прежнее значение до прихода нового (`useLiveQuery.test.ts`), а запись чужой даты не показывается и не передаётся в листы (research R3). `src/hooks/useLiveQuery.ts` и `src/hooks/useLiveQuery.test.ts` не менять. До прохождения T008.
-- [ ] T010 [US2] Замер мигания «после» тем же скриптом, что T007. Кадров с переходным состоянием (без `.entry` до прихода нового) не больше, чем кадров с прежней записью «до». Если больше или заметно на глаз — остановиться и спросить пользователя. Цифры «до/после» записать для журнала (T015).
+- [ ] T010 [US2] Замер мигания «после» тем же скриптом, что T007. Критерий — только числовой: кадров с переходным состоянием (без `.entry` до прихода нового) не больше, чем кадров с прежней записью «до» (в сумме за 20 переходов). Если больше — остановиться и спросить пользователя. Цифры «до/после» записать для журнала (T015).
 
 **Checkpoint**: коммит «015: экран «Календарь» — запись только выбранного дня» (T008–T009)
 
@@ -148,7 +149,7 @@ description: "Task list for feature 015-atomic-day-writes"
 **Independent Test**: `src/storage/atomicWrites.test.ts`, `describe('normalizeStoredPeriods — одна транзакция')`;
 существующий тест `src/storage/repository.test.ts` (`normalizeStoredPeriods (003 FR-016)`) зелёный без изменений.
 
-- [ ] T011 [US3] Failing test в `src/storage/atomicWrites.test.ts`, `describe('normalizeStoredPeriods — одна транзакция')`, до T012. Сохранены месячные `a` (`2026-10-01`–`2026-10-04`), `b` (`2026-10-05`–`2026-10-07`), `c` (`2026-10-29`, `end: null`), как в `repository.test.ts`. `const p = normalizeStoredPeriods('2026-10-30'); const q = savePeriods([X]);` — без ожидания между вызовами, `X = { id: 'x', start: '2026-09-01', end: '2026-09-05', endEstimated: false }`. `await Promise.all([p, q])` → `getPeriods()` равен `[X]`. Проверить, что тест падает на текущем коде; если не падает — закрепить порядок иначе (research R6) и записать это для журнала.
+- [ ] T011 [US3] Failing test в `src/storage/atomicWrites.test.ts`, `describe('normalizeStoredPeriods — одна транзакция')`, до T012. Сохранены месячные `a` (`2026-10-01`–`2026-10-04`), `b` (`2026-10-05`–`2026-10-07`), `c` (`2026-10-29`, `end: null`), как в `repository.test.ts`. `const p = normalizeStoredPeriods('2026-10-30'); const q = savePeriods([X]);` — без ожидания между вызовами, `X = { id: 'x', start: '2026-09-01', end: '2026-09-05', endEstimated: false }`. `await Promise.all([p, q])` → `getPeriods()` равен `[X]`. Второй случай (те же месячные): `const p = normalizeStoredPeriods('2026-10-30'); const q = updateSettings({ defaultCycleLength: 30 });` → после обоих `getSettings()` содержит `defaultCycleLength: 30`, месячные объединены, как в `repository.test.ts`. Проверить, что первый случай падает на текущем коде (второй может быть зелёным и до правки: нормализация не пишет настройки); если первый не падает — закрепить порядок иначе (research R6) и записать это для журнала.
 - [ ] T012 [US3] `src/storage/repository.ts`, `normalizeStoredPeriods`: `return db.transaction('rw', db.periods, db.kv, async () => { const periods = await getPeriods(); const settings = await getSettings(); … ; if (unchanged) return false; await savePeriods(normalized); return true; })`. Последовательные чтения вместо `Promise.all` (research R5); комментарий 003 FR-016 сохранить, добавить: «в одной транзакции — чтобы запись, начатая параллельно, не перемежалась». Сигнатура и `src/main.tsx` не меняются. До прохождения T011 при зелёном `repository.test.ts`.
 
 **Checkpoint**: коммит «015: нормализация месячных при запуске — в одной транзакции» (T011–T012)
