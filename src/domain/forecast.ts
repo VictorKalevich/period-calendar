@@ -25,6 +25,15 @@ export function ovulationShiftOf(settings: Settings): number {
 }
 
 /**
+ * Длина месячных для расчётов: средняя по истории (FR-014), иначе из настроек. От «сегодня» не зависит.
+ * Единственное место этого правила (фича 017): им считают прогноз, календарь, диалог дня, нормализация
+ * и текстовый импорт.
+ */
+export function effectivePeriodLength(periods: Period[], settings: Settings): number {
+  return averagePeriodLength(buildCycles(periods)) ?? settings.defaultPeriodLength;
+}
+
+/**
  * Овуляция цикла (+ личный сдвиг), не позже дня перед следующими месячными (005 FR-003a):
  * - по умолчанию — 14-й день цикла: начало + 13 (005 FR-003; заменяет 001 FR-016);
  * - «от следующей менструации» — следующие − 14, но не раньше дня после месячных цикла (006 FR-004, FR-005).
@@ -75,7 +84,7 @@ export function buildForecast(input: {
 
   const cycles = buildCycles(periods);
   const cycleLength = averageCycleLength(cycles) ?? settings.defaultCycleLength;
-  const periodLength = averagePeriodLength(cycles) ?? settings.defaultPeriodLength;
+  const periodLength = effectivePeriodLength(periods, settings);
   const starts = cycles.map((c) => c.start);
   const last = starts.at(-1)!;
 

@@ -77,7 +77,7 @@ description: "Task list for feature 017-forecast-model"
 
 **Independent Test**: `npx vitest run src/domain/forecastDerivations.test.ts src/domain/derivationPlacement.test.ts src/storage/periodLength.test.ts`.
 
-- [ ] T004 [US1] Failing tests до кода в новом `src/domain/forecastDerivations.test.ts`, `describe('effectivePeriodLength')` (контракт, data-model «Производные величины»):
+- [X] T004 [US1] Failing tests до кода в новом `src/domain/forecastDerivations.test.ts`, `describe('effectivePeriodLength')` (контракт, data-model «Производные величины»):
   1. `[]` → `S.defaultPeriodLength` (5); при `{ ...S, defaultPeriodLength: 7 }` → 7.
   2. Одна открытая → 5; одна закрытая 2026-08-01…2026-08-03 → 3.
   3. Оценочный конец текущих (последние, `endEstimated: true`) не учитывается: `[p('a', '2026-08-01', '2026-08-04', true)]` → 5; оценочный конец, закрытый следующим началом, учитывается: `[p('a', '2026-08-01', '2026-08-04', true), p('b', '2026-08-29')]` → 4.
@@ -86,7 +86,7 @@ description: "Task list for feature 017-forecast-model"
   6. Порядок входа не важен: перевёрнутый список даёт то же; вход не меняется.
   7. От «сегодня» не зависит: функция не принимает его (сигнатура `(periods, settings)`).
   8. Равенство с прогнозом (SC-005): для каждой истории из набора (пустая; одна открытая; одна закрытая; оценочный конец текущих; оценочный, закрытый следующим; выбросы; ручные концы; больше 6 циклов; неупорядоченный вход) и настроек `S`, `{ ...S, defaultPeriodLength: 7 }` при сегодня 2026-11-14: `const f = buildForecast(…)`; `effectivePeriodLength(ps, s)` равно `f ? f.periodLength : s.defaultPeriodLength`.
-- [ ] T005 [US1] В `src/domain/forecast.ts`: `export function effectivePeriodLength(periods: Period[], settings: Settings): number { return averagePeriodLength(buildCycles(periods)) ?? settings.defaultPeriodLength; }` с комментарием «Длина месячных для расчётов: средняя по истории (FR-014), иначе из настроек; от «сегодня» не зависит»; в `buildForecast` — `const periodLength = effectivePeriodLength(periods, settings)`. Коммит «017: длина месячных для расчётов — одна функция домена» (T004, T005)
+- [X] T005 [US1] В `src/domain/forecast.ts`: `export function effectivePeriodLength(periods: Period[], settings: Settings): number { return averagePeriodLength(buildCycles(periods)) ?? settings.defaultPeriodLength; }` с комментарием «Длина месячных для расчётов: средняя по истории (FR-014), иначе из настроек; от «сегодня» не зависит»; в `buildForecast` — `const periodLength = effectivePeriodLength(periods, settings)`. Коммит «017: длина месячных для расчётов — одна функция домена» (T004, T005)
 - [ ] T006 [US1] Failing tests до правки в новом `src/domain/derivationPlacement.test.ts`, `describe('производные прогноза — в одном месте')`:
   1. в исходниках приложения совпадения `/\?\?\s*[\w.?]*defaultPeriodLength/g` — ровно одно, в `src/domain/forecast.ts`, строка содержит `averagePeriodLength(buildCycles(periods))` (SC-002);
   2. `src/storage/repository.ts` и `src/storage/textImport.ts` не содержат `buildForecast` (SC-003).
