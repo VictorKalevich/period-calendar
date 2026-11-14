@@ -44,7 +44,8 @@
 **Constraints**: обычный путь — прежние разметка, классы, тексты, порядок элементов (FR-017); существующие
 проверки не меняются (FR-018); правила слоёв (`docs/refactoring-roadmap.md`); UI только из дизайн-системы
 
-**Scale/Scope**: 3 новых компонента/модуля UI, правки в 13 файлах UI/хуков, 6 новых файлов тестов
+**Scale/Scope**: 4 новых модуля UI (`attempt`, `ErrorBoundary`, `EmergencyScreen`, `SaveError`), правки в
+13 файлах UI/хуков, 8 новых файлов тестов
 
 ## Constitution Check
 
@@ -89,11 +90,12 @@ docs/design/design.md                        # «Аварийный экран»
 package.json, package-lock.json              # devDependencies: happy-dom
 
 src/ui/attempt.ts, attempt.test.ts           # новый: общий приём (node)
+src/ui/saveFailures.test.ts                  # новый: отказ записи во всех 10 местах
 src/ui/components/
-├── SaveError.tsx, SaveError.test.ts         # новый: useSaveError + сообщение; тест мест записи
+├── SaveError.tsx, SaveError.test.ts         # новый: useSaveError + сообщение
 ├── EmergencyScreen.tsx, EmergencyScreen.test.ts  # новый: EmergencyScreen, EmergencyPage
 ├── ErrorBoundary.tsx, ErrorBoundary.test.ts # новый
-├── share.ts                                 # + exportData()
+├── share.ts, exportData.test.ts             # + exportData(); тест «тот же файл» и отказа экспорта
 ├── BackupSection.tsx                        # «Экспорт» через exportData, сообщение об ошибке
 ├── DayDialog.tsx, MoodPicker.tsx, NoteEditor.tsx, SymptomPicker.tsx
 ├── RemindersSection.tsx, VersionTapper.tsx, FirstPeriodHint.tsx
@@ -112,13 +114,16 @@ src/hooks/useLiveQuery.ts, useLiveQuery.test.ts   # ошибка → грани�
 
 Каждый коммит проходит `npm test` и `npm run build`.
 
-1. design.md — описание компонентов.
-2. happy-dom + `attempt` + `SaveError` (тесты вперёд).
-3. Листы дня: `MoodPicker`, `SymptomPicker`, `NoteEditor`, `DayDialog`.
-4. Вне листов: `SettingsScreen`, `RemindersSection`, `VersionTapper`, `FirstPeriodHint`.
-5. `exportData` + `EmergencyScreen` + «Экспорт» в `BackupSection`.
-6. `ErrorBoundary` + подключение в `App.tsx` и `main.tsx`.
-7. `useLiveQuery`: ошибка → граница.
+По приоритетам историй (подробно — `tasks.md`, «Checkpoint»):
+
+1. happy-dom + design.md + `attempt` (тесты вперёд).
+2. US1: `ErrorBoundary`, `exportData`, `EmergencyScreen`, подключение в `App.tsx` и `main.tsx`.
+3. US2: `useLiveQuery` — ошибка → граница.
+4. US3: сообщение о неудачном экспорте на аварийном экране и в `BackupSection`.
+5. US4: `useSaveError` + `SaveError`.
+6. US4: листы дня — `MoodPicker`, `SymptomPicker`, `NoteEditor`, `DayDialog`.
+7. US4: вне листов — `SettingsScreen`, `RemindersSection`, `VersionTapper`, `FirstPeriodHint`.
+8. Задачи выполнены.
 
 ## Complexity Tracking
 
