@@ -109,7 +109,7 @@ description: "Task list for feature 017-forecast-model"
 
 **Independent Test**: `npx vitest run src/domain/forecastDerivations.test.ts src/domain/derivationPlacement.test.ts src/domain/forecastCharacterization.test.ts src/domain/reminders.test.ts src/domain/report.test.ts`.
 
-- [ ] T008 [US2] Failing tests до кода:
+- [X] T008 [US2] Failing tests до кода:
   - в `src/domain/forecastDerivations.test.ts`, `describe('originalPredictedStart и nextPredictedStart')`; история `REG = [p('a', '2026-01-05', '2026-01-09'), p('b', '2026-02-02', '2026-02-06'), p('c', '2026-03-02', '2026-03-06')]` (прогноз 2026-03-30), `f(today)` = `buildForecast({ periods: REG, settings: S, today })!`:
     1. сегодня 2026-03-20 (задержки нет) → `originalPredictedStart` = 2026-03-30, `nextPredictedStart` = 2026-03-30;
     2. сегодня 2026-03-30 (прогноз — сегодня, `delayDays` 0) → обе 2026-03-30;
@@ -122,7 +122,7 @@ description: "Task list for feature 017-forecast-model"
     9. функции не меняют прогноз (`structuredClone` до и после равны);
     10. часовой пояс и летнее время (Конституция IV): `originalPredictedStart`, `nextPredictedStart` и `effectivePeriodLength` для `REG` при сегодня 2026-03-20, 2026-03-31 и 2026-04-14 дают одинаковые результаты при `process.env.TZ` = `'Asia/Tokyo'`, `'America/Los_Angeles'` и `'Europe/Berlin'` (переход на летнее время 2026-03-29, прогноз — 2026-03-30); `TZ` восстанавливается в `afterEach`, как в `dayInfo.test.ts`.
   - в `src/domain/derivationPlacement.test.ts`: (3) обратный счёт `/-\s*[\w.]*delayDays\b/g` в исходниках приложения — ровно одно совпадение, в `src/domain/forecast.ts` (SC-004); (4) `src/domain/report.ts` не содержит `todaySummary`.
-- [ ] T009 [US2] Реализация (research R3, R4; контракт):
+- [X] T009 [US2] Реализация (research R3, R4; контракт):
   - `src/domain/forecast.ts`: `export function nextPredictedStart(forecast: Forecast, today: LocalDate): LocalDate | null` — `forecast.cycles.find((c) => c.kind === 'predicted' && c.start >= today)?.start ?? null`; `export function originalPredictedStart(forecast: Forecast): LocalDate | null` — текущий цикл `forecast.cycles.find((c) => c.kind === 'current')`, `addDaysLD(current.nextStart, -forecast.delayDays)` или `null`; комментарий: «При задержке `nextStart` текущего цикла — сегодня, поэтому исходный прогноз — `nextStart − delayDays`»; `todaySummary`: `const nextPeriod = nextPredictedStart(forecast, today);`.
   - `src/domain/reminders.ts` `planReminders`: `const original = originalPredictedStart(forecast);` и `if (delayed && current && original && settings.remindMissedPeriod) out.push(missedPeriodReminder(original));` — проверка `current` (текущий цикл в выборке `cyclesAhead`) остаётся; комментарий о `nextStart − delayDays` заменить ссылкой на `originalPredictedStart`; импорт из `./forecast`.
   - `src/domain/report.ts` `buildDoctorReport`: `nextPeriod = delayDays > 0 ? originalPredictedStart(forecast) : nextPredictedStart(forecast, today)` (ветвление прежнее, R4); импорт `todaySummary` и ставший лишним `addDaysLD` убрать.

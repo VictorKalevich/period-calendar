@@ -1,7 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { addDaysLD } from './dates';
-import { buildForecast, effectivePeriodLength } from './forecast';
-import { DEFAULT_SETTINGS, type LocalDate, type Period, type Settings } from './types';
+import { buildForecast, effectivePeriodLength, nextPredictedStart, originalPredictedStart } from './forecast';
+import { DEFAULT_SETTINGS, type Forecast, type LocalDate, type Period, type Settings } from './types';
 
 // Фича 017: производные прогноза — одна функция домена на величину (contracts/forecast-derivations.md).
 
@@ -81,5 +81,82 @@ describe('effectivePeriodLength', () => {
       const f = buildForecast({ periods: ps, settings: s, today: ld('2026-11-14') });
       expect(effectivePeriodLength(ps, s)).toBe(f ? f.periodLength : s.defaultPeriodLength);
     });
+  });
+});
+
+describe('originalPredictedStart и nextPredictedStart', () => {
+  // Прогноз следующих — 2026-03-30 (цикл 28 дней).
+  const REG = [p('a', '2026-01-05', '2026-01-09'), p('b', '2026-02-02', '2026-02-06'), p('c', '2026-03-02', '2026-03-06')];
+  const f = (today: string, periods: Period[] = REG): Forecast => buildForecast({ periods, settings: S, today: ld(today) })!;
+  const originalTZ = process.env.TZ;
+  afterEach(() => {
+    process.env.TZ = originalTZ;
+  });
+
+  it.each([
+    ['задержки нет', '2026-03-20', 0, '2026-03-30', '2026-03-30'],
+    ['прогноз — сегодня', '2026-03-30', 0, '2026-03-30', '2026-03-30'],
+    ['задержка 1 день', '2026-03-31', 1, '2026-03-30', '2026-03-31'],
+    ['задержка 15 дней', '2026-04-14', 15, '2026-03-30', '2026-04-14'],
+  ])('%s: исходная и ближайшая прогнозные даты', (_name, today, delay, original, next) => {
+    const forecast = f(today);
+    expect(forecast.delayDays).toBe(delay);
+    expect(originalPredictedStart(forecast)).toBe(original);
+    expect(nextPredictedStart(forecast, ld(today))).toBe(next);
+  });
+
+  it.each(['2026-03-20', '2026-03-30', '2026-03-31', '2026-04-14'])(
+    'сегодня %s: исходная дата = начало текущего цикла + длина цикла',
+    (today) => {
+      const forecast = f(today);
+      const current = forecast.cycles.find((c) => c.kind === 'current')!;
+      expect(originalPredictedStart(forecast)).toBe(addDaysLD(current.start, forecast.cycleLength));
+    },
+  );
+
+  it('переход года и високосный год', () => {
+    const year = f('2026-01-03', [p('a', '2025-11-06', '2025-11-10'), p('b', '2025-12-04', '2025-12-08')]);
+    expect(originalPredictedStart(year)).toBe('2026-01-01');
+    expect(nextPredictedStart(year, ld('2026-01-03'))).toBe('2026-01-03');
+    const leap = f('2028-03-02', [p('a', '2028-01-04', '2028-01-08'), p('b', '2028-02-01', '2028-02-05')]);
+    expect(originalPredictedStart(leap)).toBe('2028-02-29');
+    expect(nextPredictedStart(leap, ld('2028-03-02'))).toBe('2028-03-02');
+  });
+
+  it('без текущего цикла в прогнозе исходной даты нет', () => {
+    const forecast = f('2026-03-31');
+    expect(originalPredictedStart({ ...forecast, cycles: forecast.cycles.filter((c) => c.kind !== 'current') })).toBeNull();
+  });
+
+  it('без прогнозных циклов в горизонте ближайшей даты нет', () => {
+    const forecast = buildForecast({ periods: REG, settings: S, today: ld('2026-03-20'), horizonMonths: 0 })!;
+    expect(forecast.cycles.some((c) => c.kind === 'predicted')).toBe(false);
+    expect(nextPredictedStart(forecast, ld('2026-03-20'))).toBeNull();
+  });
+
+  it('прогноз не меняется', () => {
+    const forecast = f('2026-03-31');
+    const before = structuredClone(forecast);
+    originalPredictedStart(forecast);
+    nextPredictedStart(forecast, ld('2026-03-31'));
+    expect(forecast).toEqual(before);
+  });
+
+  it('одинаковые результаты в разных часовых поясах и при переходе на летнее время (Конституция IV)', () => {
+    const run = () =>
+      ['2026-03-20', '2026-03-31', '2026-04-14'].map((today) => {
+        const forecast = f(today);
+        return [originalPredictedStart(forecast), nextPredictedStart(forecast, ld(today)), effectivePeriodLength(REG, S)];
+      });
+    process.env.TZ = 'Asia/Tokyo';
+    const tokyo = run();
+    process.env.TZ = 'America/Los_Angeles';
+    const la = run();
+    // Europe/Berlin переходит на летнее время 2026-03-29 — за день до прогноза 2026-03-30.
+    process.env.TZ = 'Europe/Berlin';
+    const berlin = run();
+    expect(la).toEqual(tokyo);
+    expect(berlin).toEqual(tokyo);
+    expect(tokyo[1]).toEqual(['2026-03-30', '2026-03-31', 5]);
   });
 });

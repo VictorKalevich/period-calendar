@@ -1,4 +1,5 @@
 import { addDaysLD } from './dates';
+import { originalPredictedStart } from './forecast';
 import type { Forecast, LocalDate, Settings } from './types';
 
 // Расписание push-напоминаний (FR-022–FR-025). На сервер уходят только эти поля (Конституция I).
@@ -54,12 +55,12 @@ export function planReminders(forecast: Forecast, settings: Settings, now: Date,
   const upcoming = forecast.cycles.filter((c) => c.kind !== 'completed').slice(0, cyclesAhead);
   const out: Reminder[] = [];
   // Пока идёт задержка, напоминания на следующие циклы не планируются (L3) — кроме напоминания
-  // о неотмеченном начале текущего цикла (007). При задержке nextStart = сегодня, поэтому
-  // исходный прогноз — nextStart − delayDays.
+  // о неотмеченном начале текущего цикла (007): оно — по исходной прогнозной дате, до задержки.
   const delayed = forecast.delayDays > 0;
   const current = upcoming.find((c) => c.kind === 'current');
-  if (delayed && current && settings.remindMissedPeriod) {
-    out.push(missedPeriodReminder(addDaysLD(current.nextStart, -forecast.delayDays)));
+  const original = originalPredictedStart(forecast);
+  if (delayed && current && original && settings.remindMissedPeriod) {
+    out.push(missedPeriodReminder(original));
   }
   for (const c of delayed ? [] : upcoming) {
     if (settings.remindPeriod) {

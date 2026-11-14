@@ -35,4 +35,13 @@ describe('производные прогноза — в одном месте',
   it.each(['storage/repository.ts', 'storage/textImport.ts'])('%s не строит прогноз ради длины месячных (SC-003)', (file) => {
     expect(source(file)).not.toContain('buildForecast');
   });
+
+  it('обратный счёт от задержки — один, в originalPredictedStart (SC-004)', () => {
+    const found = linesMatching(/-\s*[\w.]*delayDays\b/);
+    expect(found.map((x) => x.file)).toEqual(['domain/forecast.ts']);
+  });
+
+  it('отчёт не вызывает сводку «Сегодня» (FR-007)', () => {
+    expect(source('domain/report.ts')).not.toContain('todaySummary');
+  });
 });

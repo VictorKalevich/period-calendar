@@ -110,6 +110,21 @@ export function buildForecast(input: {
   return { cycleLength, periodLength, confidence: forecastConfidence(cycles), delayDays, cycles: out };
 }
 
+/**
+ * Начало следующих месячных по прогнозу до учёта задержки; `null`, если в прогнозе нет текущего цикла.
+ * При задержке `nextStart` текущего цикла — сегодня, поэтому исходный прогноз — `nextStart − delayDays`;
+ * без задержки — сам `nextStart`. Единственный обратный счёт от задержки (фича 017).
+ */
+export function originalPredictedStart(forecast: Forecast): LocalDate | null {
+  const current = forecast.cycles.find((c) => c.kind === 'current');
+  return current ? addDaysLD(current.nextStart, -forecast.delayDays) : null;
+}
+
+/** Начало ближайших прогнозных месячных не раньше `today`; `null`, если таких в горизонте прогноза нет. */
+export function nextPredictedStart(forecast: Forecast, today: LocalDate): LocalDate | null {
+  return forecast.cycles.find((c) => c.kind === 'predicted' && c.start >= today)?.start ?? null;
+}
+
 interface DayMarks {
   fertile: boolean;
   ovulation: boolean;
@@ -232,7 +247,7 @@ export function todaySummary(ctx: DayContext): TodaySummary {
     };
   }
   const info = dayInfo(today, ctx);
-  const nextPeriod = forecast.cycles.find((c) => c.kind === 'predicted' && c.start >= today)?.start ?? null;
+  const nextPeriod = nextPredictedStart(forecast, today);
   const nextOvulation = forecast.cycles.find((c) => c.ovulation >= today)?.ovulation ?? null;
   const window = forecast.cycles.find((c) => c.ovulation >= today);
   return {
