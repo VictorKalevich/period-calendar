@@ -1,6 +1,7 @@
 import { coerceDayEntry } from '../domain/dayEntry';
 import { normalizePeriods, periodEnd } from '../domain/periods';
 import { diffDays, isLocalDate, toLocalDate } from '../domain/dates';
+import { isObject } from '../domain/guards';
 import {
   CYCLE_LENGTH_RANGE,
   DEFAULT_SETTINGS,
@@ -47,7 +48,6 @@ export async function exportBackup(now: Date = new Date()): Promise<File> {
   return new File([json], `cycle-calendar-${toLocalDate(now)}.json`, { type: 'application/json' });
 }
 
-const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
 const isIntIn = (v: unknown, r: { min: number; max: number }) => Number.isInteger(v) && (v as number) >= r.min && (v as number) <= r.max;
 
 function parsePeriods(input: unknown): Period[] | string {

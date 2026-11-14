@@ -77,10 +77,10 @@ US1 и US2 вызывают её функции. Вызывающие места
 
 ### isObject
 
-- [ ] T004 [US3] Failing tests до кода:
+- [X] T004 [US3] Failing tests до кода:
   - новый `src/domain/guards.test.ts`: `isObject` — `true` для `{}`, `{ a: 1 }`, `Object.create(null)`; `false` для `null`, `undefined`, `[]`, `[1]`, `'x'`, `1`, `true`, `() => {}`;
   - новый `src/storage/validationPlacement.test.ts`, `describe('правила корректности — в домене')`, первая проверка: в `src/domain/dayEntry.ts` нет `isRecord`, в `src/storage/backup.ts` нет `const isObject` (FR-011).
-- [ ] T005 [US3] Создать `src/domain/guards.ts`: `export const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);` (контракт). В `src/domain/dayEntry.ts` удалить `isRecord`, использовать `isObject` из `./guards`; в `src/storage/backup.ts` удалить свой `isObject`, импортировать из `../domain/guards`. Коммит «016: одна проверка «это объект» в домене» (T004, T005)
+- [X] T005 [US3] Создать `src/domain/guards.ts`: `export const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);` (контракт). В `src/domain/dayEntry.ts` удалить `isRecord`, использовать `isObject` из `./guards`; в `src/storage/backup.ts` удалить свой `isObject`, импортировать из `../domain/guards`. Коммит «016: одна проверка «это объект» в домене» (T004, T005)
 
 ### Настройки
 

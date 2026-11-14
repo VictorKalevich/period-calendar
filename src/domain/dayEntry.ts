@@ -1,5 +1,6 @@
 import { isIntensity, isMoodId, isSymptomId, LEGACY_MOOD_CODES, MOODS, SYMPTOMS } from './catalog';
 import { isLocalDate } from './dates';
+import { isObject } from './guards';
 import { MAX_NOTE_LENGTH, type DayEntry, type Intensity, type LocalDate, type MoodId, type SymptomId } from './types';
 
 // Запись дня v6 (фича 009) — specs/009-day-marks/contracts/day-entry.md.
@@ -14,8 +15,6 @@ export const emptyDayEntry = (date: LocalDate): DayEntry => ({
   note: '',
 });
 
-const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
-
 /** Известные коды без повторов, в порядке справочника. */
 function pick<T extends string>(catalog: ReadonlyArray<{ id: T }>, wanted: ReadonlySet<string>): T[] {
   return catalog.filter((item) => wanted.has(item.id)).map((item) => item.id);
@@ -27,7 +26,7 @@ function coerceSymptoms(raw: unknown): SymptomId[] {
 }
 
 function coerceIntensity(raw: unknown, symptoms: SymptomId[]): Partial<Record<SymptomId, Intensity>> {
-  if (!isRecord(raw)) return {};
+  if (!isObject(raw)) return {};
   const out: Partial<Record<SymptomId, Intensity>> = {};
   for (const id of symptoms) {
     const value = raw[id];
@@ -65,7 +64,7 @@ function coerceNote(raw: unknown): string {
  */
 export function coerceDayEntry(raw: unknown): DayEntry | null {
   try {
-    if (!isRecord(raw) || !isLocalDate(raw.date)) return null;
+    if (!isObject(raw) || !isLocalDate(raw.date)) return null;
     const symptoms = coerceSymptoms(raw.symptoms);
     return {
       date: raw.date,
