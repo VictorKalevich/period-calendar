@@ -111,17 +111,21 @@ src/storage/validationPlacement.test.ts  # новый: поиск по исхо�
 Каждый коммит проходит `npm test` и `npm run build`. Тест пишется первым, его падение проверяется до кода;
 тест и код идут в одном коммите (красный коммит не прошёл бы `npm test`).
 
+Сначала доменные правила (US3): их функции нужны и US1, и US2. Подробно — `tasks.md`, «Checkpoint».
+
 1. Характеризационные тесты: `backupRules.test.ts` целиком и прежние свойства чтения настроек в
    `settingsRead.test.ts` — до правок, зелёные (US2, US1).
 2. `isObject` в домене + `guards.test.ts`; `dayEntry.ts` и `backup.ts` используют его (US3).
-3. `coerceSettings`, `extraSettingFields` + `settings.test.ts`; импорт через `coerceSettings` (US3, US2).
-4. `getSettings` через правила + новые случаи `settingsRead.test.ts`; `SETTINGS_KEY` в `applyBackup` (US1).
-5. `validatePeriods` + `periodValidation.test.ts`; импорт через него и `periodErrorText` (US3, US2).
-6. Задачи выполнены.
+3. `coerceSettings`, `extraSettingFields` + `settings.test.ts`; вызывающих мест пока нет (US3).
+4. `validatePeriods` + `periodValidation.test.ts`; вызывающих мест пока нет (US3).
+5. `getSettings` через правила + новые случаи `settingsRead.test.ts`; `SETTINGS_KEY` в `applyBackup` (US1).
+6. Импорт через `coerceSettings`, `validatePeriods` и `periodErrorText`; правила удаляются из `backup.ts`
+   (US2).
+7. Задачи выполнены.
 
-`validationPlacement.test.ts` (поиск по исходникам, SC-005) растёт вместе с правками: в коммитах 2–5
-добавляется проверка своего шага («нет `isRecord` и своего `isObject`», «нет правил настроек», «один
-литерал ключа», «нет правил месячных»). Каждая пишется до правки и падает до неё.
+`validationPlacement.test.ts` (поиск по исходникам, SC-005) растёт вместе с правками: в коммитах 2, 5 и 6
+добавляется проверка своего шага («нет `isRecord` и своего `isObject`», «один литерал ключа», «нет правил
+по полям»). Каждая пишется до правки и падает до неё.
 
 ## Complexity Tracking
 
