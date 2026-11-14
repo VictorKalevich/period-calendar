@@ -35,7 +35,7 @@ description: "Task list for feature 017-forecast-model"
 
 ## Phase 1: Setup
 
-- [ ] T001 Базовая линия на ветке `017-forecast-model`: `npm test` — 957 тестов в 49 файлах, `npm run build` зелёный (записано при подготовке шага; повторить, если ветка менялась)
+- [X] T001 Базовая линия на ветке `017-forecast-model`: `npm test` — 957 тестов в 49 файлах, `npm run build` зелёный (записано при подготовке шага; повторить, если ветка менялась)
 
 ---
 
@@ -44,7 +44,7 @@ description: "Task list for feature 017-forecast-model"
 **Purpose**: записать текущее поведение прогноза, сводки, отчёта, напоминаний, нормализации и текстового
 импорта до правок (research R9). Оба файла зелёные на текущем коде и после каждого следующего коммита.
 
-- [ ] T002 [P] Новый `src/domain/forecastCharacterization.test.ts` — «золотой» снимок `toMatchInlineSnapshot()` (Vitest запишет его при первом прогоне на текущем коде). Функция `describeCase({ periods, today, settings })` возвращает массив строк:
+- [X] T002 [P] Новый `src/domain/forecastCharacterization.test.ts` — «золотой» снимок `toMatchInlineSnapshot()` (Vitest запишет его при первом прогоне на текущем коде). Функция `describeCase({ periods, today, settings })` возвращает массив строк:
   1. прогноз на 2 месяца `buildForecast({ periods, settings, today, horizonMonths: 2 })`: `null` → `'прогноза нет'`; иначе строка `cycle ${cycleLength} · period ${periodLength} · ${confidence} · delay ${delayDays}` и по строке на цикл: `${kind} ${start}→${nextStart} ov ${ovulation} fertile ${fertile[0]}…${fertile.at(-1)} medium ${mediumDays.join(',')} period ${periodDays.length ? `${periodDays[0]}…${periodDays.at(-1)}` : '—'}`;
   2. полный прогноз `full = buildForecast({ periods, settings, today })`; при `full` — `today next ${todaySummary({ forecast: full, periods, settings, entries: new Set(), today }).nextPeriod} · days ${…daysToPeriod}`;
   3. `report next ${r.nextPeriod} · delay ${r.delayDays}` для `r = buildDoctorReport({ periods, entries: [], settings, today })`;
@@ -59,7 +59,7 @@ description: "Task list for feature 017-forecast-model"
   7. «больше 6 циклов, выбросы»: 9 месячных по 4–5 дней с промежутками 28, 29, 27, 70 (выброс), 12 (выброс), 28, 30, 28 дней от 2025-11-03; сегодня — 10 дней после последнего начала; `S`.
   8. «переход года и високосный год с задержкой»: `p('a', '2025-11-06', '2025-11-10')`, `p('b', '2025-12-04', '2025-12-08')`, сегодня 2026-01-03; и `p('a', '2028-01-04', '2028-01-08')`, `p('b', '2028-02-01', '2028-02-05')`, сегодня 2028-03-02; `S`.
   Проверить, что все строки снимка записаны и тест зелёный на текущем коде.
-- [ ] T003 [P] Новый `src/storage/periodLength.test.ts` (`node` + `fake-indexeddb/auto`), `describe('длина месячных по истории — как раньше')`. Зелёные до и после правок:
+- [X] T003 [P] Новый `src/storage/periodLength.test.ts` (`node` + `fake-indexeddb/auto`), `describe('длина месячных по истории — как раньше')`. Зелёные до и после правок:
   1. `normalizeStoredPeriods`: в базе `p('a', '2026-08-01', '2026-08-03')`, `p('b', '2026-08-29', '2026-08-31')`, `p('c', '2026-09-26')`, `p('d', '2026-09-30', '2026-10-02')` (средняя длина 3, по умолчанию 5) → `normalizeStoredPeriods('2026-10-30')` — `false`, `getPeriods()` — те же 4 записи (при длине 5 `c` и `d` объединились бы).
   2. `normalizeStoredPeriods`, контроль: `a` = 2026-08-01…2026-08-05, `b` = 2026-08-29…2026-09-02, `c`, `d` — как в п. 1 (средняя 4) → `true`; `getPeriods()` — `a`, `b` и `{ id: 'c', start: '2026-09-26', end: '2026-10-02', endEstimated: false }`.
   3. `planTextImport`: в базе `a`, `b`, `c` из п. 1; файл с одним периодом 2026-09-30…2026-10-02 (формат — как `FILE` в `src/storage/textImport.test.ts`), сегодня 2026-11-09 → `ok`, `{ added: 1, replaced: 0, unchanged: 0, skipped: 0 }`, в `periods` есть `c` с `end: null` и новые месячные 2026-09-30…2026-10-02 (при длине 5 `c` был бы заменён).
