@@ -1,4 +1,6 @@
 import { useEffect, useState, type ComponentType } from 'react';
+import { EmergencyScreen } from './components/EmergencyScreen';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { CalendarIcon, SettingsIcon, StatsIcon } from './components/Icons';
 import { UpdateBanner } from './components/UpdateBanner';
 import { CalendarScreen } from './screens/CalendarScreen';
@@ -44,7 +46,10 @@ export function App() {
     <div className="app">
       <UpdateBanner />
       <main className="app__screen">
-        <Screen />
+        {/* Сбой экрана вкладки — аварийный экран; навигация остаётся, смена вкладки — новая граница (014). */}
+        <ErrorBoundary key={tab} fallback={<EmergencyScreen />}>
+          <Screen />
+        </ErrorBoundary>
       </main>
       <nav className="tabbar" aria-label="Разделы">
         {TABS.map(({ id, label, Icon }) => (
