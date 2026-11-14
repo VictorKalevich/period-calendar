@@ -1,17 +1,9 @@
 import { coerceDayEntry } from '../domain/dayEntry';
-import { normalizePeriods, periodEnd } from '../domain/periods';
-import { diffDays, isLocalDate, toLocalDate } from '../domain/dates';
+import { toLocalDate } from '../domain/dates';
 import { isObject } from '../domain/guards';
-import {
-  CYCLE_LENGTH_RANGE,
-  DEFAULT_SETTINGS,
-  MAX_PERIOD_DAYS,
-  OVULATION_SHIFT_RANGE,
-  PERIOD_LENGTH_RANGE,
-  type DayEntry,
-  type Period,
-  type Settings,
-} from '../domain/types';
+import { validatePeriods, type PeriodValidationError } from '../domain/periodValidation';
+import { coerceSettings } from '../domain/settings';
+import { DEFAULT_SETTINGS, type DayEntry, type Period, type Settings } from '../domain/types';
 import { db, SCHEMA_VERSION } from './db';
 import { migrateData } from './migrations';
 import { getDayEntries, getPeriods, getSettings, SETTINGS_KEY } from './repository';
@@ -48,38 +40,29 @@ export async function exportBackup(now: Date = new Date()): Promise<File> {
   return new File([json], `cycle-calendar-${toLocalDate(now)}.json`, { type: 'application/json' });
 }
 
-const isIntIn = (v: unknown, r: { min: number; max: number }) => Number.isInteger(v) && (v as number) >= r.min && (v as number) <= r.max;
-
-function parsePeriods(input: unknown): Period[] | string {
-  if (!Array.isArray(input)) return 'нет списка месячных';
-  const out: Period[] = [];
-  const ids = new Set<string>();
-  for (const raw of input) {
-    if (!isObject(raw)) return 'запись месячных не объект';
-    const { id, start, end, endEstimated } = raw;
-    if (typeof id !== 'string' || id === '' || ids.has(id)) return `некорректный или повторный id: ${String(id)}`;
-    if (!isLocalDate(start)) return `некорректная дата начала: ${String(start)}`;
-    if (end !== null && !isLocalDate(end)) return `некорректная дата конца: ${String(end)}`;
-    if (typeof endEstimated !== 'boolean') return 'нет признака endEstimated';
-    if (end !== null && end < start) return `конец раньше начала: ${start}`;
-    if (end !== null && diffDays(end, start) + 1 > MAX_PERIOD_DAYS) return `месячные длиннее ${MAX_PERIOD_DAYS} дней: ${start}`;
-    ids.add(id);
-    out.push({ id, start, end, endEstimated });
+/** Текст ошибки проверки месячных (правила — `validatePeriods` в домене). */
+function periodErrorText(e: PeriodValidationError): string {
+  switch (e.code) {
+    case 'not-a-list':
+      return 'нет списка месячных';
+    case 'not-an-object':
+      return 'запись месячных не объект';
+    case 'invalid-id':
+    case 'duplicate-id':
+      return `некорректный или повторный id: ${String(e.id)}`;
+    case 'invalid-start':
+      return `некорректная дата начала: ${String(e.start)}`;
+    case 'invalid-end':
+      return `некорректная дата конца: ${String(e.end)}`;
+    case 'invalid-end-estimated':
+      return 'нет признака endEstimated';
+    case 'end-before-start':
+      return `конец раньше начала: ${e.start}`;
+    case 'too-long':
+      return `месячные длиннее ${e.maxDays} дней: ${e.start}`;
+    case 'overlap':
+      return `месячные пересекаются: ${e.first} и ${e.second}`;
   }
-  return out;
-}
-
-/**
- * Импорт объединяет пересекающиеся и соседние месячные (003 FR-015); для оценки незакрытых —
- * длина по умолчанию из файла. Пересечения, которые нельзя объединить (> 15 дней), — ошибка.
- */
-function mergeImported(periods: Period[], periodLength: number): Period[] | string {
-  const out = normalizePeriods(periods, toLocalDate(new Date()), periodLength);
-  for (let i = 1; i < out.length; i++) {
-    const prev = out[i - 1]!;
-    if (periodEnd(prev, periodLength) >= out[i]!.start) return `месячные пересекаются: ${prev.start} и ${out[i]!.start}`;
-  }
-  return out;
 }
 
 /**
@@ -99,39 +82,10 @@ function parseDays(input: unknown): DayEntry[] {
   return out;
 }
 
-const isBool = (v: unknown): v is boolean => typeof v === 'boolean';
-
-/** Правила полей настроек; старые копии получают недостающие поля миграциями (migrations[1…5]). */
-const SETTING_RULES: { readonly [K in keyof Settings]: (v: unknown) => boolean } = {
-  defaultCycleLength: (v) => isIntIn(v, CYCLE_LENGTH_RANGE),
-  defaultPeriodLength: (v) => isIntIn(v, PERIOD_LENGTH_RANGE),
-  remindPeriod: isBool,
-  remindOvulation: isBool,
-  showWellbeing: isBool,
-  showNotes: isBool,
-  ovulationShiftEnabled: isBool,
-  ovulationShift: (v) => isIntIn(v, OVULATION_SHIFT_RANGE),
-  ovulationFromNextPeriod: isBool,
-  remindMissedPeriod: isBool,
-  showMood: isBool,
-  showIntensity: isBool,
-  showSex: isBool,
-};
-
-/** Каждое поле проверяется отдельно; некорректное или отсутствующее — значение устройства (009 FR-005). */
-function parseSettings(input: unknown, current: Settings): Settings {
-  const out: Record<string, unknown> = { ...current };
-  if (!isObject(input)) return current;
-  for (const key of Object.keys(SETTING_RULES) as Array<keyof Settings>) {
-    if (SETTING_RULES[key](input[key])) out[key] = input[key];
-  }
-  return out as unknown as Settings;
-}
-
 /**
  * Проверяет файл; данные устройства не меняются до applyBackup (FR-030). Месячные — строго: при ошибке
- * импорт отклоняется. Записи дней — мягко, настройки — с запасом из `current` (009 FR-005). Любая
- * непредвиденная ошибка перехватывается (009 FR-006).
+ * импорт отклоняется. Записи дней — мягко, настройки — с запасом из `current` (009 FR-005). Правила
+ * корректности — в домене (фича 016). Любая непредвиденная ошибка перехватывается (009 FR-006).
  */
 export function parseBackup(
   text: string,
@@ -164,11 +118,12 @@ function parseBackupUnsafe(text: string, current: Settings): { ok: true; value: 
     return { ok: false, error: corrupted((e as Error).message) };
   }
 
-  const settings = parseSettings(data.settings, current);
-  const parsed = parsePeriods(data.periods);
-  if (typeof parsed === 'string') return { ok: false, error: corrupted(parsed) };
-  const periods = mergeImported(parsed, settings.defaultPeriodLength);
-  if (typeof periods === 'string') return { ok: false, error: corrupted(periods) };
+  // Старые копии получают недостающие поля настроек миграциями (migrations[1…5]); для оценки незакрытых
+  // месячных при объединении — длина по умолчанию из файла.
+  const settings = coerceSettings(data.settings, current);
+  const checked = validatePeriods(data.periods, toLocalDate(new Date()), settings.defaultPeriodLength);
+  if (!checked.ok) return { ok: false, error: corrupted(periodErrorText(checked.error)) };
+  const periods = checked.value;
   const days = parseDays(data.days);
 
   return { ok: true, value: { periods, days, settings, summary: { periods: periods.length, days: days.length } } };

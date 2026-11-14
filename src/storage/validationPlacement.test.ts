@@ -17,4 +17,31 @@ describe('правила корректности — в домене', () => {
       .filter((line) => line.includes("'settings'"));
     expect(lines.map((line) => line.trim())).toEqual(["export const SETTINGS_KEY = 'settings';"]);
   });
+
+  const fieldRules = [
+    'SETTING_RULES',
+    'isIntIn',
+    'isBool',
+    'CYCLE_LENGTH_RANGE',
+    'PERIOD_LENGTH_RANGE',
+    'OVULATION_SHIFT_RANGE',
+    'MAX_PERIOD_DAYS',
+    'isLocalDate',
+    'diffDays',
+    'normalizePeriods',
+    'periodEnd',
+    'function parsePeriods',
+    'function parseSettings',
+    'function mergeImported',
+  ];
+
+  it.each(fieldRules)('в backup.ts нет правил по полям: %s', (fragment) => {
+    expect(source('storage/backup.ts')).not.toContain(fragment);
+  });
+
+  it('backup.ts вызывает правила домена', () => {
+    const text = source('storage/backup.ts');
+    expect(text).toContain('coerceSettings(');
+    expect(text).toContain('validatePeriods(');
+  });
 });
