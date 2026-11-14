@@ -30,8 +30,8 @@
 `this.version(1…6)` не трогаются
 
 **Testing**: Vitest 5; хранилище — `node` + `fake-indexeddb/auto`; интерфейс — `// @vitest-environment
-happy-dom` + `src/ui/testing.ts` (из 014); `vi.mock` для подмены `DayCard`, `DaySheets` и `useToday` в
-тесте смены дня
+happy-dom` + `src/ui/testing.ts` (из 014); `vi.mock` для подмены `DayCard`, `DaySheets`, `MonthPager` и
+`useToday` в тесте смены дня
 
 **Target Platform**: iOS Safari (установленная PWA), остальные браузеры — по возможности
 
@@ -44,7 +44,7 @@ happy-dom` + `src/ui/testing.ts` (из 014); `vi.mock` для подмены `Da
 меняются (FR-014, FR-011); правила слоёв (`docs/refactoring-roadmap.md`)
 
 **Scale/Scope**: 1 новая функция и 1 тип в `repository.ts`, правка `normalizeStoredPeriods`; правки в 5
-файлах UI (`DaySheets`, `SymptomPicker`, `MoodPicker`, `NoteEditor`, `CalendarScreen`); 2 новых файла тестов
+файлах UI (`DaySheets`, `SymptomPicker`, `MoodPicker`, `NoteEditor`, `CalendarScreen`); 3 новых файла тестов
 
 ## Constitution Check
 
@@ -86,7 +86,8 @@ specs/015-atomic-day-writes/
 ```text
 src/storage/repository.ts              # + DayEntryPatch, updateDayEntry; normalizeStoredPeriods в транзакции
 src/storage/atomicWrites.test.ts       # новый (node): updateDayEntry и неделимость нормализации
-src/ui/dayWrites.test.ts               # новый (happy-dom): листы, отметка, смена дня, поиск по исходникам
+src/ui/dayWrites.test.ts               # новый (happy-dom): листы и отметка, поиск по исходникам
+src/ui/screens/CalendarScreen.test.ts  # новый (happy-dom): смена дня
 src/ui/components/DaySheets.tsx        # отметка секса — updateDayEntry(date, { sex })
 src/ui/components/SymptomPicker.tsx    # updateDayEntry(date, { symptoms, intensity })
 src/ui/components/MoodPicker.tsx       # updateDayEntry(date, { moods })
@@ -102,11 +103,14 @@ src/ui/screens/CalendarScreen.tsx      # запись выбранного дн�
 Каждый коммит проходит `npm test` и `npm run build`. Тест пишется первым, его падение проверяется до кода;
 тест и код идут в одном коммите (красный коммит не прошёл бы `npm test`).
 
-1. `updateDayEntry` + тесты хранилища (US1).
-2. `normalizeStoredPeriods` в одной транзакции + тест неделимости (US3).
-3. Четыре места записи → `updateDayEntry` + UI-тесты листов и отметки + поиск по исходникам (US1, US4).
+По приоритетам историй (подробно — `tasks.md`, «Checkpoint»):
+
+1. Характеризационные тесты листов и отметки — до правок, зелёные (US4).
+2. `updateDayEntry` + тесты хранилища (US1).
+3. Четыре места записи → `updateDayEntry` + UI-тесты точечного изменения + поиск по исходникам (US1).
 4. Замер мигания «до» → `CalendarScreen`: только запись своей даты + тест смены дня → замер «после» (US2).
-5. Задачи выполнены.
+5. `normalizeStoredPeriods` в одной транзакции + тест неделимости (US3).
+6. Задачи выполнены.
 
 ## Complexity Tracking
 
