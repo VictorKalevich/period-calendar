@@ -69,7 +69,7 @@ description: "Task list for feature 015-atomic-day-writes"
 **Independent Test**: `src/storage/atomicWrites.test.ts` (`describe('updateDayEntry')`) и
 `src/ui/dayWrites.test.ts` (`describe('точечное изменение')`).
 
-- [ ] T003 [P] [US1] Failing tests в новом файле `src/storage/atomicWrites.test.ts`, `describe('updateDayEntry')` (`node`), до кода; дни `D = '2026-10-23'`, `X = '2026-10-24'`, `Y = '2026-10-25'`:
+- [X] T003 [P] [US1] Failing tests в новом файле `src/storage/atomicWrites.test.ts`, `describe('updateDayEntry')` (`node`), до кода; дни `D = '2026-10-23'`, `X = '2026-10-24'`, `Y = '2026-10-25'`:
   1. `await Promise.all([updateDayEntry(D, { moods: ['calm'] }), updateDayEntry(D, { note: 'n' })])` → `getDayEntry(D)` равен `{ ...emptyDayEntry(D), moods: ['calm'], note: 'n' }` (SC-001).
   2. То же для `{ sex: true }` и `{ symptoms: ['acne'], intensity: { acne: 'severe' } }`.
   3. Сохранена полная запись D (самочувствие со степенью, настроения, секс, заметка); `updateDayEntry(D, { note: 'новая' })` → изменилась только заметка.
@@ -80,7 +80,7 @@ description: "Task list for feature 015-atomic-day-writes"
   8. `updateDayEntry('2026-02-30', { note: 'x' })` отклоняется; `db.days.count()` → 0.
   9. Сохранена запись `{ note: 'n' }`; `vi.spyOn(db.days, 'put').mockImplementation(() => Promise.reject(new Error('QuotaExceededError')))`; `updateDayEntry(D, { moods: ['calm'] })` отклоняется; после `mockRestore()` запись D прежняя.
   10. Заметка длиннее 1000 символов обрезается до 1000 — правило `saveDayEntry` сохраняется.
-- [ ] T004 [US1] `src/storage/repository.ts`, рядом с `saveDayEntry`. До прохождения T003, при зелёных `repository.test.ts` и T002:
+- [X] T004 [US1] `src/storage/repository.ts`, рядом с `saveDayEntry`. До прохождения T003, при зелёных `repository.test.ts` и T002:
   - `export type DayEntryPatch = Partial<Omit<DayEntry, 'date'>>;`
   - `export async function updateDayEntry(date: LocalDate, patch: DayEntryPatch): Promise<void>` — `await db.transaction('rw', db.days, async () => { const current = (await getDayEntry(date)) ?? emptyDayEntry(date); await saveDayEntry({ ...current, ...patch, date }); })`; импорт `emptyDayEntry` из `../domain/dayEntry`;
   - комментарий: по образцу `updateSettings`; изменение накладывается на актуальную запись, чтобы одновременные сохранения не затирали друг друга (research R1);

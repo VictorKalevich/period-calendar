@@ -1,5 +1,5 @@
 import { db } from './db';
-import { coerceDayEntry, isEmptyDayEntry } from '../domain/dayEntry';
+import { coerceDayEntry, emptyDayEntry, isEmptyDayEntry } from '../domain/dayEntry';
 import { buildForecast } from '../domain/forecast';
 import { normalizePeriods } from '../domain/periods';
 import { DEFAULT_SETTINGS, type DayEntry, type LocalDate, type Period, type Settings } from '../domain/types';
@@ -69,6 +69,21 @@ export async function saveDayEntry(entry: DayEntry): Promise<void> {
     return;
   }
   await db.days.put(value);
+}
+
+/** Изменение записи дня: только изменённые поля; дата задаётся отдельно (фича 015). */
+export type DayEntryPatch = Partial<Omit<DayEntry, 'date'>>;
+
+/**
+ * Меняет поля записи дня поверх актуально сохранённой (в одной транзакции), чтобы одновременные
+ * сохранения не затирали друг друга, а изменение не попадало в другой день (по образцу `updateSettings`).
+ * Приведение и удаление пустой записи — как в `saveDayEntry`.
+ */
+export async function updateDayEntry(date: LocalDate, patch: DayEntryPatch): Promise<void> {
+  await db.transaction('rw', db.days, async () => {
+    const current = (await getDayEntry(date)) ?? emptyDayEntry(date);
+    await saveDayEntry({ ...current, ...patch, date });
+  });
 }
 
 export async function getSettings(): Promise<Settings> {
