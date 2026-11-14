@@ -253,6 +253,86 @@ describe('enableReminders / disableReminders — как раньше', () => {
   });
 });
 
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((res) => {
+    resolve = res;
+  });
+  return { promise, resolve };
+}
+
+describe('гонки', () => {
+  /** Первый PUT отвечает, когда тест разрешит; остальные запросы — сразу 204. */
+  function holdFirstPut() {
+    const answer = deferred<Response>();
+    let held = false;
+    fetchMock.mockImplementation(async (_url, init) => {
+      if (init.method === 'PUT' && !held) {
+        held = true;
+        return answer.promise;
+      }
+      return new Response(null, { status: 204 });
+    });
+    return () => answer.resolve(new Response(null, { status: 204 }));
+  }
+  const puts = () => fetchMock.mock.calls.filter(([, init]) => init.method === 'PUT');
+
+  beforeEach(async () => {
+    await savePeriods(PERIODS);
+    await savePushState(S0);
+  });
+
+  it('выключение во время синхронизации не отменяется', async () => {
+    const answer = holdFirstPut();
+    const run = syncReminders();
+    await vi.waitFor(() => expect(puts()).toHaveLength(1));
+    await disableReminders();
+    answer();
+    await run;
+    expect((await getPushState())?.subscribed).toBe(false);
+  });
+
+  it('изменение во время синхронизации отправляется повторным проходом', async () => {
+    const answer = holdFirstPut();
+    const first = syncReminders();
+    await vi.waitFor(() => expect(puts()).toHaveLength(1));
+    await updateSettings({ remindOvulation: false });
+    const again = syncReminders();
+    answer();
+    await Promise.all([first, again]);
+    const body = await expectedBody();
+    expect(puts()).toHaveLength(2);
+    expect(fetchMock).toHaveBeenLastCalledWith(CLIENT_URL, putInit(body));
+    expect((await getPushState())?.lastSyncedHash).toBe(await sha256(body));
+  });
+
+  it('три запроса во время синхронизации — один повторный проход', async () => {
+    const answer = holdFirstPut();
+    const first = syncReminders();
+    await vi.waitFor(() => expect(puts()).toHaveLength(1));
+    await updateSettings({ remindOvulation: false });
+    const queued = [syncReminders(), syncReminders(), syncReminders()];
+    answer();
+    await Promise.all([first, ...queued]);
+    expect(puts()).toHaveLength(2);
+  });
+
+  it('выключение и включение во время синхронизации — расписание уходит с новой подпиской', async () => {
+    const answer = holdFirstPut();
+    const first = syncReminders();
+    await vi.waitFor(() => expect(puts()).toHaveLength(1));
+    await disableReminders();
+    expect(await enableReminders()).toBe('granted');
+    const again = syncReminders();
+    answer();
+    await Promise.all([first, again]);
+    const body = await expectedBody('new-1');
+    expect(puts()).toHaveLength(2);
+    expect(fetchMock).toHaveBeenLastCalledWith(CLIENT_URL, putInit(body));
+    expect(await getPushState()).toEqual({ ...S0, subscribed: true, pendingSync: false, lastSyncedHash: await sha256(body) });
+  });
+});
+
 describe('reminderDataQuery — наблюдение', () => {
   it('срабатывает на месячные и настройки, но не на состояние push и режим разработчика', async () => {
     await savePeriods([p('a', '2026-10-01')]);

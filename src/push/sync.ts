@@ -1,61 +1,33 @@
 import { liveQuery } from 'dexie';
-import { toLocalDate } from '../domain/dates';
-import { buildForecast } from '../domain/forecast';
-import { planReminders, toServerReminders } from '../domain/reminders';
-import { db } from '../storage/db';
-import { getPeriods, getPushState, getSettings, savePushState } from '../storage/repository';
+import { getPeriods, getPushState, getSettings, updatePushState } from '../storage/repository';
 import { clientUrl, currentSubscription, isPushConfigured } from './subscribe';
+import { createSyncRunner, syncPass, type SyncDeps } from './syncCore';
 
 // Синхронизация расписания с воркером (research.md R10): полный идемпотентный PUT после любых
 // изменений (debounce 2 с), при запуске и при появлении сети. Без сети — pendingSync.
+// Правила прохода и повторный проход — `syncCore.ts` (фича 018); здесь — подключение к браузеру и базе.
 
 const DEBOUNCE_MS = 2000;
 
-async function sha256(s: string): Promise<string> {
-  const d = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)));
-  return [...d].map((b) => b.toString(16).padStart(2, '0')).join('');
-}
+const deps: SyncDeps = {
+  isConfigured: isPushConfigured,
+  getState: getPushState,
+  updateState: (patch) => updatePushState(patch),
+  getSubscription: currentSubscription,
+  loadData: async () => {
+    const [periods, settings] = await Promise.all([getPeriods(), getSettings()]);
+    return { periods, settings };
+  },
+  send: (url, init) => fetch(url, init),
+  url: clientUrl,
+  now: () => new Date(),
+};
 
-let running: Promise<void> | null = null;
-
-export function syncReminders(): Promise<void> {
-  running ??= doSync().finally(() => (running = null));
-  return running;
-}
-
-async function doSync(): Promise<void> {
-  if (!isPushConfigured()) return;
-  const state = await getPushState();
-  if (!state?.subscribed) return;
-  const subscription = await currentSubscription();
-  if (!subscription) {
-    await savePushState({ ...state, subscribed: false });
-    return;
-  }
-
-  const now = new Date();
-  const [periods, settings] = await Promise.all([getPeriods(), getSettings()]);
-  const forecast = buildForecast({ periods, settings, today: toLocalDate(now) });
-  const reminders = forecast ? toServerReminders(planReminders(forecast, settings, now)) : [];
-  const body = JSON.stringify({ subscription: subscription.toJSON(), reminders });
-  const hash = await sha256(body);
-  if (hash === state.lastSyncedHash && !state.pendingSync) return;
-
-  try {
-    const res = await fetch(clientUrl(state), {
-      method: 'PUT',
-      headers: { Authorization: `Bearer ${state.token}`, 'Content-Type': 'application/json' },
-      body,
-    });
-    if (!res.ok) throw new Error(`push api ${res.status}`);
-    await savePushState({ ...state, pendingSync: false, lastSyncedHash: hash });
-  } catch {
-    await savePushState({ ...state, pendingSync: true });
-  }
-}
+/** Синхронизация; запрос во время идущей — ещё один проход после неё. */
+export const syncReminders = createSyncRunner(() => syncPass(deps));
 
 /** Данные, от которых зависит расписание: их изменение запускает синхронизацию. */
-export const reminderDataQuery = () => Promise.all([db.periods.toArray(), db.kv.get('settings')]);
+export const reminderDataQuery = () => Promise.all([getPeriods(), getSettings()]);
 
 /** Запускает фоновую синхронизацию: при старте, при изменениях данных и при появлении сети. */
 export function startReminderSync(): void {
