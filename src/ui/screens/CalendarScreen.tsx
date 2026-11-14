@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { cardPhase, dayDialogFor } from '../../domain/dayDialog';
-import { dayInfo } from '../../domain/forecast';
+import { dayInfo, effectivePeriodLength } from '../../domain/forecast';
 import { firstPeriodHintVisible } from '../../domain/hints';
 import type { DayInfo, LocalDate } from '../../domain/types';
 import { useForecast } from '../../hooks/useForecast';
@@ -33,7 +33,7 @@ export function CalendarScreen() {
     (info: DayInfo) => {
       setSelected(info.date);
       if (!ctx) return;
-      const periodLength = ctx.forecast?.periodLength ?? ctx.settings.defaultPeriodLength;
+      const periodLength = effectivePeriodLength(ctx.periods, ctx.settings);
       if (dayDialogFor(info.date, ctx.today, ctx.periods, periodLength, ctx.settings).opens) setSheet('day');
     },
     [ctx],

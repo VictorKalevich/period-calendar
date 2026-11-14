@@ -162,7 +162,8 @@ function cycleOf(forecast: Forecast, date: LocalDate, today: LocalDate): Predict
 /** Всё, что нужно для отрисовки одного дня (data-model.md «DayInfo»). */
 export function dayInfo(date: LocalDate, ctx: DayContext): DayInfo {
   const { periods, settings, entries, today, forecast } = ctx;
-  const periodLength = forecast?.periodLength ?? settings.defaultPeriodLength;
+  // Длина из прогноза посчитана effectivePeriodLength; без прогноза — та же функция (фича 017, research R2).
+  const periodLength = forecast ? forecast.periodLength : effectivePeriodLength(periods, settings);
 
   const own = lastStartOnOrBefore(periods, date);
   let period: DayInfo['period'] = null;

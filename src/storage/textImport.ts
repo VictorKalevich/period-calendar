@@ -1,5 +1,5 @@
 import { mergeImportedPeriods, parseCycleText, type CycleTextError } from '../domain/cycleText';
-import { buildForecast } from '../domain/forecast';
+import { effectivePeriodLength } from '../domain/forecast';
 import type { LocalDate, Period } from '../domain/types';
 import { getPeriods, getSettings, savePeriods } from './repository';
 
@@ -34,7 +34,7 @@ export async function planTextImport(
   const parsed = parseCycleText(text, today);
   if (!parsed.ok) return { ok: false, error: ERRORS[parsed.error] };
   const [existing, settings] = await Promise.all([getPeriods(), getSettings()]);
-  const periodLength = buildForecast({ periods: existing, settings, today })?.periodLength ?? settings.defaultPeriodLength;
+  const periodLength = effectivePeriodLength(existing, settings);
   const merged = mergeImportedPeriods(existing, parsed.value.periods, today, periodLength);
   const starts = parsed.value.periods.map((p) => p.start).sort();
   return {

@@ -87,10 +87,10 @@ description: "Task list for feature 017-forecast-model"
   7. От «сегодня» не зависит: функция не принимает его (сигнатура `(periods, settings)`).
   8. Равенство с прогнозом (SC-005): для каждой истории из набора (пустая; одна открытая; одна закрытая; оценочный конец текущих; оценочный, закрытый следующим; выбросы; ручные концы; больше 6 циклов; неупорядоченный вход) и настроек `S`, `{ ...S, defaultPeriodLength: 7 }` при сегодня 2026-11-14: `const f = buildForecast(…)`; `effectivePeriodLength(ps, s)` равно `f ? f.periodLength : s.defaultPeriodLength`.
 - [X] T005 [US1] В `src/domain/forecast.ts`: `export function effectivePeriodLength(periods: Period[], settings: Settings): number { return averagePeriodLength(buildCycles(periods)) ?? settings.defaultPeriodLength; }` с комментарием «Длина месячных для расчётов: средняя по истории (FR-014), иначе из настроек; от «сегодня» не зависит»; в `buildForecast` — `const periodLength = effectivePeriodLength(periods, settings)`. Коммит «017: длина месячных для расчётов — одна функция домена» (T004, T005)
-- [ ] T006 [US1] Failing tests до правки в новом `src/domain/derivationPlacement.test.ts`, `describe('производные прогноза — в одном месте')`:
+- [X] T006 [US1] Failing tests до правки в новом `src/domain/derivationPlacement.test.ts`, `describe('производные прогноза — в одном месте')`:
   1. в исходниках приложения совпадения `/\?\?\s*[\w.?]*defaultPeriodLength/g` — ровно одно, в `src/domain/forecast.ts`, строка содержит `averagePeriodLength(buildCycles(periods))` (SC-002);
   2. `src/storage/repository.ts` и `src/storage/textImport.ts` не содержат `buildForecast` (SC-003).
-- [ ] T007 [US1] Потребители (contracts, «Вызывающие места»; research R2):
+- [X] T007 [US1] Потребители (contracts, «Вызывающие места»; research R2):
   - `src/domain/forecast.ts` `dayInfo`: `const periodLength = forecast ? forecast.periodLength : effectivePeriodLength(periods, settings);`
   - `src/storage/repository.ts` `normalizeStoredPeriods`: `const periodLength = effectivePeriodLength(periods, settings);`; импорт `buildForecast` → `effectivePeriodLength`;
   - `src/storage/textImport.ts` `planTextImport`: `const periodLength = effectivePeriodLength(existing, settings);`; импорт так же;

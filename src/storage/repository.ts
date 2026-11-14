@@ -1,6 +1,6 @@
 import { db } from './db';
 import { coerceDayEntry, emptyDayEntry, isEmptyDayEntry } from '../domain/dayEntry';
-import { buildForecast } from '../domain/forecast';
+import { effectivePeriodLength } from '../domain/forecast';
 import { normalizePeriods } from '../domain/periods';
 import { coerceSettings, extraSettingFields } from '../domain/settings';
 import { DEFAULT_SETTINGS, type DayEntry, type LocalDate, type Period, type Settings } from '../domain/types';
@@ -41,7 +41,7 @@ export async function normalizeStoredPeriods(today: LocalDate): Promise<boolean>
   return db.transaction('rw', db.periods, db.kv, async () => {
     const periods = await getPeriods();
     const settings = await getSettings();
-    const periodLength = buildForecast({ periods, settings, today })?.periodLength ?? settings.defaultPeriodLength;
+    const periodLength = effectivePeriodLength(periods, settings);
     const normalized = normalizePeriods(periods, today, periodLength);
     if (JSON.stringify(normalized) === JSON.stringify(periods)) return false;
     await savePeriods(normalized);
