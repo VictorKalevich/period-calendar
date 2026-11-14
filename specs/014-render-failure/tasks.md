@@ -98,8 +98,8 @@ Error('QuotaExceededError'))`, аналогично `db.kv.put`, `db.periods.bul
 
 **Independent Test**: `src/ui/saveFailures.test.ts` — отказ записи в каждом месте даёт сообщение, данные прежние; повторная удачная попытка ведёт себя как раньше.
 
-- [ ] T019 [US4] Failing test `src/ui/components/SaveError.test.ts` (happy-dom): `<SaveError shown={false} />` ничего не рисует; `shown` → `<p class="notice notice--error" role="alert">Не удалось сохранить. Попробуйте ещё раз.</p>`; пробный компонент с `useSaveError()`: `save(() => Promise.reject(err))` → `false`, `failed === true`, `console.error('save failed', err)`; `save(async () => {})` → `true`, `failed === false`; `reset()` → `failed === false`
-- [ ] T020 [US4] `src/ui/components/SaveError.tsx`: `export const SAVE_ERROR_TEXT`; `export function useSaveError(): { failed: boolean; save: (write: () => Promise<unknown>) => Promise<boolean>; reset: () => void }` (`save` — `setFailed(false)`, `ok = await attempt('save', write)`, `if (!ok) setFailed(true)`, `return ok`); `export function SaveError({ shown }: { shown: boolean })` — до прохождения T019
+- [X] T019 [US4] Failing test `src/ui/components/SaveError.test.ts` (happy-dom): `<SaveError shown={false} />` ничего не рисует; `shown` → `<p class="notice notice--error" role="alert">Не удалось сохранить. Попробуйте ещё раз.</p>`; пробный компонент с `useSaveError()`: `save(() => Promise.reject(err))` → `false`, `failed === true`, `console.error('save failed', err)`; `save(async () => {})` → `true`, `failed === false`; `reset()` → `failed === false`
+- [X] T020 [US4] `src/ui/components/SaveError.tsx`: `export const SAVE_ERROR_TEXT`; `export function useSaveError(): { failed: boolean; save: (write: () => Promise<unknown>) => Promise<boolean>; reset: () => void }` (`save` — `setFailed(false)`, `ok = await attempt('save', write)`, `if (!ok) setFailed(true)`, `return ok`); `export function SaveError({ shown }: { shown: boolean })` — до прохождения T019
 
 **Checkpoint**: коммит «014: общий приём ошибки сохранения — useSaveError и SaveError» (T019–T020)
 
