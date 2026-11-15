@@ -7,6 +7,7 @@ import {
   startOfWeek,
 } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { pluralRu } from './plural';
 import type { LocalDate } from './types';
 
 // Календарные даты как строки YYYY-MM-DD (research.md R1). Арифметика — через локальную полночь,
@@ -88,12 +89,8 @@ export function formatRangeRu(from: LocalDate, to: LocalDate): string {
 
 /** Личный сдвиг овуляции: «−5 дней», «−1 день», «0 дней», «+2 дня» (минус — U+2212). */
 export function formatShiftRu(n: number): string {
-  const abs = Math.abs(n);
-  const mod10 = abs % 10;
-  const mod100 = abs % 100;
-  const word = mod10 === 1 && mod100 !== 11 ? 'день' : mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14) ? 'дня' : 'дней';
   const sign = n > 0 ? '+' : n < 0 ? '−' : '';
-  return `${sign}${abs} ${word}`;
+  return `${sign}${pluralRu(Math.abs(n), ['день', 'дня', 'дней'])}`;
 }
 
 /** «Пятница» */

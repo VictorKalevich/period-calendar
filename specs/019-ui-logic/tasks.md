@@ -195,7 +195,7 @@ PowerShell). Тест и код одной задачи идут в одном �
 src/domain/dates.test.ts src/domain/report.test.ts src/ui/uiDecisions.test.ts
 src/ui/uiLogicPlacement.test.ts`.
 
-- [ ] T005 [US1] Склонение в домене (FR-001; research R3; контракт `plural.ts`).
+- [X] T005 [US1] Склонение в домене (FR-001; research R3; контракт `plural.ts`).
   - Тест первым: новый `src/domain/plural.test.ts`, `it.each` по таблице контракта
     (`['запись', 'записи', 'записей']`: 0, 1, 2, 4, 5, 11, 12, 14, 21, 22, 25, 101, 111, 112, 122) и
     `['период', 'периода', 'периодов']` для 1, 3, 5. Прогнать — падает: модуля нет.
