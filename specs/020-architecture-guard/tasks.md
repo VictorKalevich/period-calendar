@@ -229,7 +229,7 @@ PowerShell; `build` включает `tsc --noEmit` и проверяет тип
 **Independent Test**: `git ls-files "*.tsbuildinfo"` пуст; после `npm run build` и `npm test`
 `git status` пуст; `npx vitest run no-such-test-file` — код выхода 1.
 
-- [ ] T012 [P] [US3] `.gitignore` — строка `*.tsbuildinfo` (после `build/`… рядом с артефактами сборки);
+- [X] T012 [P] [US3] `.gitignore` — строка `*.tsbuildinfo` (после `build/`… рядом с артефактами сборки);
   `git rm --cached tsconfig.tsbuildinfo` (файл на диске остаётся). Проверить: `git ls-files
   "*.tsbuildinfo"` пуст; `npm run build`, `npm test`; `git status --short` — только `?? "Claude
   outputs/"` → коммит «020: tsconfig.tsbuildinfo — вне git» (R12).
