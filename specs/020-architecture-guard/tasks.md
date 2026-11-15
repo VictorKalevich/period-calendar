@@ -55,8 +55,9 @@ PowerShell; `build` включает `tsc --noEmit` и проверяет тип
 коммит «020: тест архитектуры — распознавание импортов и отнесение к слою».
 
 - [ ] T002 Новый `src/architecture.test.ts`: `describe('распознавание импортов')` — образцы для
-  `importsOf(text: string): ImportRef[]` (`ImportRef = { specifier: string | null; line: number }`,
-  `line` — с 1), каждый — отдельный `it` с `toEqual` полного списка (research R2):
+  `importsOf(text: string, fileName = 'sample.ts'): ImportRef[]` (`ImportRef = { specifier: string |
+  null; line: number }`, `line` — с 1; режим разбора — по расширению `fileName`: `.tsx` → TSX, иначе
+  TS), каждый — отдельный `it` с `toEqual` полного списка (research R2):
   1. `import a from './a'` и `import { a, b } from '../x'`;
   2. многострочный `import {\n  a,\n  b,\n} from '../x'` — `line` строки `import`;
   3. `import type { T } from '../t'` и `import { type T, u } from '../t'`;
@@ -69,17 +70,20 @@ PowerShell; `build` включает `tsc --noEmit` и проверяет тип
   9. `import(name)` и `` import(`../${name}`) `` — `specifier: null`;
   10. не импорт: `// import z from '../z'`, `/* import y from '../y' */`, `const s = "import w from '../w'"`,
       `` const t = `export * from '../t'` ``, `const re = /'/;` и `/// <reference types="vite/client" />`
-      — результат `[]`.
+      — результат `[]`;
+  11. режим по расширению (по итогам `/speckit-analyze`, C1): `.ts`-текст `const id = <T>(x: T) => x;\nconst
+      m = () => import('../d');` — найден `../d` (строка 2); `.tsx`-текст `const el = <div>{import('../e')}</div>;`
+      с `fileName` `'x.tsx'` — найден `../e`.
 
   Запустить `npx vitest run src/architecture.test.ts` — красный (`importsOf` нет). Затем реализовать
-  `importsOf` в том же файле: `ts.createSourceFile('x.tsx', text, ts.ScriptTarget.Latest, true,
-  ts.ScriptKind.TSX)`, рекурсивный `ts.forEachChild`; `ImportDeclaration` и `ExportDeclaration` с
+  `importsOf` в том же файле: `ts.createSourceFile(fileName, text, ts.ScriptTarget.Latest, true,
+  fileName.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS)`, рекурсивный `ts.forEachChild`; `ImportDeclaration` и `ExportDeclaration` с
   `moduleSpecifier` (строковый литерал); `CallExpression` с `expression.kind ===
   ts.SyntaxKind.ImportKeyword` (литерал или шаблон без подстановок → имя, иначе `null`); вызов
   `require('…')`; `ImportTypeNode` (`argument` — `LiteralTypeNode` со строкой);
   `ImportEqualsDeclaration` с `ExternalModuleReference`. `line` —
-  `sf.getLineAndCharacterOfPosition(node.getStart(sf)).line + 1`. Зелёный. Если `ScriptKind.TSX` ломает
-  образец 7 или `<T>`-приведения в `.ts` — выбирать вид по расширению файла (параметр `fileName`).
+  `sf.getLineAndCharacterOfPosition(node.getStart(sf)).line + 1`. Зелёный. `violations` (T004) передаёт
+  в `importsOf` путь проверяемого файла.
 - [ ] T003 В `src/architecture.test.ts`: таблица `LAYERS` и `describe('отнесение импорта')` — образцы для
   `targetOf(file: string, specifier: string | null): Target` (data-model «Цель импорта»), затем код.
   - `LAYERS: readonly Layer[]` — ровно таблица R3 research: `id`, `path`, `layers`, `packages`;
@@ -128,6 +132,10 @@ PowerShell; `build` включает `tsc --noEmit` и проверяет тип
     `react`, `react-dom`, `dexie`, `../storage/repository`, `../ui/App`, `../push/sync`,
     `../hooks/useToday`, `../report/render`, `../pwa/registerUpdates` → у каждого ровно одно нарушение;
     `date-fns`, `date-fns/locale`, `./dates` → `[]`.
+  - Образцы файлов верхнего уровня (по итогам `/speckit-analyze`, C2): `src/main.tsx` + `dexie` → «не
+    разрешён пакет»; `src/main.tsx` + `./sw` → «слой main не может импортировать слой sw»; `src/main.tsx` +
+    `./storage/repository`, `./ui/App`, `react-dom/client` → `[]`; `src/vite-env.d.ts` + `import 'react'` →
+    нарушение; `src/sw.ts` + `./pwa/pushNotification`, `workbox-precaching` → `[]`.
   - Образцы сообщений (`toEqual` строк): `('src/storage/x.ts', "import { App } from '../ui/App';")` →
     `["src/storage/x.ts:1: '../ui/App' — слой storage не может импортировать слой ui"]`; `('src/ui/x.ts',
     "import { format } from 'date-fns';")` → `["src/ui/x.ts:1: 'date-fns' — слою ui не разрешён пакет
