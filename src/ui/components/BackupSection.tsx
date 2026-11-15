@@ -1,22 +1,12 @@
 import { useRef, useState } from 'react';
-import { toLocalDate } from '../../domain/dates';
-import type { LocalDate } from '../../domain/types';
+import { formatDateNumeric, toLocalDate } from '../../domain/dates';
+import { importFileKind } from '../../domain/importFile';
+import { pluralRu } from '../../domain/plural';
 import { applyBackup, parseBackup, type ParsedBackup } from '../../storage/backup';
 import { getSettings } from '../../storage/repository';
-import { applyTextImport, looksLikeCycleText, planTextImport, type TextImportPlan } from '../../storage/textImport';
+import { applyTextImport, planTextImport, type TextImportPlan } from '../../storage/textImport';
 import { BottomSheet } from './BottomSheet';
 import { EXPORT_FAILED_TEXT, exportData } from './share';
-
-/** «1 запись», «2 записи», «5 записей». */
-export function pluralRu(n: number, [one, few, many]: [string, string, string]): string {
-  const mod10 = n % 10;
-  const mod100 = n % 100;
-  const word = mod10 === 1 && mod100 !== 11 ? one : mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14) ? few : many;
-  return `${n} ${word}`;
-}
-
-/** «23.12.2017» */
-const numericDate = (d: LocalDate) => `${d.slice(8, 10)}.${d.slice(5, 7)}.${d.slice(0, 4)}`;
 
 const PERIOD_WORDS: [string, string, string] = ['период', 'периода', 'периодов'];
 
@@ -41,7 +31,8 @@ export function BackupSection() {
     if (!file) return;
     if (input.current) input.current.value = '';
     const text = await file.text();
-    if (!text.trimStart().startsWith('{') && looksLikeCycleText(text)) {
+    const kind = importFileKind(text);
+    if (kind === 'cycle-text') {
       const plan = await planTextImport(text, toLocalDate(new Date()));
       if (!plan.ok) setMessage({ text: plan.error, error: true });
       else {
@@ -50,7 +41,7 @@ export function BackupSection() {
       }
       return;
     }
-    if (!text.trimStart().startsWith('{')) {
+    if (kind === 'unknown') {
       setMessage({ text: 'Файл не распознан', error: true });
       return;
     }
@@ -149,8 +140,8 @@ export function BackupSection() {
         {textPlan && (
           <>
             <p className="t-body sheet__note">
-              Найдено: {pluralRu(textPlan.found, PERIOD_WORDS)} месячных ({numericDate(textPlan.first)} –{' '}
-              {numericDate(textPlan.last)}). Добавить в календарь?
+              Найдено: {pluralRu(textPlan.found, PERIOD_WORDS)} месячных ({formatDateNumeric(textPlan.first)} –{' '}
+              {formatDateNumeric(textPlan.last)}). Добавить в календарь?
             </p>
             {textPlan.replaced > 0 && (
               <p className="t-body sheet__note">

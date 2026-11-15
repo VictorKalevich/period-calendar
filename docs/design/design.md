@@ -117,7 +117,7 @@
 | Плашка статуса | `status-pill` (+ `--delay`) | `violetSoft`/`violetText` (задержка — `roseSoft`/`roseText`) |
 | Сообщение | `notice notice--ok|--error` | `--radius-field`, 14/700; «Готово» — `sageSoft`/`ink`, ошибка — `roseSoft`/`roseText` |
 | Подсказка | `hint` | `roseSoft`/`roseText`, `--radius-card`, крестик — `icon-btn` |
-| Переключатель | `toggle` | строка 52 с разделителем `line`, дорожка `track`, включён — `btnBg` |
+| Переключатель | `Toggle` (`toggle`) | строка 52 с разделителем `line`, дорожка `track`, включён — `btnBg` |
 | Счётчик | `stepper` | строка с разделителем, кнопки `icon-btn--secondary` |
 | Лист | `BottomSheet` (`sheet`) | снизу, `--radius-card` сверху, фокус — на самом листе; действие в шапке — `icon-btn` |
 | Шапка экрана | `screen__header` | заголовок слева, действие справа (`btn btn--compact btn--raised`) |

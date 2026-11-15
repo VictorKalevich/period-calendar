@@ -23,9 +23,6 @@ const ERRORS: Record<CycleTextError, string> = {
   'no-periods': 'В файле нет корректных дат месячных',
 };
 
-/** Похоже ли содержимое на текстовую выгрузку месячных. */
-export const looksLikeCycleText = (text: string) => /period start date:/i.test(text);
-
 /** Готовит импорт: разбирает файл и считает итог относительно текущих данных, ничего не сохраняя. */
 export async function planTextImport(
   text: string,
