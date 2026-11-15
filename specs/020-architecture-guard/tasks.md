@@ -21,7 +21,7 @@ description: "Task list for feature 020-architecture-guard"
 Файлы — UTF-8 без BOM, правка только Edit/Write. Каждый коммит проходит `npm test` и `npm run build` (из
 PowerShell; `build` включает `tsc --noEmit` и проверяет типы тестового файла: `noUnusedLocals`,
 `noUncheckedIndexedAccess`). Тест и код одной задачи идут в одном коммите. Перед коммитом — `git diff` без
-испорченной кириллицы и BOM (`LC_ALL=C.UTF-8 grep -cP "Р[°µѕёЅќ]|С[‚Ђ]|Ð|\xEF\xBB\xBF"` → 0). `git push`
+испорченной кириллицы и BOM (`LC_ALL=C.UTF-8 grep -cP` по шаблону из памяти проекта → 0). `git push`
 и деплой не выполнять (план рефакторинга, «Ветки и запрет на push»).
 
 **Обвязка теста** (`src/architecture.test.ts`):
@@ -241,7 +241,7 @@ PowerShell; `build` включает `tsc --noEmit` и проверяет тип
   `git status --short` — только `Claude outputs/`.
 - [ ] T015 Объём и кодировка: `git diff refactoring...HEAD --stat` — только файлы из quickstart §5;
   `git diff refactoring...HEAD --stat -- src worker ':!src/**/*.test.ts' ':!src/*.test.ts'` — пусто;
-  `git diff refactoring...HEAD | LC_ALL=C.UTF-8 grep -cP "Р[°µѕёЅќ]|С[‚Ђ]|Ð|\xEF\xBB\xBF"` → 0; BOM в
+  `git diff refactoring...HEAD` — проверка на испорченную кириллицу и BOM даёт 0 совпадений; BOM в
   начале новых файлов нет (`head -c 3 … | od -An -tx1`). Критерии готовности файла шага и SC-001…SC-008
   выполнены.
 - [ ] T016 Отметить задачи `[X]` (Edit), «Заметки T007» заполнены → коммит «020: задачи выполнены».
