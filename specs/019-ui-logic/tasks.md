@@ -341,7 +341,7 @@ src/ui/dayWrites.test.ts src/ui/saveFailures.test.ts src/ui/uiLogicPlacement.tes
     Тип `Levels` и импорты `DEFAULT_INTENSITY`, `withDefaultIntensity` убрать. Разметку не трогать.
   - Проверить: `uiDecisions.test.ts`, `dayWrites.test.ts`, `saveFailures.test.ts`, `normalPath.test.ts`
     зелёные. `npm test`, `npm run build`; коммит «019: лист «Самочувствие» — переходы в домене».
-- [ ] T013 [P] [US2] Действие напоминаний (FR-007; контракт `reminderToggle.ts`; data-model
+- [X] T013 [P] [US2] Действие напоминаний (FR-007; контракт `reminderToggle.ts`; data-model
   «ReminderToggleAction»).
   - Тест первым: новый `src/ui/components/reminderToggle.test.ts` (окружение `node`).
     - Все 8 сочетаний трёх флагов × `subscribed` ∈ {`false`, `true`} × `permission` ∈ {`'granted'`,
@@ -358,7 +358,7 @@ src/ui/dayWrites.test.ts src/ui/saveFailures.test.ts src/ui/uiLogicPlacement.tes
       'remindMissedPeriod'>, subscribed: boolean, permission: ReturnType<typeof notificationPermission>):
       ReminderToggleAction` — правило из `RemindersSection.tsx:39-40`, JSDoc со ссылкой на 007 FR-008.
   - `npm test`, `npm run build`; коммит вместе с T014.
-- [ ] T014 [US2] `RemindersSection` — через `reminderToggleAction` (FR-007; research R7).
+- [X] T014 [US2] `RemindersSection` — через `reminderToggleAction` (FR-007; research R7).
   - Поиск, тест первым: новый `it` в `uiLogicPlacement.test.ts` — `RemindersSection.tsx` содержит
     `reminderToggleAction(` и не содержит `!next.remindPeriod`. Прогнать — падает.
   - Код `toggle`:

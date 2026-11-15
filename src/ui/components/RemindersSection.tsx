@@ -12,6 +12,7 @@ import {
 import { syncReminders } from '../../push/sync';
 import { useLiveQuery } from '../../hooks/useLiveQuery';
 import { getPushState, updateSettings } from '../../storage/repository';
+import { reminderToggleAction } from './reminderToggle';
 import { SaveError, useSaveError } from './SaveError';
 
 /** Push-напоминания (US4, FR-022–FR-025). */
@@ -33,11 +34,11 @@ export function RemindersSection({ settings }: { settings: Settings }) {
   };
 
   const toggle = async (patch: Partial<Settings>) => {
-    const next = { ...settings, ...patch };
     // Настройка не сохранилась — сообщение в карточке, подписку не трогаем (014).
     if (!(await saveError.save(() => updateSettings(patch)))) return;
-    if (!next.remindPeriod && !next.remindOvulation && !next.remindMissedPeriod) await disableReminders();
-    else if (!subscribed && permission !== 'denied') await enable();
+    const action = reminderToggleAction({ ...settings, ...patch }, subscribed, permission);
+    if (action === 'unsubscribe') await disableReminders();
+    else if (action === 'subscribe') await enable();
   };
 
   let body: ReactNode;

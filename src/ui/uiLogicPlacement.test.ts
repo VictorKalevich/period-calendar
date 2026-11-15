@@ -61,4 +61,10 @@ describe('решения интерфейса — в чистых функция
     expect(picker).not.toContain('DEFAULT_INTENSITY');
     expect(picker).not.toContain('withDefaultIntensity');
   });
+
+  it('«Напоминания» выбирают действие функцией reminderToggleAction (FR-007, SC-005)', () => {
+    const reminders = source('ui/components/RemindersSection.tsx');
+    expect(reminders).toContain('reminderToggleAction(');
+    expect(reminders).not.toContain('!next.remindPeriod');
+  });
 });
