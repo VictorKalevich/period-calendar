@@ -52,7 +52,7 @@ export function importFileKind(text: string): ImportFileKind;
 ```
 
 Правило — `data-model.md`, «ImportFileKind». Ожидаемые значения: `'{"a":1}'`, `'  \n\t{'`,
-`'﻿{'`, `'{ "x": "Period start date: 2017-12-23" }'` → `'backup'`;
+знак U+FEFF перед `{`, `'{ "x": "Period start date: 2017-12-23" }'` → `'backup'`;
 `'cycle 1\nPeriod start date: 2017-12-23'`, `'PERIOD START DATE:'` → `'cycle-text'`; `''`, `'   '`,
 `'hello'`, `'[1,2]'` → `'unknown'`.
 
