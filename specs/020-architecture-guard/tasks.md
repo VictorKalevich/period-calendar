@@ -54,7 +54,7 @@ PowerShell; `build` включает `tsc --noEmit` и проверяет тип
 **Purpose**: чистые функции теста, на которые опираются правила (US1) и проверка карты (US2). После T003 —
 коммит «020: тест архитектуры — распознавание импортов и отнесение к слою».
 
-- [ ] T002 Новый `src/architecture.test.ts`: `describe('распознавание импортов')` — образцы для
+- [X] T002 Новый `src/architecture.test.ts`: `describe('распознавание импортов')` — образцы для
   `importsOf(text: string, fileName = 'sample.ts'): ImportRef[]` (`ImportRef = { specifier: string |
   null; line: number }`, `line` — с 1; режим разбора — по расширению `fileName`: `.tsx` → TSX, иначе
   TS), каждый — отдельный `it` с `toEqual` полного списка (research R2):
@@ -84,7 +84,7 @@ PowerShell; `build` включает `tsc --noEmit` и проверяет тип
   `ImportEqualsDeclaration` с `ExternalModuleReference`. `line` —
   `sf.getLineAndCharacterOfPosition(node.getStart(sf)).line + 1`. Зелёный. `violations` (T004) передаёт
   в `importsOf` путь проверяемого файла.
-- [ ] T003 В `src/architecture.test.ts`: таблица `LAYERS` и `describe('отнесение импорта')` — образцы для
+- [X] T003 В `src/architecture.test.ts`: таблица `LAYERS` и `describe('отнесение импорта')` — образцы для
   `targetOf(file: string, specifier: string | null): Target` (data-model «Цель импорта»), затем код.
   - `LAYERS: readonly Layer[]` — ровно таблица R3 research: `id`, `path`, `layers`, `packages`;
     `main.layers` — все семь слоёв приложения (`domain`, `storage`, `report`, `push`, `hooks`, `pwa`,
@@ -117,7 +117,7 @@ PowerShell; `build` включает `tsc --noEmit` и проверяет тип
 **Independent Test**: тест зелёный на текущем коде; временные нарушения T007 делают его красным с файлом,
 импортом и правилом; после отката — зелёный.
 
-- [ ] T004 [US1] В `src/architecture.test.ts`: `EXCEPTIONS` и `describe('правила слоёв')` — образцы для
+- [X] T004 [US1] В `src/architecture.test.ts`: `EXCEPTIONS` и `describe('правила слоёв')` — образцы для
   `violations(file: string, text: string): string[]`, затем код.
   - `EXCEPTIONS: readonly Exception[]` — ровно таблица R5: `{ file: 'src/hooks/useLiveQuery.ts', target:
     'dexie', reason: '…' }`, `{ file: 'src/push/sync.ts', target: 'dexie', reason: '…' }`; причины — текст
@@ -146,7 +146,7 @@ PowerShell; `build` включает `tsc --noEmit` и проверяет тип
     нарушение; `src/ui/x.ts` + `import type { X } from '../push/subscribe'` → `[]` (R15).
 
   Красный → реализовать `violations` (через `importsOf`, `targetOf`, `layerOf`) → зелёный.
-- [ ] T005 [US1] В `src/architecture.test.ts` — проверки файлов проекта (зелёные на текущем коде):
+- [X] T005 [US1] В `src/architecture.test.ts` — проверки файлов проекта (зелёные на текущем коде):
   - `SOURCES` — исходные файлы `src` и `worker/src` (обвязка выше); `describe('файлы и слои')`:
     `it('исходники найдены')` — `SOURCES` содержит `src/main.tsx`, `src/sw.ts`, `src/vite-env.d.ts`,
     `src/ui/testing.ts`, `worker/src/index.ts` и не содержит ни одного `*.test.ts`;
@@ -159,10 +159,10 @@ PowerShell; `build` включает `tsc --noEmit` и проверяет тип
 
   Если какой-то файл даёт нарушение — **остановиться и сообщить пользователю** (FR-008), код не
   переносить, правила не ослаблять.
-- [ ] T006 [US1] Удалить `src/domain/isolation.test.ts` (`git rm`); сверить соответствие проверок с
+- [X] T006 [US1] Удалить `src/domain/isolation.test.ts` (`git rm`); сверить соответствие проверок с
   таблицей R1 research. `npm test`: тестов ≥ 1348 (минус 39 прежних, плюс новые), все зелёные;
   `npm run build` → коммит «020: правила слоёв под тестом; isolation.test.ts — в architecture.test.ts».
-- [ ] T007 [US1] Красный → зелёный на настоящих файлах (research R7, quickstart §2). Для каждой строки
+- [X] T007 [US1] Красный → зелёный на настоящих файлах (research R7, quickstart §2). Для каждой строки
   таблицы R7: временный `__violation.ts` в каталоге слоя (для `src/sw.ts` — временная строка
   `import './ui/App';`), `npx vitest run src/architecture.test.ts` — красный с ожидаемой строкой
   нарушения; удалить файл (`git checkout -- src/sw.ts`) — зелёный. Исключение: временно добавить в
@@ -258,7 +258,28 @@ PowerShell; `build` включает `tsc --noEmit` и проверяет тип
 
 ## Заметки T007
 
-_Заполняется при выполнении T007: сценарий → сообщение красного теста._
+Один прогон `npx vitest run src/architecture.test.ts` со всеми временными нарушениями сразу: 13 красных из
+173. Двенадцать — сценарии R7, тринадцатый — образец «исключение действует только в своём файле»
+(временное исключение для `syncCore.ts` его ожидаемо снимает). После удаления файлов, отката `sw.ts` и
+строки исключения — 162 из 162 зелёные, `git status` и `git diff` пусты.
+
+| Сценарий | Сообщение |
+|----------|-----------|
+| `src/domain/__violation.ts`: `import '../ui/app.css'` | `src/domain/__violation.ts:1: '../ui/app.css' — слой domain не может импортировать слой ui` |
+| то же: `export { db } from '../storage/db'` | `…:2: '../storage/db' — слой domain не может импортировать слой storage` |
+| то же: многострочный `import {\n useState,\n} from 'react'` | `…:3: 'react' — слою domain не разрешён пакет react` |
+| то же: `() => import('../push/sync')` | `…:6: '../push/sync' — слой domain не может импортировать слой push` |
+| то же: `Date.now()` | `домен не читает текущее время > src/domain/__violation.ts`: `expected '…' not to match /new\s+Date\(\s*\)\|Date\.now\(/` |
+| `src/storage/__violation.ts`: `import type { App } from '../ui/App'` | `src/storage/__violation.ts:1: '../ui/App' — слой storage не может импортировать слой ui` |
+| `src/report/__violation.ts`: `../storage/repository`, `import 'dexie'` | `…:1: '../storage/repository' — слой report не может импортировать слой storage`; `…:2: 'dexie' — слою report не разрешён пакет dexie` |
+| `src/push/__violation.ts`: `../hooks/useToday` | `src/push/__violation.ts:1: '../hooks/useToday' — слой push не может импортировать слой hooks` |
+| `src/hooks/__violation.ts`: `../push/sync` | `src/hooks/__violation.ts:1: '../push/sync' — слой hooks не может импортировать слой push` |
+| `src/pwa/__violation.ts`: `../storage/repository` | `src/pwa/__violation.ts:1: '../storage/repository' — слой pwa не может импортировать слой storage` |
+| `src/ui/__violation.ts`: `date-fns` | `src/ui/__violation.ts:1: 'date-fns' — слою ui не разрешён пакет date-fns` |
+| новый `src/extra.ts` | `src/extra.ts: файл вне таблицы слоёв — отнесите его к слою` |
+| `src/sw.ts`: временная строка `import './ui/App'` | `src/sw.ts:5: './ui/App' — слой sw не может импортировать слой ui` |
+| `worker/src/__violation.ts`: `../../src/domain/dates` | `worker/src/__violation.ts:1: '../../src/domain/dates' — слой worker не может импортировать слой domain` |
+| временное исключение `src/push/syncCore.ts` → `dexie` | `src/push/syncCore.ts: исключение dexie больше не нужно — удалите его` |
 
 ---
 

@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
@@ -394,5 +394,54 @@ const clockRead = /new\s+Date\(\s*\)|Date\.now\(/;
 describe('домен не читает текущее время', () => {
   it.each(SOURCES.filter((f) => f.startsWith('src/domain/')))('%s', (file) => {
     expect(read(file)).not.toMatch(clockRead);
+  });
+});
+
+// Карта архитектуры: разделы, существующие пути и те же слои, что в LAYERS (research R9).
+const MAP_FILE = 'docs/architecture.md';
+const map = existsSync(join(ROOT, MAP_FILE)) ? read(MAP_FILE) : '';
+const mapLines = map.trimEnd().split(/\r?\n/);
+const PROJECT_PATH = /^(src|docs|worker|specs|\.specify)\//;
+const ROOT_FILES = new Set(['CLAUDE.md', 'README.md', 'package.json', 'vitest.config.ts', '.gitignore']);
+/** Пути проекта в обратных кавычках; шаблоны (`*`, `…`, `<`, `{`) пропускаются. */
+const mapPaths = [...new Set([...map.matchAll(/`([^`\r\n]+)`/g)].map((m) => m[1]!))].filter(
+  (s) => (PROJECT_PATH.test(s) || ROOT_FILES.has(s)) && !/[*…<{]/.test(s),
+);
+
+describe('карта архитектуры', () => {
+  it(`${MAP_FILE} есть и не длиннее 120 строк`, () => {
+    expect(map, `нет ${MAP_FILE}`).not.toBe('');
+    expect(mapLines.length).toBeLessThanOrEqual(120);
+  });
+
+  it.each([
+    '## Слои',
+    '## Пути данных',
+    '## Правила корректности данных',
+    '## Чек-листы',
+    '### Добавить настройку',
+    '### Добавить отметку дня',
+    '### Добавить вид напоминания',
+  ])('есть раздел «%s»', (heading) => {
+    expect(mapLines).toContain(heading);
+  });
+
+  it('ссылается на чек-лист новой версии схемы', () => {
+    expect(map).toContain('`src/storage/migrations/README.md`');
+  });
+
+  it('пути проекта упомянуты', () => {
+    expect(mapPaths.length).toBeGreaterThan(0);
+  });
+
+  it.each(mapPaths)('путь %s существует, без номера строки', (path) => {
+    expect(path).not.toMatch(/:\d+$/);
+    expect(existsSync(join(ROOT, path))).toBe(true);
+  });
+
+  it('таблица «Слои» — те же слои, что в тесте', () => {
+    const section = map.split(/^## /m).find((s) => s.startsWith('Слои')) ?? '';
+    const rows = [...section.matchAll(/^\| `([^`]+)` \|/gm)].map((m) => m[1]!);
+    expect(rows.sort()).toEqual(LAYERS.map((l) => l.path).sort());
   });
 });
