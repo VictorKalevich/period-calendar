@@ -425,7 +425,7 @@ src/ui/normalPath.test.ts src/ui/saveFailures.test.ts src/ui/uiLogicPlacement.te
 
 ## Phase 6: Polish & проверки
 
-- [ ] T019 Проверки шага (quickstart.md, разделы 1–5):
+- [X] T019 Проверки шага (quickstart.md, разделы 1–5):
   - `npm test`: тестов ≥ 1121, файлов = 60 + 9;
   - `npm run build`;
   - `git diff refactoring...HEAD --stat -- "*.test.ts" "*.snap"`: из существующих изменён только
@@ -439,7 +439,7 @@ src/ui/normalPath.test.ts src/ui/saveFailures.test.ts src/ui/uiLogicPlacement.te
     --stat -- src/ui/app.css src/ui/theme.css` пуст. Разметка посимвольно прежняя (T002), значит вид в
     светлой и тёмной темах, контраст и зоны нажатия не изменились. `theme.test.ts` и
     `design-system.test.ts` зелёные.
-- [ ] T020 Критерии готовности файла шага (`docs/refactoring/step-6-ui-logic.md`) отметить по
+- [X] T020 Критерии готовности файла шага (`docs/refactoring/step-6-ui-logic.md`) отметить по
   результатам T019:
   - тесты новых функций написаны до кода;
   - в `src/ui` нет `date-fns` и своих функций склонения и дат;
@@ -453,7 +453,7 @@ src/ui/normalPath.test.ts src/ui/saveFailures.test.ts src/ui/uiLogicPlacement.te
   - `MonthPager.tsx` `toIndex`;
   - `*.test.tsx` не входят в `include` (шаг 7);
   - всё, что найдётся при реализации.
-- [ ] T021 Отметить задачи в `specs/019-ui-logic/tasks.md` выполненными; коммит «019: задачи
+- [X] T021 Отметить задачи в `specs/019-ui-logic/tasks.md` выполненными; коммит «019: задачи
   выполнены».
 
 ---
