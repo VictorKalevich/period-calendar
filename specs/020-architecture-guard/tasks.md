@@ -244,15 +244,15 @@ PowerShell; `build` включает `tsc --noEmit` и проверяет тип
 
 ## Phase 6: Polish & проверки
 
-- [ ] T014 Полные проверки (PowerShell): `npm test` — все зелёные, тестов ≥ 1348, файлов ≥ 69;
+- [X] T014 Полные проверки (PowerShell): `npm test` — все зелёные, тестов ≥ 1348, файлов ≥ 69;
   `npm run build`; `npm test --prefix worker` — 111; `npm run typecheck --prefix worker`; после них
   `git status --short` — только `Claude outputs/`.
-- [ ] T015 Объём и кодировка: `git diff refactoring...HEAD --stat` — только файлы из quickstart §5;
+- [X] T015 Объём и кодировка: `git diff refactoring...HEAD --stat` — только файлы из quickstart §5;
   `git diff refactoring...HEAD --stat -- src worker ':!src/**/*.test.ts' ':!src/*.test.ts'` — пусто;
   `git diff refactoring...HEAD` — проверка на испорченную кириллицу и BOM даёт 0 совпадений; BOM в
   начале новых файлов нет (`head -c 3 … | od -An -tx1`). Критерии готовности файла шага и SC-001…SC-008
   выполнены.
-- [ ] T016 Отметить задачи `[X]` (Edit), «Заметки T007» заполнены → коммит «020: задачи выполнены».
+- [X] T016 Отметить задачи `[X]` (Edit), «Заметки T007» заполнены → коммит «020: задачи выполнены».
 
 ---
 
