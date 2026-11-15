@@ -236,7 +236,7 @@ src/ui/uiLogicPlacement.test.ts`.
     `formatDayMonthNumeric` остаётся.
   - Проверить: `dates.test.ts`, `report.test.ts`, `forecastCharacterization.test.ts` зелёные и не
     менялись. `npm test`, `npm run build`; коммит «019: числовая и полная дата — в модуле дат».
-- [ ] T007 [US1] Интерфейс — через доменные форматы (FR-002–FR-004).
+- [X] T007 [US1] Интерфейс — через доменные форматы (FR-002–FR-004).
   - `BackupSection.tsx`: удалить `numericDate`, вызывать `formatDateNumeric` из `../../domain/dates`.
     Импорт `LocalDate` убрать, если он больше не нужен.
   - `src/ui/screens/StatsScreen.tsx`: удалить импорты `date-fns`, `date-fns/locale`, `parseLD`,

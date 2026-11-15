@@ -1,15 +1,11 @@
 import { useRef, useState } from 'react';
-import { toLocalDate } from '../../domain/dates';
+import { formatDateNumeric, toLocalDate } from '../../domain/dates';
 import { pluralRu } from '../../domain/plural';
-import type { LocalDate } from '../../domain/types';
 import { applyBackup, parseBackup, type ParsedBackup } from '../../storage/backup';
 import { getSettings } from '../../storage/repository';
 import { applyTextImport, looksLikeCycleText, planTextImport, type TextImportPlan } from '../../storage/textImport';
 import { BottomSheet } from './BottomSheet';
 import { EXPORT_FAILED_TEXT, exportData } from './share';
-
-/** «23.12.2017» */
-const numericDate = (d: LocalDate) => `${d.slice(8, 10)}.${d.slice(5, 7)}.${d.slice(0, 4)}`;
 
 const PERIOD_WORDS: [string, string, string] = ['период', 'периода', 'периодов'];
 
@@ -142,8 +138,8 @@ export function BackupSection() {
         {textPlan && (
           <>
             <p className="t-body sheet__note">
-              Найдено: {pluralRu(textPlan.found, PERIOD_WORDS)} месячных ({numericDate(textPlan.first)} –{' '}
-              {numericDate(textPlan.last)}). Добавить в календарь?
+              Найдено: {pluralRu(textPlan.found, PERIOD_WORDS)} месячных ({formatDateNumeric(textPlan.first)} –{' '}
+              {formatDateNumeric(textPlan.last)}). Добавить в календарь?
             </p>
             {textPlan.replaced > 0 && (
               <p className="t-body sheet__note">

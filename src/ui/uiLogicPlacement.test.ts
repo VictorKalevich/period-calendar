@@ -35,4 +35,15 @@ describe('решения интерфейса — в чистых функция
     expect(occurrences(appSources, 'function pluralRu')).toEqual(['domain/plural.ts × 1']);
     expect(source('domain/dates.ts')).not.toContain('% 10');
   });
+
+  it('в src/ui нет date-fns и разбора даты срезами для вывода (FR-004)', () => {
+    // `slice(5, 7)` не проверяется: им считает индекс месяца MonthPager.tsx (вне объёма шага).
+    expect(occurrences(uiSources, "from 'date-fns")).toEqual([]);
+    expect(occurrences(uiSources, 'slice(8, 10)')).toEqual([]);
+  });
+
+  it('форматы «8 ноября 2026» и «08.11.2026» определены один раз — в модуле дат (FR-002, FR-003)', () => {
+    expect(occurrences(appSources, "'d MMMM yyyy'")).toEqual(['domain/dates.ts × 1']);
+    expect(occurrences(appSources, '${d.slice(8, 10)}.${d.slice(5, 7)}.')).toEqual(['domain/dates.ts × 1']);
+  });
 });

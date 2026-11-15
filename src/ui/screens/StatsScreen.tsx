@@ -1,15 +1,10 @@
-import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
 import { buildCycles } from '../../domain/cycles';
-import { parseLD } from '../../domain/dates';
+import { formatFullDateRu } from '../../domain/dates';
 import { cycleStats } from '../../domain/stats';
-import type { LocalDate } from '../../domain/types';
 import { useLiveQuery } from '../../hooks/useLiveQuery';
 import { useToday } from '../../hooks/useToday';
 import { getDayEntries, getPeriods, getSettings } from '../../storage/repository';
 import { DoctorReportButton } from '../components/DoctorReportButton';
-
-const fullDate = (d: LocalDate) => format(parseLD(d), 'd MMMM yyyy', { locale: ru });
 
 /** Статистика (US5, FR-027). Макета пока нет — собрано из карточек и типографики design.md. */
 export function StatsScreen() {
@@ -55,7 +50,7 @@ export function StatsScreen() {
           <ul className="history__list">
             {stats.history.map((c) => (
               <li key={c.start} className="history__row">
-                <span className="history__date">{fullDate(c.start)}</span>
+                <span className="history__date">{formatFullDateRu(c.start)}</span>
                 <span className="t-caption history__meta">
                   {c.length !== null ? `цикл ${c.length} дн.` : 'идёт сейчас'}
                   {c.periodLength !== null && ` · месячные ${c.periodEndEstimated ? '≈ ' : ''}${c.periodLength} дн.`}
