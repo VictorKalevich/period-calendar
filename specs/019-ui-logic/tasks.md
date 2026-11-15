@@ -383,7 +383,7 @@ src/ui/dayWrites.test.ts src/ui/saveFailures.test.ts src/ui/uiLogicPlacement.tes
 **Independent Test**: `npx vitest run src/ui/components/Toggle.test.ts src/ui/toggleMarkup.test.ts
 src/ui/normalPath.test.ts src/ui/saveFailures.test.ts src/ui/uiLogicPlacement.test.ts`.
 
-- [ ] T015 [US3] Компонент `Toggle` (FR-009, FR-011; research R2; контракт `Toggle.tsx`).
+- [X] T015 [US3] Компонент `Toggle` (FR-009, FR-011; research R2; контракт `Toggle.tsx`).
   - Тест первым: новый `src/ui/components/Toggle.test.ts` (happy-dom).
     - `renderToStaticMarkup(createElement(Toggle, …))` `toBe` строкам таблицы контракта для четырёх
       вариантов: без подсказки и включён; со ссылкой на пояснение и выключен; с подсказкой и выключен;
