@@ -305,7 +305,7 @@ src/ui/dayWrites.test.ts src/ui/saveFailures.test.ts src/ui/uiLogicPlacement.tes
     убрать.
   - Проверить: `uiDecisions.test.ts` и `exportData.test.ts` зелёные. `npm test`, `npm run build`;
     коммит «019: вид импортируемого файла — чистая функция».
-- [ ] T011 [P] [US2] Переходы «Самочувствия» (FR-006; контракт `symptomSelection.ts`; data-model
+- [X] T011 [P] [US2] Переходы «Самочувствия» (FR-006; контракт `symptomSelection.ts`; data-model
   «SymptomSelection»).
   - Тест первым: новый `src/domain/symptomSelection.test.ts`. Вход замораживать
     (`Object.freeze` у объекта, массива и `intensity`) и проверять, что он не изменился. Случаи:
@@ -325,7 +325,7 @@ src/ui/dayWrites.test.ts src/ui/saveFailures.test.ts src/ui/uiLogicPlacement.tes
     `withDefaultIntensity` из `./dayEntry`, типы из `./types`. Комментарии со ссылками 009 US4 сц. 3 и
     012 FR-006 переносятся из `SymptomPicker.tsx`.
   - `npm test`, `npm run build`; коммит вместе с T012.
-- [ ] T012 [US2] `SymptomPicker` — через переходы (FR-006; research R6).
+- [X] T012 [US2] `SymptomPicker` — через переходы (FR-006; research R6).
   - Поиск, тест первым: новый `it` в `uiLogicPlacement.test.ts` — `SymptomPicker.tsx` содержит
     `initialSymptomSelection(`, `toggleSymptom(`, `setSymptomIntensity(` и не содержит
     `DEFAULT_INTENSITY` и `withDefaultIntensity`. Прогнать — падает.

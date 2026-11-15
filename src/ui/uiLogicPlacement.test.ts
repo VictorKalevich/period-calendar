@@ -54,4 +54,11 @@ describe('решения интерфейса — в чистых функция
     expect(backup).not.toContain('looksLikeCycleText');
     expect(occurrences(appSources, 'looksLikeCycleText =')).toEqual(['domain/cycleText.ts × 1']);
   });
+
+  it('«Самочувствие» меняет состояние переходами домена (FR-006, SC-005)', () => {
+    const picker = source('ui/components/SymptomPicker.tsx');
+    for (const call of ['initialSymptomSelection(', 'toggleSymptom(', 'setSymptomIntensity(']) expect(picker).toContain(call);
+    expect(picker).not.toContain('DEFAULT_INTENSITY');
+    expect(picker).not.toContain('withDefaultIntensity');
+  });
 });
