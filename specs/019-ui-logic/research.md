@@ -252,8 +252,8 @@ Toggle({ label: string; hint?: string; checked: boolean; disabled?: boolean;
 
 1. Ни один файл `src/ui/**/*.{ts,tsx}` не импортирует `date-fns` и `date-fns/locale`.
 2. В `src/ui` нет правила склонения (`% 10`, `% 100`) и разбора даты срезами для вывода
-   (`slice(8, 10)`, `slice(5, 7)`). `function pluralRu` определена в `src` ровно один раз
-   (`src/domain/plural.ts`); в `dates.ts` нет `% 10`.
+   (`slice(8, 10)`). `function pluralRu` определена в `src` ровно один раз (`src/domain/plural.ts`);
+   в `dates.ts` нет `% 10`.
 3. Шаблон числовой даты (`slice(8, 10)}.${…slice(5, 7)}.`) встречается в `src` ровно один раз, в
    `dates.ts`. Формат `'d MMMM yyyy'` — тоже один раз, в `dates.ts`.
 4. `role="switch"` и `className="toggle"` в `src/ui` — только в `Toggle.tsx`. `<Toggle` — 7 раз в
@@ -268,8 +268,8 @@ Toggle({ label: string; hint?: string; checked: boolean; disabled?: boolean;
 Проверки добавляются по частям, в коммитах соответствующих правок. Каждая сначала падает локально,
 затем проходит. Коммит с красным тестом не создаётся: каждый коммит проходит `npm test`.
 
-`DayCell.tsx` (`Number(info.date.slice(8))`, номер дня в ячейке) и `MonthPager.tsx` (индекс месяца)
-под проверку 2 не попадают: шаблон — `slice(8, 10)` и `slice(5, 7)` в выводе даты. `MonthPager` вне
+`DayCell.tsx` (`Number(info.date.slice(8))`, номер дня в ячейке) и `MonthPager.tsx` (индекс месяца через
+`slice(0, 4)` и `slice(5, 7)`) под проверку 2 не попадают: шаблон — `slice(8, 10)`. `MonthPager` вне
 объёма. Номер дня в ячейке — не копия доменной функции. Оба записываются в «Журнал» как находки.
 
 ## R12. Описание компонента в `design.md`
