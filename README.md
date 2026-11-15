@@ -37,6 +37,7 @@ npm ci --prefix worker
 npm test --prefix worker       # Web Push (RFC 8291/8292), API и cron воркера
 ```
 
+- Карта архитектуры — `docs/architecture.md`: слои и их правила, пути данных, чек-листы типовых изменений.
 - `src/domain` — чистые функции прогноза, разрабатываются тестами вперёд.
 - `src/storage` — Dexie (IndexedDB) с версиями схемы; чек-лист новой версии — `src/storage/migrations/README.md`.
 - `src/ui` — React-экраны по макетам `docs/design/design.md`.
