@@ -1,9 +1,10 @@
 import { useRef, useState } from 'react';
+import { looksLikeCycleText } from '../../domain/cycleText';
 import { formatDateNumeric, toLocalDate } from '../../domain/dates';
 import { pluralRu } from '../../domain/plural';
 import { applyBackup, parseBackup, type ParsedBackup } from '../../storage/backup';
 import { getSettings } from '../../storage/repository';
-import { applyTextImport, looksLikeCycleText, planTextImport, type TextImportPlan } from '../../storage/textImport';
+import { applyTextImport, planTextImport, type TextImportPlan } from '../../storage/textImport';
 import { BottomSheet } from './BottomSheet';
 import { EXPORT_FAILED_TEXT, exportData } from './share';
 

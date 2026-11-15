@@ -265,7 +265,7 @@ src/ui/uiLogicPlacement.test.ts`.
 src/ui/components/reminderToggle.test.ts src/ui/uiDecisions.test.ts src/storage/textImport.test.ts
 src/ui/dayWrites.test.ts src/ui/saveFailures.test.ts src/ui/uiLogicPlacement.test.ts`.
 
-- [ ] T008 [US2] `looksLikeCycleText` — в домен (research R5).
+- [X] T008 [US2] `looksLikeCycleText` — в домен (research R5).
   - Характеризация уже есть: `src/storage/textImport.test.ts:36-37`.
   - Перенести `export const looksLikeCycleText = (text: string) => /period start date:/i.test(text);`
     вместе с JSDoc из `src/storage/textImport.ts:26-27` в `src/domain/cycleText.ts` (после типов, перед

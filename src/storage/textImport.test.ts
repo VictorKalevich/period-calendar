@@ -2,7 +2,8 @@ import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from './db';
 import { getDayEntries, getPeriods, getSettings, saveDayEntry, savePeriods, saveSettings } from './repository';
-import { applyTextImport, looksLikeCycleText, planTextImport } from './textImport';
+import { applyTextImport, planTextImport } from './textImport';
+import { looksLikeCycleText } from '../domain/cycleText';
 import { DEFAULT_SETTINGS, type LocalDate } from '../domain/types';
 
 const ld = (s: string) => s as LocalDate;

@@ -21,6 +21,9 @@ export interface CycleText {
 
 export type CycleTextError = 'not-cycle-text' | 'no-periods';
 
+/** Похоже ли содержимое на текстовую выгрузку месячных. */
+export const looksLikeCycleText = (text: string) => /period start date:/i.test(text);
+
 const CYCLE_RE = /^cycle\s+\d+$/i;
 const SEPARATOR_RE = /^-{3,}$/;
 const MANUAL_RE = /^manual events\b/i;
