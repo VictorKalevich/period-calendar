@@ -1,4 +1,5 @@
-import { posix } from 'node:path';
+import { readdirSync, readFileSync } from 'node:fs';
+import { join, posix } from 'node:path';
 import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 
@@ -98,6 +99,54 @@ function targetOf(file: string, specifier: string | null): Target {
   }
   const parts = specifier.split('/');
   return { kind: 'package', name: specifier.startsWith('@') ? parts.slice(0, 2).join('/') : parts[0]! };
+}
+
+interface Exception {
+  file: string;
+  /** Пакет, `id` слоя или `import(…)` для вычисляемого динамического импорта. */
+  target: string;
+  reason: string;
+}
+
+/** Единичные импорты против правил слоя — явно, с причиной (research R5). Ненужное исключение — ошибка. */
+const EXCEPTIONS: readonly Exception[] = [
+  {
+    file: 'src/hooks/useLiveQuery.ts',
+    target: 'dexie',
+    reason: 'живые запросы: своя обёртка над liveQuery вместо dexie-react-hooks (Конституция V); единственный хук с Dexie',
+  },
+  {
+    file: 'src/push/sync.ts',
+    target: 'dexie',
+    reason: 'startReminderSync подписывается liveQuery(reminderDataQuery) и отправляет расписание после изменения данных (018 R7)',
+  },
+];
+
+/** Нарушения правил слоёв в файле `file` (путь от корня проекта) с текстом `text`; пусто — всё в порядке. */
+function violations(file: string, text: string): string[] {
+  const path = toPosix(file);
+  const layer = layerOf(path);
+  if (!layer) return [`${path}: файл вне таблицы слоёв — отнесите его к слою`];
+  const excepted = (target: string) => EXCEPTIONS.some((e) => e.file === path && e.target === target);
+  const out: string[] = [];
+  for (const { specifier, line } of importsOf(text, path)) {
+    const at = `${path}:${line}: '${specifier ?? 'import(…)'}' — `;
+    const target = targetOf(path, specifier);
+    if (target.kind === 'layer') {
+      if (target.id !== layer.id && !layer.layers.includes(target.id) && !excepted(target.id)) {
+        out.push(`${at}слой ${layer.id} не может импортировать слой ${target.id}`);
+      }
+    } else if (target.kind === 'package') {
+      if (!layer.packages.includes(target.name) && !excepted(target.name)) {
+        out.push(`${at}слою ${layer.id} не разрешён пакет ${target.name}`);
+      }
+    } else if (target.kind === 'outside') {
+      out.push(`${at}импорт вне слоёв: ${target.path}`);
+    } else if (!excepted('import(…)')) {
+      out.push(`${at}динамический импорт с вычисляемым именем`);
+    }
+  }
+  return out;
 }
 
 describe('распознавание импортов', () => {
@@ -217,5 +266,133 @@ describe('отнесение импорта', () => {
     expect(layerOf('worker/src/webpush.ts')?.id).toBe('worker');
     expect(layerOf('src/extra.ts')).toBeUndefined();
     expect(layerOf('src/domainx/a.ts')).toBeUndefined();
+  });
+});
+
+describe('правила слоёв', () => {
+  // Прежние запреты src/domain/isolation.test.ts (react, react-dom, dexie, storage, ui, push, hooks) и новые
+  // (report, pwa) — research R1.
+  it.each([
+    'react',
+    'react-dom',
+    'dexie',
+    '../storage/repository',
+    '../ui/App',
+    '../push/sync',
+    '../hooks/useToday',
+    '../report/render',
+    '../pwa/registerUpdates',
+  ])('домену запрещён %s', (specifier) => {
+    expect(violations('src/domain/x.ts', `import { x } from '${specifier}';`)).toHaveLength(1);
+  });
+
+  it.each(['date-fns', 'date-fns/locale', './dates'])('домену разрешён %s', (specifier) => {
+    expect(violations('src/domain/x.ts', `import { x } from '${specifier}';`)).toEqual([]);
+  });
+
+  it('сообщение называет файл, строку, импорт и правило', () => {
+    expect(violations('src/storage/x.ts', "import { App } from '../ui/App';")).toEqual([
+      "src/storage/x.ts:1: '../ui/App' — слой storage не может импортировать слой ui",
+    ]);
+    expect(violations('src/ui/x.ts', "const a = 1;\nimport { format } from 'date-fns';")).toEqual([
+      "src/ui/x.ts:2: 'date-fns' — слою ui не разрешён пакет date-fns",
+    ]);
+    expect(violations('src/report/x.ts', "import 'dexie';")).toEqual([
+      "src/report/x.ts:1: 'dexie' — слою report не разрешён пакет dexie",
+    ]);
+    expect(violations('src/storage/x.ts', "import pkg from '../../package.json';")).toEqual([
+      "src/storage/x.ts:1: '../../package.json' — импорт вне слоёв: package.json",
+    ]);
+    expect(violations('src/ui/x.ts', 'const m = import(name);')).toEqual([
+      "src/ui/x.ts:1: 'import(…)' — динамический импорт с вычисляемым именем",
+    ]);
+    expect(violations('src/extra.ts', "import { a } from './domain/dates';")).toEqual([
+      'src/extra.ts: файл вне таблицы слоёв — отнесите его к слою',
+    ]);
+  });
+
+  it('импорт внутри своего слоя разрешён', () => {
+    expect(violations('src/ui/screens/X.tsx', "import { A } from '../components/A';\nimport './x.css';")).toEqual([]);
+    expect(violations('worker/src/index.ts', "import { v } from './validate';")).toEqual([]);
+  });
+
+  it('воркер не импортирует код приложения', () => {
+    expect(violations('worker/src/index.ts', "import { toLocalDate } from '../../src/domain/dates';")).toEqual([
+      "worker/src/index.ts:1: '../../src/domain/dates' — слой worker не может импортировать слой domain",
+    ]);
+  });
+
+  it('исключение действует только в своём файле', () => {
+    const dexie = "import { liveQuery } from 'dexie';";
+    expect(violations('src/push/sync.ts', dexie)).toEqual([]);
+    expect(violations('src/push/syncCore.ts', dexie)).toHaveLength(1);
+    expect(violations('src/hooks/useLiveQuery.ts', dexie)).toEqual([]);
+    expect(violations('src/hooks/useToday.ts', dexie)).toHaveLength(1);
+  });
+
+  it('импорт только типов — зависимость; разрешённое направление не нарушение', () => {
+    expect(violations('src/ui/x.ts', "import type { X } from '../push/subscribe';")).toEqual([]);
+    expect(violations('src/storage/x.ts', "import type { X } from '../push/subscribe';")).toHaveLength(1);
+  });
+
+  // Файлы верхнего уровня src (по итогам /speckit-analyze, C2).
+  it('точка входа приложения', () => {
+    expect(violations('src/main.tsx', "import Dexie from 'dexie';")).toEqual([
+      "src/main.tsx:1: 'dexie' — слою main не разрешён пакет dexie",
+    ]);
+    expect(violations('src/main.tsx', "import './sw';")).toEqual([
+      "src/main.tsx:1: './sw' — слой main не может импортировать слой sw",
+    ]);
+    const allowed = "import { a } from './storage/repository';\nimport { App } from './ui/App';\nimport { createRoot } from 'react-dom/client';";
+    expect(violations('src/main.tsx', allowed)).toEqual([]);
+  });
+
+  it('service worker и объявления типов', () => {
+    expect(violations('src/vite-env.d.ts', "import 'react';")).toHaveLength(1);
+    expect(violations('src/sw.ts', "import { n } from './pwa/pushNotification';\nimport { p } from 'workbox-precaching';")).toEqual([]);
+    expect(violations('src/sw.ts', "import { App } from './ui/App';")).toHaveLength(1);
+  });
+});
+
+const ROOT = join(__dirname, '..');
+const read = (file: string) => readFileSync(join(ROOT, file), 'utf8');
+
+/** Исходные файлы приложения и воркера без тестов, пути от корня проекта. */
+const SOURCES = ['src', 'worker/src']
+  .flatMap((dir) => (readdirSync(join(ROOT, dir), { recursive: true }) as string[]).map((f) => `${dir}/${toPosix(f)}`))
+  .filter((f) => /\.tsx?$/.test(f) && !/\.test\.tsx?$/.test(f))
+  .sort();
+
+describe('файлы и слои', () => {
+  it('исходники найдены, тесты не проверяются', () => {
+    expect(SOURCES).toEqual(
+      expect.arrayContaining(['src/main.tsx', 'src/sw.ts', 'src/vite-env.d.ts', 'src/ui/testing.ts', 'worker/src/index.ts']),
+    );
+    expect(SOURCES.filter((f) => f.includes('.test.'))).toEqual([]);
+  });
+
+  it.each(LAYERS.map((l) => l.path))('в слое %s есть файлы', (path) => {
+    expect(SOURCES.filter((f) => layerOf(f)?.path === path).length).toBeGreaterThan(0);
+  });
+
+  it.each(SOURCES)('%s — по правилам слоя', (file) => {
+    expect(violations(file, read(file))).toEqual([]);
+  });
+
+  it.each(EXCEPTIONS.map((e) => [e.file, e.target] as const))('исключение %s → %s нужно', (file, target) => {
+    const used = importsOf(read(file), file).some(({ specifier }) => {
+      const t = targetOf(file, specifier);
+      return (t.kind === 'package' && t.name === target) || (t.kind === 'layer' && t.id === target) || (t.kind === 'computed' && target === 'import(…)');
+    });
+    if (!used) expect.fail(`${file}: исключение ${target} больше не нужно — удалите его`);
+  });
+});
+
+// Конституция IV: домен не читает часы — выражение прежнего src/domain/isolation.test.ts без изменений (R6).
+const clockRead = /new\s+Date\(\s*\)|Date\.now\(/;
+
+describe('домен не читает текущее время', () => {
+  it.each(SOURCES.filter((f) => f.startsWith('src/domain/')))('%s', (file) => {
+    expect(read(file)).not.toMatch(clockRead);
   });
 });
