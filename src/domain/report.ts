@@ -1,8 +1,8 @@
 import { addMonths } from 'date-fns';
 import { moodLabel, MOODS, symptomLabel, SYMPTOMS } from './catalog';
 import { averageCycleLength, averagePeriodLength, buildCycles } from './cycles';
-import { addDaysLD, diffDays, parseLD, toLocalDate } from './dates';
-import { buildForecast, todaySummary } from './forecast';
+import { diffDays, formatDateNumeric, parseLD, toLocalDate } from './dates';
+import { buildForecast, nextPredictedStart, originalPredictedStart } from './forecast';
 import type { DayEntry, Intensity, LocalDate, MoodId, Period, Settings, SymptomId } from './types';
 
 // Отчёт для врача (фича 011) — specs/011-doctor-report/contracts/report.md. Чистые функции:
@@ -78,10 +78,7 @@ export function buildDoctorReport(input: DoctorReportInput): DoctorReport {
   const delayDays = forecast?.delayDays ?? 0;
   let nextPeriod: LocalDate | null = null;
   if (forecast) {
-    nextPeriod =
-      delayDays > 0
-        ? addDaysLD(today, -delayDays)
-        : todaySummary({ forecast, periods, settings, entries: new Set(), today }).nextPeriod;
+    nextPeriod = delayDays > 0 ? originalPredictedStart(forecast) : nextPredictedStart(forecast, today);
   }
 
   const inPeriod = entries.filter((e) => e.date >= from && e.date <= today);
@@ -139,8 +136,6 @@ export const REPORT_TITLE = 'Отчёт о менструальном цикле
 export const NO_CYCLES_TEXT = 'Пока нет завершённых циклов';
 const LOW_CONFIDENCE_NOTE = 'Прогноз по средним значениям: мало данных или нерегулярный цикл';
 
-/** «08.11.2026» */
-export const formatDateNumeric = (d: LocalDate) => `${d.slice(8, 10)}.${d.slice(5, 7)}.${d.slice(0, 4)}`;
 const formatDayMonthNumeric = (d: LocalDate) => `${d.slice(8, 10)}.${d.slice(5, 7)}`;
 const days = (n: number | null) => (n === null ? '—' : `${n} дн.`);
 const count = (n: number) => (n === 0 ? '—' : String(n));

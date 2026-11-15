@@ -1,6 +1,7 @@
 /// <reference lib="webworker" />
 import { clientsClaim } from 'workbox-core';
 import { cleanupOutdatedCaches, precacheAndRoute } from 'workbox-precaching';
+import { notificationFromPush } from './pwa/pushNotification';
 
 declare const self: ServiceWorkerGlobalScope;
 
@@ -15,18 +16,14 @@ clientsClaim();
 cleanupOutdatedCaches();
 precacheAndRoute(self.__WB_MANIFEST);
 
-// Push-напоминания от воркера: payload { title, body, id } (contracts/push-worker-api.md).
+// Push-напоминания от воркера: payload { title, body, id } (contracts/push-worker-api.md); разбор —
+// src/pwa/pushNotification.ts.
 self.addEventListener('push', (event) => {
-  let data: { title?: string; body?: string; id?: string } = {};
-  try {
-    data = event.data?.json() ?? {};
-  } catch {
-    data = { body: event.data?.text() };
-  }
+  const n = notificationFromPush(event.data);
   event.waitUntil(
-    self.registration.showNotification(data.title ?? 'Календарь цикла', {
-      body: data.body ?? '',
-      tag: data.id,
+    self.registration.showNotification(n.title, {
+      body: n.body,
+      tag: n.tag,
       icon: 'icon-192.png',
       badge: 'icon-192.png',
       lang: 'ru',

@@ -7,6 +7,7 @@ import {
   startOfWeek,
 } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { pluralRu } from './plural';
 import type { LocalDate } from './types';
 
 // Календарные даты как строки YYYY-MM-DD (research.md R1). Арифметика — через локальную полночь,
@@ -75,25 +76,26 @@ export function formatDayMonthRu(d: LocalDate): string {
   return format(parseLD(d), 'd MMMM', { locale: ru });
 }
 
+/** «8 ноября 2026» */
+export function formatFullDateRu(d: LocalDate): string {
+  return format(parseLD(d), 'd MMMM yyyy', { locale: ru });
+}
+
+/** «08.11.2026» */
+export const formatDateNumeric = (d: LocalDate) => `${d.slice(8, 10)}.${d.slice(5, 7)}.${d.slice(0, 4)}`;
+
 /** «1–5 октября», «30 сентября – 4 октября», «28 декабря 2026 – 2 января 2027», «5 октября». */
 export function formatRangeRu(from: LocalDate, to: LocalDate): string {
   if (from === to) return formatDayMonthRu(from);
-  if (from.slice(0, 4) !== to.slice(0, 4)) {
-    const full = (d: LocalDate) => format(parseLD(d), 'd MMMM yyyy', { locale: ru });
-    return `${full(from)} – ${full(to)}`;
-  }
+  if (from.slice(0, 4) !== to.slice(0, 4)) return `${formatFullDateRu(from)} – ${formatFullDateRu(to)}`;
   if (from.slice(0, 7) === to.slice(0, 7)) return `${Number(from.slice(8))}–${formatDayMonthRu(to)}`;
   return `${formatDayMonthRu(from)} – ${formatDayMonthRu(to)}`;
 }
 
 /** Личный сдвиг овуляции: «−5 дней», «−1 день», «0 дней», «+2 дня» (минус — U+2212). */
 export function formatShiftRu(n: number): string {
-  const abs = Math.abs(n);
-  const mod10 = abs % 10;
-  const mod100 = abs % 100;
-  const word = mod10 === 1 && mod100 !== 11 ? 'день' : mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14) ? 'дня' : 'дней';
   const sign = n > 0 ? '+' : n < 0 ? '−' : '';
-  return `${sign}${abs} ${word}`;
+  return `${sign}${pluralRu(Math.abs(n), ['день', 'дня', 'дней'])}`;
 }
 
 /** «Пятница» */

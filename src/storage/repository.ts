@@ -1,10 +1,12 @@
 import { db } from './db';
-import { coerceDayEntry, isEmptyDayEntry } from '../domain/dayEntry';
-import { buildForecast } from '../domain/forecast';
+import { coerceDayEntry, emptyDayEntry, isEmptyDayEntry } from '../domain/dayEntry';
+import { effectivePeriodLength } from '../domain/forecast';
 import { normalizePeriods } from '../domain/periods';
+import { coerceSettings, extraSettingFields } from '../domain/settings';
 import { DEFAULT_SETTINGS, type DayEntry, type LocalDate, type Period, type Settings } from '../domain/types';
 
-const SETTINGS_KEY = 'settings';
+/** Ключ записи настроек в `kv`; им же пишет `applyBackup` (фича 016). */
+export const SETTINGS_KEY = 'settings';
 const PUSH_KEY = 'push';
 const DEV_MODE_KEY = 'devMode';
 const FIRST_PERIOD_HINT_KEY = 'firstPeriodHintDismissed';
@@ -32,15 +34,19 @@ export async function savePeriods(periods: Period[]): Promise<void> {
 
 /**
  * Приводит сохранённые месячные к инварианту «нет пересекающихся и соседних» (003 FR-016).
- * Вызывается при запуске; пишет в базу, только если что-то объединилось.
+ * Вызывается при запуске; пишет в базу, только если что-то объединилось. Чтение, расчёт и запись —
+ * в одной транзакции, чтобы запись, начатая параллельно, не перемежалась с ними (фича 015).
  */
 export async function normalizeStoredPeriods(today: LocalDate): Promise<boolean> {
-  const [periods, settings] = await Promise.all([getPeriods(), getSettings()]);
-  const periodLength = buildForecast({ periods, settings, today })?.periodLength ?? settings.defaultPeriodLength;
-  const normalized = normalizePeriods(periods, today, periodLength);
-  if (JSON.stringify(normalized) === JSON.stringify(periods)) return false;
-  await savePeriods(normalized);
-  return true;
+  return db.transaction('rw', db.periods, db.kv, async () => {
+    const periods = await getPeriods();
+    const settings = await getSettings();
+    const periodLength = effectivePeriodLength(periods, settings);
+    const normalized = normalizePeriods(periods, today, periodLength);
+    if (JSON.stringify(normalized) === JSON.stringify(periods)) return false;
+    await savePeriods(normalized);
+    return true;
+  });
 }
 
 // Записи дня читаются мягко (009 FR-003/FR-004): запись старой формы или испорченная не ломает экран.
@@ -71,9 +77,29 @@ export async function saveDayEntry(entry: DayEntry): Promise<void> {
   await db.days.put(value);
 }
 
+/** Изменение записи дня: только изменённые поля; дата задаётся отдельно (фича 015). */
+export type DayEntryPatch = Partial<Omit<DayEntry, 'date'>>;
+
+/**
+ * Меняет поля записи дня поверх актуально сохранённой (в одной транзакции), чтобы одновременные
+ * сохранения не затирали друг друга, а изменение не попадало в другой день (по образцу `updateSettings`).
+ * Приведение и удаление пустой записи — как в `saveDayEntry`.
+ */
+export async function updateDayEntry(date: LocalDate, patch: DayEntryPatch): Promise<void> {
+  await db.transaction('rw', db.days, async () => {
+    const current = (await getDayEntry(date)) ?? emptyDayEntry(date);
+    await saveDayEntry({ ...current, ...patch, date });
+  });
+}
+
+/**
+ * Настройки читаются по правилам домена (фича 016): некорректное или отсутствующее поле — значение по
+ * умолчанию. Неизвестные поля записи сохраняются после известных, чтобы не потеряться при `updateSettings`,
+ * который пишет запись целиком.
+ */
 export async function getSettings(): Promise<Settings> {
-  const rec = await db.kv.get(SETTINGS_KEY);
-  return { ...DEFAULT_SETTINGS, ...(rec?.value as Partial<Settings> | undefined) };
+  const raw = (await db.kv.get(SETTINGS_KEY))?.value;
+  return { ...coerceSettings(raw, DEFAULT_SETTINGS), ...extraSettingFields(raw) };
 }
 
 export async function saveSettings(settings: Settings): Promise<void> {
@@ -115,4 +141,23 @@ export async function getPushState(): Promise<PushState | undefined> {
 
 export async function savePushState(state: PushState): Promise<void> {
   await db.kv.put({ key: PUSH_KEY, value: state });
+}
+
+/** Изменение состояния push: идентификатор клиента и токен им не меняются (фича 018). */
+export type PushStatePatch = Partial<Omit<PushState, 'clientId' | 'token'>>;
+export type PushIdentity = Pick<PushState, 'clientId' | 'token'>;
+
+/**
+ * Меняет поля состояния push поверх актуально сохранённого (в одной транзакции, по образцу `updateSettings`),
+ * чтобы запись после сетевого запроса не возвращала устаревший снимок — например, не включала обратно
+ * напоминания, выключенные во время синхронизации. Состояния нет — создаётся из `identity`, если он передан
+ * (у одновременных созданий остаётся первая идентичность), иначе ничего не пишется.
+ */
+export async function updatePushState(patch: PushStatePatch, identity?: PushIdentity): Promise<void> {
+  await db.transaction('rw', db.kv, async () => {
+    const current = await getPushState();
+    const base = current ?? (identity && { ...identity, subscribed: false, pendingSync: false, lastSyncedHash: null });
+    if (!base) return;
+    await db.kv.put({ key: PUSH_KEY, value: { ...base, ...patch } });
+  });
 }

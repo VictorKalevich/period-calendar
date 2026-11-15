@@ -1,4 +1,4 @@
-import { getPushState, savePushState, type PushState } from '../storage/repository';
+import { getPushState, updatePushState, type PushState } from '../storage/repository';
 
 // Подписка на Web Push (research.md R5, R9). Запросы к воркеру — только подписка и расписание.
 
@@ -49,14 +49,12 @@ export async function enableReminders(): Promise<NotificationPermission | 'unsup
   if (!existing) {
     await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: base64UrlToBytes(VAPID_PUBLIC_KEY) });
   }
-  const prev = await getPushState();
-  await savePushState({
-    clientId: prev?.clientId ?? crypto.randomUUID(),
-    token: prev?.token ?? randomToken(),
-    subscribed: true,
-    pendingSync: true,
-    lastSyncedHash: null,
-  });
+  // Поверх актуального состояния, одной транзакцией: прежние clientId и токен сохраняются, новые
+  // создаются, только если состояния ещё нет (у одновременных включений — один клиент, фича 018).
+  await updatePushState(
+    { subscribed: true, pendingSync: true, lastSyncedHash: null },
+    { clientId: crypto.randomUUID(), token: randomToken() },
+  );
   return permission;
 }
 
@@ -69,7 +67,7 @@ export async function disableReminders(): Promise<void> {
     } catch {
       // офлайн — подписка на воркере удалится сама при ответе 404/410 от push-сервиса
     }
-    await savePushState({ ...state, subscribed: false, pendingSync: false, lastSyncedHash: null });
+    await updatePushState({ subscribed: false, pendingSync: false, lastSyncedHash: null });
   }
   const sub = await currentSubscription();
   await sub?.unsubscribe();

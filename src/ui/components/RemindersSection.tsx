@@ -12,12 +12,16 @@ import {
 import { syncReminders } from '../../push/sync';
 import { useLiveQuery } from '../../hooks/useLiveQuery';
 import { getPushState, updateSettings } from '../../storage/repository';
+import { reminderToggleAction } from './reminderToggle';
+import { SaveError, useSaveError } from './SaveError';
+import { Toggle } from './Toggle';
 
 /** Push-напоминания (US4, FR-022–FR-025). */
 export function RemindersSection({ settings }: { settings: Settings }) {
   const push = useLiveQuery(getPushState, []);
   const [permission, setPermission] = useState(notificationPermission);
   const [busy, setBusy] = useState(false);
+  const saveError = useSaveError();
   const subscribed = push?.subscribed === true;
 
   const enable = async () => {
@@ -31,10 +35,11 @@ export function RemindersSection({ settings }: { settings: Settings }) {
   };
 
   const toggle = async (patch: Partial<Settings>) => {
-    const next = { ...settings, ...patch };
-    await updateSettings(patch);
-    if (!next.remindPeriod && !next.remindOvulation && !next.remindMissedPeriod) await disableReminders();
-    else if (!subscribed && permission !== 'denied') await enable();
+    // Настройка не сохранилась — сообщение в карточке, подписку не трогаем (014).
+    if (!(await saveError.save(() => updateSettings(patch)))) return;
+    const action = reminderToggleAction({ ...settings, ...patch }, subscribed, permission);
+    if (action === 'unsubscribe') await disableReminders();
+    else if (action === 'subscribe') await enable();
   };
 
   let body: ReactNode;
@@ -65,45 +70,27 @@ export function RemindersSection({ settings }: { settings: Settings }) {
             Включить напоминания
           </button>
         )}
-        <label className="toggle">
-          <span>
-            За 2 дня до месячных
-            <span className="t-small toggle__hint">{PERIOD_REMINDER.body}</span>
-          </span>
-          <input
-            type="checkbox"
-            role="switch"
-            checked={settings.remindPeriod}
-            disabled={busy}
-            onChange={(e) => toggle({ remindPeriod: e.target.checked })}
-          />
-        </label>
-        <label className="toggle">
-          <span>
-            В день овуляции
-            <span className="t-small toggle__hint">{OVULATION_REMINDER.body}</span>
-          </span>
-          <input
-            type="checkbox"
-            role="switch"
-            checked={settings.remindOvulation}
-            disabled={busy}
-            onChange={(e) => toggle({ remindOvulation: e.target.checked })}
-          />
-        </label>
-        <label className="toggle">
-          <span>
-            Напоминать, если забыла отметить начало месячных
-            <span className="t-small toggle__hint">Придёт на 3-й день после ожидаемого начала месячных, если оно не отмечено</span>
-          </span>
-          <input
-            type="checkbox"
-            role="switch"
-            checked={settings.remindMissedPeriod}
-            disabled={busy}
-            onChange={(e) => toggle({ remindMissedPeriod: e.target.checked })}
-          />
-        </label>
+        <Toggle
+          label="За 2 дня до месячных"
+          hint={PERIOD_REMINDER.body}
+          checked={settings.remindPeriod}
+          disabled={busy}
+          onChange={(v) => toggle({ remindPeriod: v })}
+        />
+        <Toggle
+          label="В день овуляции"
+          hint={OVULATION_REMINDER.body}
+          checked={settings.remindOvulation}
+          disabled={busy}
+          onChange={(v) => toggle({ remindOvulation: v })}
+        />
+        <Toggle
+          label="Напоминать, если забыла отметить начало месячных"
+          hint="Придёт на 3-й день после ожидаемого начала месячных, если оно не отмечено"
+          checked={settings.remindMissedPeriod}
+          disabled={busy}
+          onChange={(v) => toggle({ remindMissedPeriod: v })}
+        />
       </>
     );
   }
@@ -115,6 +102,7 @@ export function RemindersSection({ settings }: { settings: Settings }) {
       </h2>
       <p className="t-caption settings-card__text">Приходят в 12:00. На сервер уходят только даты и тексты напоминаний.</p>
       {body}
+      <SaveError shown={saveError.failed} />
     </section>
   );
 }

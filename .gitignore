@@ -4,6 +4,7 @@ dev-dist/
 build/
 coverage/
 .wrangler/
+*.tsbuildinfo
 *.log
 .env*
 !.env.example

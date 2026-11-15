@@ -1,10 +1,16 @@
 import { useEffect, useState } from 'react';
 import { INTENSITIES, SYMPTOMS } from '../../domain/catalog';
 import { formatDayMonthRu } from '../../domain/dates';
-import { DEFAULT_INTENSITY, emptyDayEntry, withDefaultIntensity } from '../../domain/dayEntry';
+import {
+  initialSymptomSelection,
+  setSymptomIntensity,
+  toggleSymptom,
+  type SymptomSelection,
+} from '../../domain/symptomSelection';
 import type { DayEntry, Intensity, LocalDate, SymptomId } from '../../domain/types';
-import { saveDayEntry } from '../../storage/repository';
+import { updateDayEntry } from '../../storage/repository';
 import { BottomSheet } from './BottomSheet';
+import { SaveError, useSaveError } from './SaveError';
 
 interface Props {
   open: boolean;
@@ -15,46 +21,33 @@ interface Props {
   showIntensity: boolean;
 }
 
-type Levels = Partial<Record<SymptomId, Intensity>>;
-
 /**
  * «Самочувствие»: несколько пунктов (FR-010; 004 FR-003). С 009 настроение — в отдельном листе;
  * при включённой интенсивности у каждого отмеченного пункта ровно одна степень, по умолчанию «средне» (012).
+ * Переходы состояния — чистые функции домена (`domain/symptomSelection.ts`, 019).
  */
 export function SymptomPicker({ open, onClose, date, entry, showIntensity }: Props) {
-  const [symptoms, setSymptoms] = useState<SymptomId[]>([]);
-  const [levels, setLevels] = useState<Levels>({});
+  const [selection, setSelection] = useState<SymptomSelection>({ symptoms: [], intensity: {} });
+  const saveError = useSaveError();
 
   useEffect(() => {
     if (!open) return;
-    const saved = entry?.symptoms ?? [];
-    setSymptoms(saved);
-    // У старых пунктов без степени при включённой интенсивности выбрано «средне» (012 FR-006).
-    setLevels(showIntensity ? withDefaultIntensity(saved, entry?.intensity ?? {}) : (entry?.intensity ?? {}));
+    saveError.reset();
+    setSelection(initialSymptomSelection(entry, showIntensity));
   }, [open, entry, showIntensity]);
 
-  const toggle = (id: SymptomId) => {
-    if (symptoms.includes(id)) {
-      setSymptoms(symptoms.filter((s) => s !== id));
-      // Снятый пункт теряет и свою степень (009 US4, сценарий 3).
-      const { [id]: _dropped, ...rest } = levels;
-      setLevels(rest);
-    } else {
-      setSymptoms([...symptoms, id]);
-      // Новый пункт сразу получает «средне»; при выключенной интенсивности степень не ставится (012).
-      if (showIntensity) setLevels({ ...levels, [id]: DEFAULT_INTENSITY });
-    }
-  };
+  const toggle = (id: SymptomId) => setSelection((cur) => toggleSymptom(cur, id, showIntensity));
 
-  // Степень — как переключатель-радио: всегда одна, повторное нажатие её не снимает (012 FR-006).
-  const setLevel = (id: SymptomId, level: Intensity) => setLevels((cur) => ({ ...cur, [id]: level }));
+  const setLevel = (id: SymptomId, level: Intensity) => setSelection((cur) => setSymptomIntensity(cur, id, level));
 
   const save = async () => {
-    // Остальные поля записи сохраняются как есть. При выключенной интенсивности степени не меняются.
-    await saveDayEntry({ ...(entry ?? emptyDayEntry(date)), symptoms, intensity: levels });
-    onClose();
+    // Меняются только пункты и степени, поверх записи в базе (015); остальные поля — как есть.
+    // При выключенной интенсивности степени не меняются. Отказ записи — лист открыт, пункты и степени целы (014).
+    const patch = { symptoms: selection.symptoms, intensity: selection.intensity };
+    if (await saveError.save(() => updateDayEntry(date, patch))) onClose();
   };
 
+  const { symptoms, intensity } = selection;
   const selected = SYMPTOMS.filter((s) => symptoms.includes(s.id));
 
   return (
@@ -79,7 +72,7 @@ export function SymptomPicker({ open, onClose, date, entry, showIntensity }: Pro
                     key={level.id}
                     type="button"
                     className="segment"
-                    aria-pressed={levels[s.id] === level.id}
+                    aria-pressed={intensity[s.id] === level.id}
                     onClick={() => setLevel(s.id, level.id)}
                   >
                     {level.label}
@@ -90,6 +83,7 @@ export function SymptomPicker({ open, onClose, date, entry, showIntensity }: Pro
           ))}
         </div>
       )}
+      <SaveError shown={saveError.failed} />
       <button type="button" className="btn btn--primary" onClick={save}>
         Готово
       </button>

@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { setDevMode } from '../../storage/repository';
 import { INITIAL_TAPS, registerTap } from '../tapCounter';
+import { SaveError, useSaveError } from './SaveError';
 
 /** «Версия X.Y.Z» внизу настроек; 7 нажатий подряд переключают режим разработчика (002 FR-001, FR-002). */
 export function VersionTapper({ devMode }: { devMode: boolean }) {
   const taps = useRef(INITIAL_TAPS);
   const [toast, setToast] = useState<string | null>(null);
+  const saveError = useSaveError();
 
   useEffect(() => {
     if (!toast) return;
@@ -17,7 +19,8 @@ export function VersionTapper({ devMode }: { devMode: boolean }) {
     const r = registerTap(taps.current, performance.now());
     taps.current = r.state;
     if (!r.toggled) return;
-    await setDevMode(!devMode);
+    // Режим не сохранился — сообщение под строкой версии вместо тоста (014).
+    if (!(await saveError.save(() => setDevMode(!devMode)))) return;
     setToast(devMode ? 'Режим разработчика выключен' : 'Режим разработчика включён');
   };
 
@@ -26,6 +29,7 @@ export function VersionTapper({ devMode }: { devMode: boolean }) {
       <button type="button" className="version" onClick={onTap}>
         Версия {__APP_VERSION__} · {__APP_BUILD__}
       </button>
+      <SaveError shown={saveError.failed} />
       <p className={toast ? 'toast toast--visible' : 'toast'} role="status" aria-live="polite">
         {toast}
       </p>
