@@ -104,6 +104,9 @@ export function Toggle(props: {
 | без подсказки, включён | `<label class="toggle"><span>Учитывать личный сдвиг овуляции</span><input type="checkbox" role="switch" checked=""/></label>` |
 | со ссылкой на пояснение, выключен | `<label class="toggle"><span>Считать от следующей менструации</span><input type="checkbox" role="switch" aria-describedby="ovulation-mode-hint"/></label>` |
 | с подсказкой, выключен | `<label class="toggle"><span>Настроение<span class="t-small toggle__hint">Можно выбрать несколько</span></span><input type="checkbox" role="switch"/></label>` |
-| с подсказкой, недоступен, включён | `<label class="toggle"><span>За 2 дня до месячных<span class="t-small toggle__hint">…</span></span><input type="checkbox" role="switch" checked="" disabled=""/></label>` |
+| с подсказкой, недоступен, включён | `<label class="toggle"><span>За 2 дня до месячных<span class="t-small toggle__hint">…</span></span><input type="checkbox" role="switch" disabled="" checked=""/></label>` |
+
+Серверная отрисовка React выводит `checked` у `input` последним, после остальных атрибутов в порядке
+свойств (выяснено характеризацией T002: `aria-describedby="…" checked=""`).
 
 Нажатие вызывает `onChange` с новым состоянием (`true` для выключенного, `false` для включённого).

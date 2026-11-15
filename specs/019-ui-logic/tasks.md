@@ -52,7 +52,7 @@ PowerShell). Тест и код одной задачи идут в одном �
 
 ## Phase 1: Setup
 
-- [ ] T001 Базовая линия на ветке `019-ui-logic`: `npm test` — 1121 тест в 60 файлах, `npm run build`
+- [X] T001 Базовая линия на ветке `019-ui-logic`: `npm test` — 1121 тест в 60 файлах, `npm run build`
   зелёный (записано при подготовке шага; повторить, если ветка менялась). `worker/` не затрагивается.
 
 ---
@@ -63,7 +63,7 @@ PowerShell). Тест и код одной задачи идут в одном �
 текущем коде и остаются зелёными до конца шага; после них — один коммит «019: характеризационные тесты
 разметки и решений интерфейса».
 
-- [ ] T002 [P] Новый `src/ui/toggleMarkup.test.ts` — разметка 10 переключателей (research R1).
+- [X] T002 [P] Новый `src/ui/toggleMarkup.test.ts` — разметка 10 переключателей (research R1).
   - **Подмены.** `const live = vi.hoisted(() => ({ settings: undefined as unknown, push: undefined as
     unknown }))`. `vi.mock('../hooks/useLiveQuery', async () => { const repo = await
     import('../storage/repository'); return { useLiveQuery: (q: unknown) => q === repo.getSettings ?
@@ -77,7 +77,8 @@ PowerShell). Тест и код одной задачи идут в одном �
     `toggles(renderToStaticMarkup(createElement(SettingsScreen)))` `toEqual` массиву из 10
     строк-литералов в порядке экрана:
     - «Учитывать личный сдвиг овуляции»;
-    - «Считать от следующей менструации» (`… checked="" aria-describedby="ovulation-mode-hint"/>`);
+    - «Считать от следующей менструации» (`… aria-describedby="ovulation-mode-hint" checked=""/>` —
+      серверная отрисовка ставит `checked` последним);
     - «Самочувствие»;
     - «Интенсивность самочувствия» с подсказкой;
     - «Настроение» с подсказкой;
@@ -103,7 +104,7 @@ PowerShell). Тест и код одной задачи идут в одном �
 
   Прогнать `npx vitest run src/ui/toggleMarkup.test.ts` на текущем коде: зелёный, inline-снимки
   записаны. Строки-литералы совпали с настоящими экранами.
-- [ ] T003 [P] Новый `src/ui/uiDecisions.test.ts` — поведение трёх компонентов (research R10).
+- [X] T003 [P] Новый `src/ui/uiDecisions.test.ts` — поведение трёх компонентов (research R10).
   Окружение, `fake-indexeddb`, подмена push и «сегодня» — из «Обвязки».
   - **«Резервная копия»** (`mount(createElement(BackupSection))`; лист — `dialog.sheet` с
     `aria-label`; текст листа — `textContent` его `p.sheet__note`; сообщение — `p.notice`).
@@ -177,7 +178,7 @@ PowerShell). Тест и код одной задачи идут в одном �
 
   Прогнать `npx vitest run src/ui/uiDecisions.test.ts` на текущем коде — зелёный. Если ожидание
   расходится с текущим поведением, исправить ожидание, а не код: это характеризация.
-- [ ] T004 Прогнать `npm test` и `npm run build`; закоммитить T002–T003 **вместе с заполненными
+- [X] T004 Прогнать `npm test` и `npm run build`; закоммитить T002–T003 **вместе с заполненными
   inline-снимками** T002 (3). Снимки записываются только на текущем коде, до T005; после этого коммита
   Vitest их не переписывает, а сравнивает.
 
