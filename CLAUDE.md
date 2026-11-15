@@ -7,8 +7,9 @@
 
 - Конституция (обязательные принципы): `.specify/memory/constitution.md`
 - Макеты (источник правды для UI): `docs/design/design.md`
-- Текущая фича: `specs/001-cycle-calendar/` — spec.md, plan.md, research.md, data-model.md,
-  contracts/, quickstart.md
+- Карта архитектуры (слои, пути данных, чек-листы типовых изменений): `docs/architecture.md`;
+  правила слоёв проверяет `src/architecture.test.ts`.
+- Спецификации фич — `specs/NNN-…/` (история решений); форматы обмена — `specs/001-cycle-calendar/contracts/`.
 
 ## Стек
 
@@ -62,3 +63,5 @@
 
 - `npm test` · `npm run dev` · `npm run build && npm run preview`
 - `cd worker && npm test` · `npx wrangler deploy`
+- Vitest (`npm test`, `npm test --prefix worker`) запускать из PowerShell в папке проекта: из Git Bash
+  с `cd /c/…` он падает целиком («Vitest failed to find the runner») — это окружение, а не тесты.

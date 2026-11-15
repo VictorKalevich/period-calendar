@@ -180,7 +180,7 @@ PowerShell; `build` включает `tsc --noEmit` и проверяет тип
 
 **Independent Test**: тест «карта архитектуры» зелёный; ссылки на месте; «Текущей фичи» нет.
 
-- [ ] T008 [US2] В `src/architecture.test.ts` — `describe('карта архитектуры')` (research R9),
+- [X] T008 [US2] В `src/architecture.test.ts` — `describe('карта архитектуры')` (research R9),
   `MAP = join(ROOT, 'docs/architecture.md')`:
   1. файл существует; строк ≤ 120 (`text.trimEnd().split('\n').length`);
   2. есть строки-заголовки `## Слои`, `## Пути данных`, `## Правила корректности данных`, `## Чек-листы`,
@@ -195,7 +195,7 @@ PowerShell; `build` включает `tsc --noEmit` и проверяет тип
 
   Запустить — красный (файла нет). Чтобы `it.each` по путям не падал на этапе сбора, читать файл через
   `existsSync(MAP) ? readFileSync(MAP, 'utf8') : ''`.
-- [ ] T009 [US2] Новый `docs/architecture.md` по структуре `contracts/architecture-guard.md` и фактам
+- [X] T009 [US2] Новый `docs/architecture.md` по структуре `contracts/architecture-guard.md` и фактам
   research R10 (код ветки после шагов 1–6, не файлы шагов):
   - вступление (1–2 строки): что это, точные правила — `src/architecture.test.ts`, общие принципы —
     `.specify/memory/constitution.md`, интерфейс — `docs/design/design.md`;
@@ -210,11 +210,11 @@ PowerShell; `build` включает `tsc --noEmit` и проверяет тип
   Только пути без номеров строк; не больше 120 строк. Сверить каждый путь и имя функции с кодом
   (`grep`). Тест T008 — зелёный; `npm test`, `npm run build` → коммит «020: карта архитектуры
   docs/architecture.md».
-- [ ] T010 [P] [US2] `CLAUDE.md` — правки ровно по research R11: в «Ключевых документах» строка «Текущая
+- [X] T010 [P] [US2] `CLAUDE.md` — правки ровно по research R11: в «Ключевых документах» строка «Текущая
   фича: …» заменяется двумя строками (карта архитектуры; спецификации и форматы обмена); в «Командах» —
   строка о запуске Vitest из PowerShell. Раздел «Рабочий процесс» и правила не меняются (`git diff
   CLAUDE.md` — только эти места).
-- [ ] T011 [P] [US2] `README.md`, «Разработка» — пункт о карте архитектуры перед списком каталогов (R11).
+- [X] T011 [P] [US2] `README.md`, «Разработка» — пункт о карте архитектуры перед списком каталогов (R11).
   После T010–T011: `npm test`, `npm run build` → коммит «020: CLAUDE.md и README.md — ссылка на карту
   архитектуры».
 
