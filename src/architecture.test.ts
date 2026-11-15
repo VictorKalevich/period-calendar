@@ -3,7 +3,7 @@ import { join, posix } from 'node:path';
 import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 
-// Правила слоёв (docs/refactoring-roadmap.md, «Целевые правила слоёв»; specs/020-architecture-guard).
+// Правила слоёв (docs/architecture.md, «Слои»; specs/020-architecture-guard).
 // Импорты находит разбор синтаксиса TypeScript: «импорт» в комментарии или строке не считается (research R2).
 
 interface ImportRef {
