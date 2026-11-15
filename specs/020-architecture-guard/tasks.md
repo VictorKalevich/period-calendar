@@ -233,7 +233,7 @@ PowerShell; `build` включает `tsc --noEmit` и проверяет тип
   `git rm --cached tsconfig.tsbuildinfo` (файл на диске остаётся). Проверить: `git ls-files
   "*.tsbuildinfo"` пуст; `npm run build`, `npm test`; `git status --short` — только `?? "Claude
   outputs/"` → коммит «020: tsconfig.tsbuildinfo — вне git» (R12).
-- [ ] T013 [P] [US3] `vitest.config.ts`: убрать `passWithNoTests: true`; `include: ['src/**/*.test.ts',
+- [X] T013 [P] [US3] `vitest.config.ts`: убрать `passWithNoTests: true`; `include: ['src/**/*.test.ts',
   'src/**/*.test.tsx']` (R13). Проверить: `npm test` — то же число тестов, что после T011;
   `npx vitest run no-such-test-file` — «No test files found», код выхода 1; `npm run build` → коммит
   «020: настройки тестов — без passWithNoTests, с *.test.tsx».
