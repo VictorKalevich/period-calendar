@@ -212,7 +212,7 @@ src/ui/uiLogicPlacement.test.ts`.
       `function pluralRu`, в `src/domain/plural.ts`; `src/domain/dates.ts` не содержит `% 10`.
   - Проверить: `dates.test.ts` (сдвиг −5…+5, U+2212) и `uiDecisions.test.ts` зелёные. `npm test`,
     `npm run build`; коммит «019: склонение — одна функция в домене».
-- [ ] T006 [US1] Числовая и полная дата в домене (FR-002, FR-003; research R4; контракт `dates.ts`).
+- [X] T006 [US1] Числовая и полная дата в домене (FR-002, FR-003; research R4; контракт `dates.ts`).
   - Тест первым: новый `src/domain/dateFormats.test.ts`. Ожидания:
     - `formatDateNumeric`: `2026-11-08` → «08.11.2026», `2024-02-29` → «29.02.2024», `2017-12-23` →
       «23.12.2017», `2027-01-01` → «01.01.2027»;
