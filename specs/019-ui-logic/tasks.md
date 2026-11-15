@@ -274,7 +274,7 @@ src/ui/dayWrites.test.ts src/ui/saveFailures.test.ts src/ui/uiLogicPlacement.tes
     `'../domain/cycleText'`, остальные имена — по-прежнему из `'./textImport'`.
   - `BackupSection.tsx` временно импортирует `looksLikeCycleText` из `../../domain/cycleText`, до T010.
   - `npm test`, `npm run build`; коммит «019: looksLikeCycleText — в домен, к разбору выгрузки».
-- [ ] T009 [P] [US2] Вид импортируемого файла (FR-005; контракт `importFile.ts`; data-model
+- [X] T009 [P] [US2] Вид импортируемого файла (FR-005; контракт `importFile.ts`; data-model
   «ImportFileKind»).
   - Тест первым: новый `src/domain/importFile.test.ts`, `it.each` по таблице контракта.
     - `'backup'`: `'{"a":1}'`, `'  \n\t{'`, `String.fromCharCode(0xfeff) + '{'`,
@@ -290,7 +290,7 @@ src/ui/dayWrites.test.ts src/ui/saveFailures.test.ts src/ui/uiLogicPlacement.tes
     'cycle-text' : 'unknown';`. Импорт `looksLikeCycleText` из `./cycleText`. JSDoc со ссылкой на 008 и
     009 FR-006.
   - `npm test`, `npm run build`; коммит вместе с T010.
-- [ ] T010 [US2] `BackupSection` — через `importFileKind` (FR-005).
+- [X] T010 [US2] `BackupSection` — через `importFileKind` (FR-005).
   - Поиск, тест первым: новый `it` в `uiLogicPlacement.test.ts` — `BackupSection.tsx` содержит
     `importFileKind(`, `pluralRu(`, `formatDateNumeric(` и не содержит `startsWith('{')` и
     `looksLikeCycleText`; в `src/**` одно определение `looksLikeCycleText =`, в

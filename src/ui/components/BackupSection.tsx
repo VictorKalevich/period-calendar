@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
-import { looksLikeCycleText } from '../../domain/cycleText';
 import { formatDateNumeric, toLocalDate } from '../../domain/dates';
+import { importFileKind } from '../../domain/importFile';
 import { pluralRu } from '../../domain/plural';
 import { applyBackup, parseBackup, type ParsedBackup } from '../../storage/backup';
 import { getSettings } from '../../storage/repository';
@@ -31,7 +31,8 @@ export function BackupSection() {
     if (!file) return;
     if (input.current) input.current.value = '';
     const text = await file.text();
-    if (!text.trimStart().startsWith('{') && looksLikeCycleText(text)) {
+    const kind = importFileKind(text);
+    if (kind === 'cycle-text') {
       const plan = await planTextImport(text, toLocalDate(new Date()));
       if (!plan.ok) setMessage({ text: plan.error, error: true });
       else {
@@ -40,7 +41,7 @@ export function BackupSection() {
       }
       return;
     }
-    if (!text.trimStart().startsWith('{')) {
+    if (kind === 'unknown') {
       setMessage({ text: 'Файл не распознан', error: true });
       return;
     }

@@ -46,4 +46,12 @@ describe('решения интерфейса — в чистых функция
     expect(occurrences(appSources, "'d MMMM yyyy'")).toEqual(['domain/dates.ts × 1']);
     expect(occurrences(appSources, '${d.slice(8, 10)}.${d.slice(5, 7)}.')).toEqual(['domain/dates.ts × 1']);
   });
+
+  it('«Резервная копия» выбирает ветку по importFileKind и берёт склонение и даты из домена (FR-005, SC-005)', () => {
+    const backup = source('ui/components/BackupSection.tsx');
+    for (const call of ['importFileKind(', 'pluralRu(', 'formatDateNumeric(']) expect(backup).toContain(call);
+    expect(backup).not.toContain("startsWith('{')");
+    expect(backup).not.toContain('looksLikeCycleText');
+    expect(occurrences(appSources, 'looksLikeCycleText =')).toEqual(['domain/cycleText.ts × 1']);
+  });
 });
