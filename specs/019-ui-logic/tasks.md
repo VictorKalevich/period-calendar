@@ -415,7 +415,7 @@ src/ui/normalPath.test.ts src/ui/saveFailures.test.ts src/ui/uiLogicPlacement.te
   - Проверить: `toggleMarkup.test.ts` (все части, включая inline-снимки DOM), `uiDecisions.test.ts`,
     `saveFailures.test.ts`, `normalPath.test.ts` зелёные. `npm test`, `npm run build`; коммит «019:
     переключатели «Настроек» и «Напоминаний» — компонент Toggle».
-- [ ] T018 [US3] `docs/design/design.md`, таблица «Компоненты»: в строке «Переключатель» ячейку классов
+- [X] T018 [US3] `docs/design/design.md`, таблица «Компоненты»: в строке «Переключатель» ячейку классов
   `` `toggle` `` заменить на `` `Toggle` (`toggle`) ``, как у `` `BottomSheet` (`sheet`) ``. Вид, классы и
   токены не менять (research R12). Коммит «019: design.md — компонент Toggle».
 
