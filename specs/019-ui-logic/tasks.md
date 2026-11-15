@@ -137,9 +137,10 @@ PowerShell). Тест и код одной задачи идут в одном �
        ещё раз → `aria-pressed="true"` остаётся; после «Готово» — `nausea: 'severe'`.
     4. Переоткрытие сбрасывает несохранённое: снять пункт, `rerender` с `open: false`, затем с `open:
        true` → пункт снова `aria-pressed="true"`.
-    5. `showIntensity: false`, запись `{ symptoms: ['headache'], intensity: { headache: 'severe' } }`:
-       снять «Головная боль» → «Готово» → `symptoms: []` и `intensity` без `headache` — то, что
-       сохраняет текущий код, проверить прогоном.
+    5. `showIntensity: false`, запись `{ symptoms: ['headache'], intensity: { headache: 'severe' }, note:
+       'n' }` (заметка — чтобы запись не стала пустой и не удалилась): снять «Головная боль» → «Готово» →
+       сохранено `{ symptoms: [], intensity: {}, note: 'n' }` (остальные поля — пустые значения
+       `emptyDayEntry`).
   - **«Напоминания»** (`mount(createElement(RemindersSection, { settings }))`, разрешение `'granted'`):
     1. Подписки нет (состояние push не записано), `settings = DEFAULT_SETTINGS` (три вида включены).
        Выключить «За 2 дня до месячных» → `waitUntil(enableReminders вызван)`;
@@ -150,10 +151,35 @@ PowerShell). Тест и код одной задачи идут в одном �
        false, lastSyncedHash: null })` до монтирования, дождаться «Напоминания включены»). Выключить
        «В день овуляции» → после `settle()` ни `enable`, ни `disable` не вызваны.
     4. Подписка есть, включён только `remindOvulation`. Выключить → `disableReminders` вызван.
+  - **Переключатели «Настроек»** (`mount(createElement(SettingsScreen))`; до монтирования
+    `updateSettings(ALL_ON)`, где `ALL_ON` — настройки из T002 (1); дождаться «Резервная копия»).
+    Каждый переключатель ищется по подписи, как помощник `toggle` в `saveFailures.test.ts:264-266`.
+    1. `it.each` по 10 парам «подпись → ключ»:
+       - «Учитывать личный сдвиг овуляции» → `ovulationShiftEnabled`;
+       - «Считать от следующей менструации» → `ovulationFromNextPeriod`;
+       - «Самочувствие» → `showWellbeing`; «Интенсивность самочувствия» → `showIntensity`;
+       - «Настроение» → `showMood`; «Отметка секса» → `showSex`; «Заметки» → `showNotes`;
+       - «За 2 дня до месячных» → `remindPeriod`; «В день овуляции» → `remindOvulation`;
+       - «Напоминать, если забыла отметить начало месячных» → `remindMissedPeriod`.
+
+       Нажатие → `waitUntil((await getSettings())[key] === false)`; остальные девять ключей не
+       изменились.
+    2. `it.each` по тем же 10 подписям с картой «подпись → карточка»: первые два — `cycle-title`,
+       следующие пять — `entries-title`, три напоминания — `reminders-title`. При отказе записи
+       (`vi.spyOn(db.kv, 'put').mockRejectedValue(new Error('fail'))`, как `failWrites` в
+       `saveFailures.test.ts`) нажатие → `p.notice--error` «Не удалось сохранить. Попробуйте ещё раз.»
+       появляется последним элементом своей карточки, в других карточках его нет.
+  - **«Статистика»** (`mount(createElement(StatsScreen))`; до монтирования `savePeriods` с началами
+    `2026-01-01`, `2026-01-29`, `2026-02-26` и концами через 4 дня; дождаться «История циклов»).
+    `[...querySelectorAll('.history__date')].map((e) => e.textContent)` `toEqual` датам вида «26 февраля
+    2026», «29 января 2026», «1 января 2026» в порядке экрана. Порядок и тексты — по текущему коду,
+    проверить прогоном.
 
   Прогнать `npx vitest run src/ui/uiDecisions.test.ts` на текущем коде — зелёный. Если ожидание
   расходится с текущим поведением, исправить ожидание, а не код: это характеризация.
-- [ ] T004 Прогнать `npm test` и `npm run build`; закоммитить T002–T003.
+- [ ] T004 Прогнать `npm test` и `npm run build`; закоммитить T002–T003 **вместе с заполненными
+  inline-снимками** T002 (3). Снимки записываются только на текущем коде, до T005; после этого коммита
+  Vitest их не переписывает, а сравнивает.
 
 **Checkpoint**: прежние разметка и поведение зафиксированы — правки можно начинать.
 
@@ -407,7 +433,11 @@ src/ui/normalPath.test.ts src/ui/saveFailures.test.ts src/ui/uiLogicPlacement.te
   - `git grep` из quickstart, раздел 4;
   - кириллица и BOM в `git diff refactoring...HEAD` (`LC_ALL=C.UTF-8 grep -P …`);
   - объём: `git diff refactoring...HEAD --stat` — только файлы из plan.md, «Source Code», и
-    `specs/019-ui-logic/`.
+    `specs/019-ui-logic/`;
+  - темы (Конституция, «Процесс…»: изменения UI проверяются в обеих темах): `git diff refactoring...HEAD
+    --stat -- src/ui/app.css src/ui/theme.css` пуст. Разметка посимвольно прежняя (T002), значит вид в
+    светлой и тёмной темах, контраст и зоны нажатия не изменились. `theme.test.ts` и
+    `design-system.test.ts` зелёные.
 - [ ] T020 Критерии готовности файла шага (`docs/refactoring/step-6-ui-logic.md`) отметить по
   результатам T019:
   - тесты новых функций написаны до кода;
