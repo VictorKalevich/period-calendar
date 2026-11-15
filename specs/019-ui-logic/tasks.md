@@ -398,14 +398,14 @@ src/ui/normalPath.test.ts src/ui/saveFailures.test.ts src/ui/uiLogicPlacement.te
     <span className="t-small toggle__hint">{hint}</span>}`. JSDoc: «Переключатель дизайн-системы
     (`docs/design/design.md`, «Компоненты»): строка 52 с подписью и необязательной подсказкой».
   - `npm test`, `npm run build`; коммит «019: компонент Toggle с прежней разметкой».
-- [ ] T016 [US3] `SettingsScreen` — 7 × `Toggle` (FR-010).
+- [X] T016 [US3] `SettingsScreen` — 7 × `Toggle` (FR-010).
   - Заменить каждый `<label className="toggle">…</label>` в `src/ui/screens/SettingsScreen.tsx` на
     `<Toggle label=… [hint=…] checked={settings.X} [describedBy="ovulation-mode-hint"] onChange={(v) =>
     update|updateEntries({ X: v })} />`. Карточку обработчика (`update` или `updateEntries`), условия
     показа (`settings.showWellbeing && …`) и порядок элементов сохранить.
   - Проверить: `toggleMarkup.test.ts` (SSR (1) и (2)), `normalPath.test.ts`, `saveFailures.test.ts`
     зелёные. `npm test`, `npm run build`; коммит вместе с T017.
-- [ ] T017 [US3] `RemindersSection` — 3 × `Toggle` (FR-010).
+- [X] T017 [US3] `RemindersSection` — 3 × `Toggle` (FR-010).
   - Поиск, тест первым: новый `it` в `uiLogicPlacement.test.ts`. Прогнать до правки — падает.
     - в `src/ui` строки `role="switch"` и `className="toggle"` есть только в
       `src/ui/components/Toggle.tsx`;

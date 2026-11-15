@@ -8,6 +8,7 @@ import { ForecastInfo } from '../components/ForecastInfo';
 import { RemindersSection } from '../components/RemindersSection';
 import { SaveError, useSaveError } from '../components/SaveError';
 import { Stepper } from '../components/Stepper';
+import { Toggle } from '../components/Toggle';
 import { VersionTapper } from '../components/VersionTapper';
 
 export function SettingsScreen() {
@@ -45,15 +46,11 @@ export function SettingsScreen() {
           unit="дн."
           onChange={(v) => update({ defaultPeriodLength: v })}
         />
-        <label className="toggle">
-          <span>Учитывать личный сдвиг овуляции</span>
-          <input
-            type="checkbox"
-            role="switch"
-            checked={settings.ovulationShiftEnabled}
-            onChange={(e) => update({ ovulationShiftEnabled: e.target.checked })}
-          />
-        </label>
+        <Toggle
+          label="Учитывать личный сдвиг овуляции"
+          checked={settings.ovulationShiftEnabled}
+          onChange={(v) => update({ ovulationShiftEnabled: v })}
+        />
         {settings.ovulationShiftEnabled && (
           <>
             <p className="t-caption settings-card__hint">
@@ -70,16 +67,12 @@ export function SettingsScreen() {
             />
           </>
         )}
-        <label className="toggle">
-          <span>Считать от следующей менструации</span>
-          <input
-            type="checkbox"
-            role="switch"
-            checked={settings.ovulationFromNextPeriod}
-            aria-describedby="ovulation-mode-hint"
-            onChange={(e) => update({ ovulationFromNextPeriod: e.target.checked })}
-          />
-        </label>
+        <Toggle
+          label="Считать от следующей менструации"
+          checked={settings.ovulationFromNextPeriod}
+          describedBy="ovulation-mode-hint"
+          onChange={(v) => update({ ovulationFromNextPeriod: v })}
+        />
         <p id="ovulation-mode-hint" className="t-caption settings-card__hint">
           Овуляция будет рассчитана примерно за 14 дней до ожидаемого начала месячных
         </p>
@@ -93,62 +86,32 @@ export function SettingsScreen() {
         <p className="t-caption settings-card__text">
           Включите то, что хотите отмечать в диалоге дня. Выключение ничего не удаляет — записи просто скрываются.
         </p>
-        <label className="toggle">
-          <span>Самочувствие</span>
-          <input
-            type="checkbox"
-            role="switch"
-            checked={settings.showWellbeing}
-            onChange={(e) => updateEntries({ showWellbeing: e.target.checked })}
-          />
-        </label>
+        <Toggle
+          label="Самочувствие"
+          checked={settings.showWellbeing}
+          onChange={(v) => updateEntries({ showWellbeing: v })}
+        />
         {settings.showWellbeing && (
-          <label className="toggle">
-            <span>
-              Интенсивность самочувствия
-              <span className="t-small toggle__hint">Слабо, средне или сильно — для каждой отметки самочувствия</span>
-            </span>
-            <input
-              type="checkbox"
-              role="switch"
-              checked={settings.showIntensity}
-              onChange={(e) => updateEntries({ showIntensity: e.target.checked })}
-            />
-          </label>
+          <Toggle
+            label="Интенсивность самочувствия"
+            hint="Слабо, средне или сильно — для каждой отметки самочувствия"
+            checked={settings.showIntensity}
+            onChange={(v) => updateEntries({ showIntensity: v })}
+          />
         )}
-        <label className="toggle">
-          <span>
-            Настроение
-            <span className="t-small toggle__hint">Можно выбрать несколько</span>
-          </span>
-          <input
-            type="checkbox"
-            role="switch"
-            checked={settings.showMood}
-            onChange={(e) => updateEntries({ showMood: e.target.checked })}
-          />
-        </label>
-        <label className="toggle">
-          <span>
-            Отметка секса
-            <span className="t-small toggle__hint">Сердечко в календаре</span>
-          </span>
-          <input
-            type="checkbox"
-            role="switch"
-            checked={settings.showSex}
-            onChange={(e) => updateEntries({ showSex: e.target.checked })}
-          />
-        </label>
-        <label className="toggle">
-          <span>Заметки</span>
-          <input
-            type="checkbox"
-            role="switch"
-            checked={settings.showNotes}
-            onChange={(e) => updateEntries({ showNotes: e.target.checked })}
-          />
-        </label>
+        <Toggle
+          label="Настроение"
+          hint="Можно выбрать несколько"
+          checked={settings.showMood}
+          onChange={(v) => updateEntries({ showMood: v })}
+        />
+        <Toggle
+          label="Отметка секса"
+          hint="Сердечко в календаре"
+          checked={settings.showSex}
+          onChange={(v) => updateEntries({ showSex: v })}
+        />
+        <Toggle label="Заметки" checked={settings.showNotes} onChange={(v) => updateEntries({ showNotes: v })} />
         <SaveError shown={entriesSave.failed} />
       </section>
 

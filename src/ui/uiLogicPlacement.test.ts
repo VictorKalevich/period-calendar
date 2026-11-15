@@ -67,4 +67,10 @@ describe('решения интерфейса — в чистых функция
     expect(reminders).toContain('reminderToggleAction(');
     expect(reminders).not.toContain('!next.remindPeriod');
   });
+
+  it('разметка переключателя — только в компоненте Toggle; 10 из 10 переключателей используют его (FR-010, SC-003)', () => {
+    expect(occurrences(uiSources, 'role="switch"')).toEqual(['ui/components/Toggle.tsx × 1']);
+    expect(occurrences(uiSources, 'className="toggle"')).toEqual(['ui/components/Toggle.tsx × 1']);
+    expect(occurrences(uiSources, '<Toggle')).toEqual(['ui/components/RemindersSection.tsx × 3', 'ui/screens/SettingsScreen.tsx × 7']);
+  });
 });
